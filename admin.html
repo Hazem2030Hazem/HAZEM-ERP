@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة الإدارة | شركة درة فارس الشمال</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-v2.css">
+    <style>
+    :root {
+        --sidebar-width: 260px; --header-height: 70px;
+        --primary: #0f0c29; --accent: #c9a84c; --text: #e2e8f0; --text-muted: #94a3b8;
+        --danger: #ef4444; --success: #10b981; --warning: #f59e0b;
+        --bg: #0f0c29; --card: rgba(255,255,255,0.03); --border: rgba(255,255,255,0.08);
+        font-family: 'Tajawal','Cairo',sans-serif;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html,body { overflow-x:hidden; width:100%; }
+    body { 
+        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+        color: var(--text);
+        min-height: 100vh;
+    }
+    
+    .login-page { 
+        display:flex; align-items:center; justify-content:center; min-height:100vh; 
+        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+        position:relative; 
+    }
+    .login-page::before { 
+        content:''; position:absolute; inset:0; 
+        background: radial-gradient(ellipse at 20% 50%, rgba(14,165,233,0.08) 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 20%, rgba(201,168,76,0.06) 0%, transparent 60%),
+                    radial-gradient(ellipse at 50% 80%, rgba(14,165,233,0.05) 0%, transparent 60%);
+    }
+    .login-box { 
+        background: rgba(255,255,255,0.03); 
+        border: 1px solid rgba(255,255,255,0.08); 
+        border-radius: 24px; 
+        padding: 48px 40px; 
+        width: 420px; max-width: 90vw; 
+        position: relative; z-index: 1; 
+        backdrop-filter: blur(20px);
+        box-shadow: 0 25px 80px rgba(0,0,0,0.4), 0 0 60px rgba(14,165,233,0.05);
+    }
+    .login-box h2 { 
+        text-align: center; 
+        background: linear-gradient(135deg, #c9a84c, #f59e0b);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        margin-bottom: 4px; font-size: 32px; font-weight: 900; 
+    }
+    .login-box .subtitle { text-align:center; color:var(--text-muted); margin-bottom:32px; font-size:13px; }
+    .login-box label { display:block; margin-bottom:6px; color:var(--text-muted); font-size:13px; }
+    .login-box input { 
+        width:100%; padding:14px 16px; border-radius:12px; 
+        border: 1px solid rgba(255,255,255,0.08); 
+        background: rgba(255,255,255,0.03); 
+        color:white; font-family:inherit; font-size:14px; margin-bottom:20px; transition:0.3s; 
+    }
+    .login-box input:focus { border-color: rgba(14,165,233,0.5); outline:none; box-shadow: 0 0 20px rgba(14,165,233,0.1); }
+    .login-box button { 
+        width:100%; padding:16px; background: linear-gradient(135deg, #0EA5E9, #3B82F6); 
+        color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; 
+        cursor: pointer; font-family: inherit; transition: 0.3s;
+        box-shadow: 0 8px 30px rgba(14,165,233,0.3);
+    }
+    .login-box button:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(14,165,233,0.5); }
+    .login-error { color:var(--danger); text-align:center; margin-top:12px; display:none; font-size:13px; }
+    
+    .dashboard-layout { display:none; }
+    .dashboard-layout.active { display:flex; }
+    
+    .sidebar { 
+        width: var(--sidebar-width); background: rgba(15,12,41,0.95); 
+        backdrop-filter: blur(30px); position: fixed; top:0; left:0; bottom:0; z-index:1000; 
+        overflow-y:auto; border-right: 1px solid rgba(255,255,255,0.06); 
+        display: flex; flex-direction: column; 
+    }
+    .sidebar-content { position:relative; z-index:1; flex:1; display:flex; flex-direction:column; }
+    .sidebar-logo { 
+        padding: 24px 20px; text-align: center; 
+        border-bottom: 1px solid rgba(255,255,255,0.06); 
+    }
+    .sidebar-logo h2 { 
+        background: linear-gradient(135deg, #c9a84c, #f59e0b);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        font-size: 20px; font-weight: 900; 
+    }
+    .sidebar-nav { flex:1; padding:8px 0; }
+    .sidebar-nav .nav-section { 
+        padding: 16px 20px 8px; font-size: 10px; text-transform: uppercase; 
+        letter-spacing: 1px; color: rgba(14,165,233,0.7); font-weight: 700; 
+    }
+    .sidebar-nav a { 
+        display: flex; align-items: center; gap: 10px; padding: 10px 20px; 
+        color: var(--text-muted); text-decoration: none; font-size: 13px; 
+        transition: 0.2s; cursor: pointer; 
+        border-right: 3px solid transparent; margin: 1px 0; 
+    }
+    .sidebar-nav a:hover, .sidebar-nav a.active { 
+        color: white; background: rgba(14,165,233,0.06); border-right-color: #0EA5E9; 
+    }
+    .sidebar-nav a svg, .stat-icon svg, .header-notif svg, .sidebar-footer button svg { 
+        filter: drop-shadow(0 0 6px rgba(14,165,233,0.6)); transition: all 0.3s ease; 
+    }
+    .sidebar-nav a:hover svg, .sidebar-nav a.active svg { 
+        filter: drop-shadow(0 0 12px rgba(14,165,233,0.9)); transform: scale(1.15); 
+    }
+    .stat-card:hover .stat-icon svg { 
+        filter: drop-shadow(0 0 15px rgba(14,165,233,0.9)); transform: scale(1.2); 
+    }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.06); }
+    .sidebar-footer button { 
+        width: 100%; padding: 10px; background: rgba(239,68,68,0.1); color: var(--danger); 
+        border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; 
+        cursor: pointer; font-weight: 600; font-family: inherit; transition: 0.3s;
+    }
+    .sidebar-footer button:hover { background: rgba(239,68,68,0.2); }
+    
+    .header { 
+        position: fixed; top:0; left: var(--sidebar-width); right:0; 
+        height: var(--header-height); 
+        background: rgba(15,12,41,0.95); backdrop-filter: blur(30px);
+        border-bottom: 1px solid rgba(255,255,255,0.06); 
+        z-index: 999; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; 
+    }
+    .header-breadcrumb { color: var(--text-muted); font-size: 13px; }
+    .header-breadcrumb span { color: #0EA5E9; font-weight: 600; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .header-notif { 
+        width: 40px; height: 40px; background: rgba(255,255,255,0.03); border-radius: 50%; 
+        display: flex; align-items: center; justify-content: center; 
+        cursor: pointer; position: relative; border: 1px solid rgba(255,255,255,0.08); transition: 0.3s;
+    }
+    .header-notif:hover { border-color: rgba(14,165,233,0.5); box-shadow: 0 0 20px rgba(14,165,233,0.15); }
+    .header-notif .badge { 
+        position: absolute; top: -4px; right: -4px; background: var(--danger); 
+        color: white; font-size: 9px; width: 18px; height: 18px; 
+        border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; 
+    }
+    .header-user { display: flex; align-items: center; gap: 8px; }
+    .header-user .avatar { 
+        width: 36px; height: 36px; background: linear-gradient(135deg, #0EA5E9, #3B82F6); 
+        border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+        font-weight: 700; font-size: 15px; color: white;
+        box-shadow: 0 0 15px rgba(14,165,233,0.3);
+    }
+    
+    .main { margin-left: var(--sidebar-width); margin-top: var(--header-height); padding: 30px; min-height: calc(100vh - var(--header-height)); }
+    .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card { 
+        background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); 
+        border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 14px; 
+        transition: 0.3s; backdrop-filter: blur(10px);
+        animation: cardPulse 3s ease-in-out infinite;
+    }
+    .stat-card:nth-child(2) { animation-delay: 0.5s; }
+    .stat-card:nth-child(3) { animation-delay: 1s; }
+    .stat-card:nth-child(4) { animation-delay: 1.5s; }
+    @keyframes cardPulse { 0%, 100% { box-shadow: 0 0 15px rgba(14,165,233,0.03); } 50% { box-shadow: 0 0 30px rgba(14,165,233,0.1); } }
+    .stat-card:hover { border-color: rgba(14,165,233,0.4); transform: translateY(-3px); box-shadow: 0 12px 40px rgba(14,165,233,0.15); }
+    .stat-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+    .stat-icon.blue { background: rgba(14,165,233,0.12); color: #38bdf8; box-shadow: 0 0 20px rgba(14,165,233,0.2); }
+    .stat-icon.green { background: rgba(16,185,129,0.12); color: #34d399; box-shadow: 0 0 20px rgba(16,185,129,0.2); }
+    .stat-icon.orange { background: rgba(245,158,11,0.12); color: #fbbf24; box-shadow: 0 0 20px rgba(245,158,11,0.2); }
+    .stat-icon.purple { background: rgba(139,92,246,0.12); color: #a78bfa; box-shadow: 0 0 20px rgba(139,92,246,0.2); }
+    .stat-num { font-size: 26px; font-weight: 900; color: white; }
+    .stat-label { font-size: 12px; color: var(--text-muted); }
+    
+    .content-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px; backdrop-filter: blur(10px); }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+    
+    table { width:100%; border-collapse:collapse; }
+    th,td { padding: 10px 14px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 13px; }
+    th { color: var(--text-muted); font-weight: 600; font-size: 11px; text-transform: uppercase; }
+    
+    .btn-add { background: linear-gradient(135deg, #0EA5E9, #3B82F6); color: white; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 700; cursor: pointer; font-family: inherit; font-size: 13px; transition: 0.3s; box-shadow: 0 4px 15px rgba(14,165,233,0.3); }
+    .btn-add:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(14,165,233,0.5); }
+    .btn-edit { background: rgba(14,165,233,0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 12px; margin: 2px; transition: 0.3s; }
+    .btn-edit:hover { background: rgba(14,165,233,0.25); }
+    .btn-delete { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 12px; margin: 2px; transition: 0.3s; }
+    .btn-delete:hover { background: rgba(239,68,68,0.2); }
+    .btn-save { background: linear-gradient(135deg, #0EA5E9, #3B82F6); color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 700; cursor: pointer; font-family: inherit; font-size: 14px; margin-top: 16px; transition: 0.3s; box-shadow: 0 4px 15px rgba(14,165,233,0.3); }
+    .btn-save:hover { box-shadow: 0 8px 25px rgba(14,165,233,0.5); }
+    
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 6px; color: var(--text-muted); font-size: 13px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color: white; font-family: inherit; font-size: 13px; transition: 0.3s; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: rgba(14,165,233,0.5); outline: none; box-shadow: 0 0 20px rgba(14,165,233,0.1); }
+    .form-group textarea { resize: vertical; }
+    
+    .admin-empty { text-align: center; padding: 40px; color: var(--text-muted); }
+    .admin-data-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; margin-bottom: 12px; transition: 0.3s; }
+    .admin-data-card:hover { border-color: rgba(14,165,233,0.3); }
+    .admin-data-card .admin-card-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .admin-data-card .admin-card-title strong { font-size: 15px; color: white; }
+    .admin-data-card .admin-note { color: var(--text-muted); font-size: 12px; margin-top: 4px; }
+    .admin-data-card .admin-meta { display: flex; gap: 12px; font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+    .admin-data-card .admin-card-actions { display: flex; gap: 8px; margin-top: 10px; }
+    
+    .modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:99999;align-items:center;justify-content:center;padding:20px}
+    .modal.show{display:flex}
+    .modal-content{background:rgba(15,12,41,0.95);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.15);border-radius:24px;padding:30px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
+    
+    @media (max-width:768px) { 
+        .sidebar { transform: translateX(-100%); } 
+        .header { left: 0; } 
+        .main { margin-left: 0; } 
+        .stats-grid { grid-template-columns: repeat(2,1fr); } 
+    }
+</style>
+</head>
+<body>
+
+<div class="login-page" id="loginPage">
+    <div class="login-box">
+        <h2>درة فارس الشمال</h2>
+        <p class="subtitle">لوحة الإدارة</p>
+        <form onsubmit="return handleLogin(event)">
+            <label>البريد الإلكتروني</label>
+            <input type="email" id="username" placeholder="admin@example.com" required>
+            <label>كلمة المرور</label>
+            <input type="password" id="password" placeholder="أدخل كلمة المرور" required>
+            <button type="submit">دخول إلى لوحة التحكم</button>
+            <div class="login-error" id="errorMsg">❌ بيانات الدخول غير صحيحة</div>
+            <p class="login-hint">دخول الأدمن بحساب Supabase — لو واجهت مشكلة راجع: Authentication → Users في لوحة Supabase</p>
+        </form>
+    </div>
+</div>
+
+<div class="dashboard-layout" id="dashboardLayout">
+    <aside class="sidebar">
+        <div class="sidebar-content">
+            <div class="sidebar-logo"><h2>درة فارس</h2></div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">الرئيسية</div>
+                <a onclick="showTab('dashboard')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg> لوحة المؤشرات</a>
+                <a onclick="showTab('products')" class="active"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"></path></svg> المنتجات</a>
+                <a onclick="showTab('orders')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg> الطلبات</a>
+                <a onclick="showTab('customers')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg> العملاء</a>
+                <div class="nav-section">الإدارة</div>
+                <a onclick="showTab('services')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg> الخدمات</a>
+                <a onclick="showTab('receipts')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg> المدفوعات</a>
+                <a onclick="showTab('reviews')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> التقييمات</a>
+                <a onclick="showTab('messages')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> الرسائل</a>
+                <a onclick="showTab('invoices')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg> الفواتير</a>
+                <a onclick="showTab('accounting')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l7-4 7 4v14"></path><line x1="9" y1="21" x2="9" y2="12"></line><line x1="15" y1="21" x2="15" y2="12"></line></svg> 🏛️ المحاسبة</a>
+                <a onclick="showTab('auditLog')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> سجل التدقيق</a>
+                <div class="nav-section">المحتوى</div>
+                <a onclick="showTab('why_us')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> لماذا تختارنا</a>
+                <a onclick="showTab('vision_mission')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> رؤيتنا ورسالتنا</a>
+                <a onclick="showTab('hero_stats')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg> الإحصائيات</a>
+                <a onclick="showTab('home_hero')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> محتوى الرئيسية</a>
+                <a onclick="showTab('about')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> عن الشركة</a>
+                <a onclick="showTab('testimonials')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> آراء العملاء</a>
+                <a onclick="showTab('projects')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"></path></svg> المشاريع</a>
+                <a onclick="showTab('blog')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> المقالات</a>
+                <a onclick="showTab('certifications')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg> الشهادات</a>
+                <a onclick="showTab('contact')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> التواصل</a>
+                <a onclick="showTab('announcements')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 14v-3z"></path><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path></svg> إعلانات الزوار</a>
+                <div class="nav-section">المالية</div>
+                <a onclick="showTab('bank_accounts')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><line x1="3" y1="10" x2="21" y2="10"></line><polyline points="7 3 12 3 17 7 17 21"></polyline></svg> الحسابات البنكية</a>
+                <a onclick="showTab('payment_methods')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg> طرق الدفع</a>
+                <a onclick="showTab('shipping')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg> الشحن</a>
+                <a onclick="showTab('afaky')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> ربط أفاقي</a>
+                <a onclick="showTab('gateways')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line><line x1="6" y1="15" x2="10" y2="15"></line></svg> 💳 بوابات الدفع</a>
+                <div class="nav-section">الإعدادات</div>
+                <a onclick="showTab('settings')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> عام</a>
+                <a onclick="showTab('company_info')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> بيانات الشركة</a>
+                <a onclick="showTab('staff')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> الموظفون</a>
+                <a onclick="showTab('security')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> كلمة المرور</a>
+                <a onclick="showTab('gov_docs')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg> التوثيق الحكومي</a>
+                <a onclick="showTab('einvoice')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><rect x="8" y="13" width="8" height="2" rx="1"></rect></svg> فوترة إلكترونية</a>
+                <a onclick="showTab('marketing')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> التسويق</a>
+                <a onclick="showTab('files')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> الملفات</a>
+            </nav>
+            <div class="sidebar-footer"><button onclick="logout()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:6px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> تسجيل الخروج</button></div>
+        </div>
+    </aside>
+    
+    <header class="header">
+        <div class="header-breadcrumb">الرئيسية / <span id="pageTitle">المنتجات</span></div>
+        <div class="header-right">
+            <div class="header-notif" onclick="showTab('messages')"><span class="badge" id="notifBadge">0</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></div>
+            <div class="header-user"><div class="avatar">م</div><div class="name">مدير النظام</div></div>
+        </div>
+    </header>
+    
+    <main class="main">
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-icon blue"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"></path></svg></div><div><div class="stat-num" id="totalProducts">0</div><div class="stat-label">إجمالي المنتجات</div></div></div>
+            <div class="stat-card"><div class="stat-icon orange"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></div><div><div class="stat-num" id="totalOrdersAll">0</div><div class="stat-label">إجمالي الطلبات</div></div></div>
+            <div class="stat-card"><div class="stat-icon green"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg></div><div><div class="stat-num" id="totalOrders">0</div><div class="stat-label">الطلبات الجديدة</div></div></div>
+            <div class="stat-card"><div class="stat-icon purple"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div><div><div class="stat-num" id="totalCustomers">0</div><div class="stat-label">إجمالي العملاء</div></div></div>
+            <div class="stat-card"><div class="stat-icon green"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div><div><div class="stat-num" id="todaySales">0</div><div class="stat-label">مبيعات اليوم</div></div></div>
+            <div class="stat-card"><div class="stat-icon blue"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div><div><div class="stat-num" id="monthSales">0</div><div class="stat-label">مبيعات الشهر</div></div></div>
+            <div class="stat-card"><div class="stat-icon orange"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></div><div><div class="stat-num" id="totalReviews">0</div><div class="stat-label">التقييمات</div></div></div>
+            <div class="stat-card"><div class="stat-icon purple"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div><div><div class="stat-num" id="totalMessages">0</div><div class="stat-label">الرسائل الجديدة</div></div></div>
+        </div>
+        
+        <div class="content-card">
+            <div class="tab-content" id="dashboardTab">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg> لوحة المؤشرات</h3><button class="btn-add" onclick="renderDashboardCharts()">🔄 تحديث</button></div>
+                <div class="dash-charts-grid">
+                    <div class="dash-chart-card">
+                        <h4>📈 مبيعات آخر 7 أيام</h4>
+                        <div class="dash-chart-box" id="chartSalesWeekBox"><canvas id="chartSalesWeek"></canvas></div>
+                        <div class="admin-empty" id="chartSalesWeekEmpty" style="display:none">لا توجد بيانات</div>
+                    </div>
+                    <div class="dash-chart-card">
+                        <h4>🍩 توزيع الطلبات حسب الحالة</h4>
+                        <div class="dash-chart-box" id="chartOrdersStatusBox"><canvas id="chartOrdersStatus"></canvas></div>
+                        <div class="admin-empty" id="chartOrdersStatusEmpty" style="display:none">لا توجد بيانات</div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-content active" id="productsTab"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"></path></svg> المنتجات</h3><button class="btn-add" onclick="openModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> إضافة</button></div><table><thead><tr><th>#</th><th>الصورة</th><th>الاسم</th><th>الوصف</th><th>السعر</th><th>التصنيف</th><th>الإجراءات</th></tr></thead><tbody id="productsTable"></tbody></table></div>
+            <div class="tab-content" id="ordersTab"><div id="ordersList"></div></div>
+            <div class="tab-content" id="reviewsTab"><div id="reviewsList"></div></div>
+            <div class="tab-content" id="servicesTab"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg> طلبات الخدمات</h3><button class="btn-add" onclick="addService()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> إضافة</button></div><div id="servicesList"></div></div>
+            <div class="tab-content" id="customersTab"><div id="customersList"></div></div>
+            <div class="tab-content" id="receiptsTab"><div id="receiptsList"></div></div>
+            <div class="tab-content" id="messagesTab"><div id="messagesList"></div></div>
+            <div class="tab-content" id="invoicesTab"><div id="invoicesTable"><div class="admin-empty">⏳ جاري التحميل...</div></div></div>
+            <div class="tab-content" id="accountingTab">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3>🏛️ المحاسبة — قيود اليومية والتقارير</h3><button class="btn-add" onclick="erpPostUnposted()">⚡ ترحيل الطلبات غير المرحّلة</button></div>
+                <div class="zatca-note">ℹ️ كل قيد يتولد من طلب بيع موجود (مدين: العملاء / دائن: المبيعات) — القيود لا تُعدَّل ولا تُحذف، التصحيح بقيود عكسية فقط. الأرصدة مشتقة تلقائياً.</div>
+                <h4 style="margin:16px 0 8px">📒 قيود اليومية</h4>
+                <table><thead><tr><th>رقم القيد</th><th>التاريخ</th><th>البيان</th><th>الحساب</th><th>الطرف</th><th>مدين</th><th>دائن</th></tr></thead><tbody id="erpJournalTable"><tr><td colspan="7">⏳ جاري التحميل...</td></tr></tbody></table>
+                <h4 style="margin:24px 0 8px">⚖️ ميزان المراجعة</h4>
+                <table><thead><tr><th>الكود</th><th>الحساب</th><th>النوع</th><th>إجمالي مدين</th><th>إجمالي دائن</th><th>الرصيد</th></tr></thead><tbody id="erpTrialTable"><tr><td colspan="6">⏳ جاري التحميل...</td></tr></tbody></table>
+                <h4 style="margin:24px 0 8px">📈 قائمة الدخل المبسطة</h4>
+                <table><thead><tr><th>البند</th><th>المبلغ</th></tr></thead><tbody id="erpIncomeTable"><tr><td colspan="2">⏳ جاري التحميل...</td></tr></tbody></table>
+            </div>
+            <div class="tab-content" id="auditLogTab">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> سجل التدقيق — آخر 100 عملية</h3><button class="btn-add" onclick="loadAuditLog()">🔄 تحديث</button></div>
+                <div id="auditLogList"><div class="admin-empty">⏳ جاري التحميل...</div></div>
+            </div>
+            <div class="tab-content" id="einvoiceTab">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><rect x="8" y="13" width="8" height="2" rx="1"></rect></svg> الفوترة الإلكترونية — ZATCA (هيئة الزكاة والضريبة والجمارك)</h3><button class="btn-add" onclick="loadZatcaInvoices()">🔄 تحديث</button></div>
+                <div class="zatca-note">ℹ️ هذا الـ QR يغطي <strong>المرحلة الأولى (التوليد)</strong> بصيغة TLV القياسية — الربط الكامل مع هيئة الزكاة والضريبة والجمارك (المرحلة الثانية - الربط والتكامل) يتطلب شهادة رسمية (CSID) وتوقيعاً رقمياً عبر حل معتمد.</div>
+                <div class="afaky-form" style="margin-bottom:24px">
+                    <h4>⚙️ إعدادات الفوترة الإلكترونية</h4>
+                    <div class="form-group"><label>اسم البائع (Tag 1)</label><input type="text" id="zatcaSellerName" placeholder="شركة درة فارس الشمال للتجارة"></div>
+                    <div class="form-group"><label>الرقم الضريبي (Tag 2)</label><input type="text" id="zatcaVatNumber" placeholder="3XXXXXXXXXXXX3" dir="ltr" style="text-align:left"></div>
+                    <button class="btn-save" onclick="saveZatcaSettings()">💾 حفظ إعدادات الفوترة</button>
+                </div>
+                <table><thead><tr><th>#</th><th>رقم الفاتورة</th><th>العميل</th><th>الإجمالي</th><th>الضريبة</th><th>التاريخ</th><th>QR</th></tr></thead><tbody id="zatcaInvoicesTable"><tr><td colspan="7">⏳ جاري التحميل...</td></tr></tbody></table>
+            </div>
+            
+            <div class="tab-content" id="why_usTab"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> لماذا تختارنا</h3><button class="btn-add" onclick="addSiteItem('why_us')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> إضافة</button></div><div id="why_usList"><div class="admin-empty">⏳ جاري التحميل...</div></div></div>
+            <div class="tab-content" id="vision_missionTab"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> رؤيتنا - رسالتنا - قيمنا</h3><button class="btn-add" onclick="addSiteItem('vision_mission')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> إضافة</button></div><div id="vision_missionList"><div class="admin-empty">⏳ جاري التحميل...</div></div></div>
+            <div class="tab-content" id="hero_statsTab"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg> الإحصائيات</h3><button class="btn-add" onclick="addSiteItem('hero_stats')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> إضافة</button></div><div id="hero_statsList"><div class="admin-empty">⏳ جاري التحميل...</div></div></div>
+
+            <div class="tab-content" id="home_heroTab">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> 🏠 محتوى الصفحة الرئيسية (الهيرو)</h3></div>
+                <form class="afaky-form" onsubmit="return saveHomeHero(event)">
+                    <h4>✏️ نصوص الواجهة الرئيسية — تُقرأ حيًّا من قاعدة البيانات وتتطبق فورًا</h4>
+                    <div class="admin-form-grid">
+                        <div class="form-group"><label>الشارة العلوية (Badge)</label><input type="text" id="heroBadgeInput" placeholder="✨ حلول تقنية متكاملة للشركات والأفراد"></div>
+                        <div class="form-group"><label>العنوان الرئيسي</label><input type="text" id="heroTitleInput" placeholder="شركة درة فارس الشمال"></div>
+                        <div class="form-group"><label>الجزء المميّز من العنوان (بجانبه)</label><input type="text" id="heroHighlightInput" placeholder="للتجارة"></div>
+                        <div class="form-group"><label>نص زر التواصل</label><input type="text" id="heroCtaTextInput" placeholder="تحدث مع خبير"></div>
+                        <div class="form-group" style="grid-column:1/-1"><label>الوصف (الفقرة تحت العنوان)</label><textarea id="heroDescInput" rows="3" placeholder="نوفر لك أحدث الأجهزة التقنية..."></textarea></div>
+                        <div class="form-group"><label>رابط زر التواصل</label><input type="url" id="heroCtaUrlInput" dir="ltr" style="text-align:left" placeholder="https://wa.me/9665XXXXXXXX"></div>
+                        <div class="form-group"><label>رقم إحصائية العملاء</label><input type="text" id="heroStatClientsInput" dir="ltr" style="text-align:left" placeholder="+500"></div>
+                        <div class="form-group"><label>عنوان إحصائية العملاء</label><input type="text" id="heroStatClientsLabelInput" placeholder="عميل سعيد"></div>
+                    </div>
+                    <button type="submit" class="btn-save">💾 حفظ محتوى الصفحة الرئيسية</button>
+                </form>
+            </div>
+            <div class="tab-content" id="aboutTab"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> عن الشركة</h3><button class="btn-add" onclick="addSiteItem('about')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> إضافة</button></div><div id="aboutList"><div class="admin-empty">⏳ جاري التحميل...</div></div></div>
+            <div class="tab-content" id="testimonialsTab"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> آراء العملاء</h3><button class="btn-add" onclick="addSiteItem('testimonials')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> إضافة</button></div><div id="testimonialsList"><div class="admin-empty">⏳ جاري التحميل...</div></div></div>
+            <div class="tab-content" id="projectsTab"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"></path></svg> المشاريع</h3><button class="btn-add" onclick="addSiteItem('projects')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> إضافة</button></div><div id="projectsList"><div class="admin-empty">⏳ جاري التحميل...</div></div></div>
+            <div class="tab-content" id="blogTab"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> المقالات</h3><button class="btn-add" onclick="addSiteItem('blog')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> إضافة</button></div><div id="blogList"><div class="admin-empty">⏳ جاري التحميل...</div></div></div>
+            <div class="tab-content" id="certificationsTab"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg> الشهادات</h3><button class="btn-add" onclick="addSiteItem('certifications')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> إضافة</button></div><div id="certificationsList"><div class="admin-empty">⏳ جاري التحميل...</div></div></div>
+            <div class="tab-content" id="contactTab"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> التواصل</h3><button class="btn-add" onclick="addSiteItem('contact')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> إضافة</button></div><div id="contactList"><div class="admin-empty">⏳ جاري التحميل...</div></div></div>
+            <div class="tab-content" id="announcementsTab"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><path d="M3 11l18-5v12L3 14v-3z"></path><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path></svg> إعلانات الزوار</h3><button class="btn-add" onclick="addSiteItem('announcements')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> إضافة</button></div><div id="announcementsList"><div class="admin-empty">⏳ جاري التحميل...</div></div></div>
+            <div class="tab-content" id="afakyTab">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> ربط أفاقي — التكامل مع نظام الحسابات</h3></div>
+                <div class="afaky-status-card">
+                    <div class="afaky-status-badge" id="afakyStatus">⚪ غير مفعل</div>
+                    <div class="afaky-status-note" id="afakyStatusNote">لم يتم تفعيل الربط بعد — اضبط الإعدادات بالأسفل ثم احفظ.</div>
+                </div>
+                <form class="afaky-form" onsubmit="return saveAfakySettings(event)">
+                    <h4>⚙️ إعدادات الربط</h4>
+                    <label class="afaky-check"><input type="checkbox" id="afakyEnabled"> تفعيل الربط مع نظام أفاقي</label>
+                    <div class="form-group"><label>وضع الربط</label><select id="afakyMode" onchange="toggleAfakyModeFields()"><option value="api">API مباشر</option><option value="database">قاعدة بيانات SQL Server</option><option value="csv">ملفات CSV</option><option value="webhook">Webhook</option><option value="email">البريد الإلكتروني</option></select></div>
+                    <div class="afaky-mode-fields" id="afakyFieldsApi">
+                        <div class="mode-title">🔑 إعدادات API</div>
+                        <div class="form-group"><label>مفتاح API</label><input type="text" id="afakyApiKey" placeholder="AFAKY-API-KEY"></div>
+                        <div class="form-group"><label>رابط API</label><input type="url" id="afakyApiUrl" placeholder="https://afaky.example.com/api"></div>
+                    </div>
+                    <div class="afaky-mode-fields" id="afakyFieldsDatabase" style="display:none">
+                        <div class="mode-title">🗄️ بيانات SQL Server</div>
+                        <div class="form-group"><label>اسم السيرفر</label><input type="text" id="afakySqlServer" placeholder="SERVER\INSTANCE"></div>
+                        <div class="form-group"><label>اسم قاعدة البيانات</label><input type="text" id="afakySqlDatabase" placeholder="AFAKY_DB"></div>
+                        <div class="form-group"><label>اسم المستخدم</label><input type="text" id="afakySqlUser" placeholder="sa"></div>
+                        <div class="form-group"><label>كلمة المرور</label><input type="password" id="afakySqlPassword" placeholder="••••••"></div>
+                    </div>
+                    <div class="afaky-mode-fields" id="afakyFieldsCsv" style="display:none">
+                        <div class="mode-title">📄 وضع ملفات CSV</div>
+                        <p style="color:var(--text-muted);font-size:12px;line-height:1.8;margin:0">لا يحتاج هذا الوضع لأي إعدادات إضافية — استخدم أدوات التصدير والاستيراد بالأسفل لتبادل البيانات مع أفاقي.</p>
+                    </div>
+                    <div class="afaky-mode-fields" id="afakyFieldsWebhook" style="display:none">
+                        <div class="mode-title">🪝 إعدادات Webhook</div>
+                        <div class="form-group"><label>رابط Webhook</label><input type="url" id="afakyWebhookUrl" placeholder="https://afaky.example.com/webhook"></div>
+                    </div>
+                    <div class="afaky-mode-fields" id="afakyFieldsEmail" style="display:none">
+                        <div class="mode-title">📧 إعدادات البريد الإلكتروني</div>
+                        <div class="form-group"><label>بريد أفاقي المستلم</label><input type="email" id="afakyEmail" placeholder="accounting@afaky.example.com"></div>
+                        <p style="color:var(--text-muted);font-size:12px;line-height:1.8;margin:0">عند الحفظ تُفتح رسالة بريد جاهزة — أرفق بها ملفات CSV المُصدّرة لإرسال تقارير تلقائية إلى أفاقي.</p>
+                    </div>
+                    <button type="submit" class="btn-save">💾 حفظ إعدادات الربط</button>
+                </form>
+                <div class="afaky-guide-grid">
+                    <div class="afaky-guide-card"><span class="guide-icon">🔑</span><h5>API مباشر</h5><p>ربط مباشر عبر واجهة برمجية — الأنسب للسيرفرات السحابية والمزامنة اللحظية للفواتير والمخزون.</p></div>
+                    <div class="afaky-guide-card"><span class="guide-icon">🗄️</span><h5>قاعدة بيانات</h5><p>اتصال مباشر بقاعدة بيانات SQL Server — الأنسب للسيرفر المحلي داخل مقر الشركة.</p></div>
+                    <div class="afaky-guide-card"><span class="guide-icon">📄</span><h5>ملفات CSV</h5><p>الطريقة الأسهل — تصدير البيانات من الموقع واستيرادها في أفاقي (والعكس) بدون أي برمجة.</p></div>
+                    <div class="afaky-guide-card"><span class="guide-icon">🪝</span><h5>Webhook</h5><p>إشعارات فورية عند كل طلب أو عملية — للتكامل المتقدم مع الأنظمة الوسيطة.</p></div>
+                    <div class="afaky-guide-card"><span class="guide-icon">📧</span><h5>البريد</h5><p>يرسل تقارير CSV تلقائياً على بريد أفاقي — مناسب للمتابعة المحاسبية الدورية بدون ربط تقني.</p></div>
+                </div>
+                <div class="afaky-csv-tools">
+                    <h4>📄 أدوات CSV — تصدير واستيراد</h4>
+                    <div class="afaky-csv-row">
+                        <div class="csv-label">تصدير البيانات لنظام أفاقي (ملفات CSV متوافقة مع Excel):</div>
+                        <button class="btn-add" onclick="exportProductsCSV()">📦 تصدير المنتجات CSV</button>
+                        <button class="btn-add" onclick="exportOrdersCSV()">🛒 تصدير الطلبات CSV</button>
+                    </div>
+                </div>
+                <div class="afaky-csv-tools" style="margin-top:24px;border:2px solid #22C55E;border-radius:14px">
+                    <h4>📥 استيراد مخزون آفاق — الاستيراد من هنا فقط ⬇️ (Excel أو CSV — أرصدة الأصناف)</h4>
+                    <p style="color:var(--text-muted);font-size:12px;line-height:1.9;margin:0 0 12px">ارفع ملف Excel المُصدَّر من برنامج آفاق (تقرير «أرصدة الأصناف»). الأداة تقرأ <b>الكود والاسم والكمية</b> فقط — <b>بدون أسعار</b>، تضيف الأصناف الجديدة <b>مخفية</b> حتى تسعّرها بنفسك من صفحة المنتجات، وتحدّث كميات الأصناف الموجودة بدون لمس أسعارها أو صورها.</p>
+                    <div class="afaky-csv-row">
+                        <div class="csv-label">ملف آفاق (xlsx أو CSV):</div>
+                        <input type="file" class="afaky-import-file" id="afaqXlsFile" accept=".xlsx,.xls,.csv,text/csv" onchange="afaqXlsPreview(this)">
+                    </div>
+                    <label class="afaky-check" style="margin:6px 0"><input type="checkbox" id="afaqHideNew" checked> إخفاء الأصناف الجديدة عن المتجر حتى تسعيرها (يظهر سعرها 0 في لوحة المنتجات فقط)</label>
+                    <label class="afaky-check" style="margin:6px 0"><input type="checkbox" id="afaqAutoCat" checked> تصنيف تلقائي بالكلمات (حبر/TONER→أحبار، CABLE→وصلات… وغير المعروف → إكسسوارات)</label>
+                    <div class="afaky-import-preview" id="afaqXlsPreviewBox"></div>
+                    <button class="btn-save" id="afaqXlsImportBtn" style="display:none" onclick="afaqXlsRun()">⬆️ تنفيذ الاستيراد الآن</button>
+                </div>
+                <div class="afaky-csv-tools" style="margin-top:24px">
+                    <h4>🔄 المزامنة مع أفاقي</h4>
+                    <div class="afaky-csv-row">
+                        <div class="csv-label">مزامنة فورية حسب وضع الربط المحفوظ (Webhook: إرسال آخر 20 طلب — CSV: تصدير الطلبات — البريد: فتح رسالة تقرير):</div>
+                        <button class="btn-add" onclick="syncAfakyNow()">🔄 مزامنة الآن</button>
+                    </div>
+                    <h4 style="margin-top:8px">🧾 سجل المزامنة — آخر 20 عملية</h4>
+                    <div id="afakySyncLogList"><div class="admin-empty">⏳ جاري التحميل...</div></div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="bank_accountsTab">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><path d="M3 21h18"></path><line x1="3" y1="10" x2="21" y2="10"></line><polyline points="7 3 12 3 17 7 17 21"></polyline></svg> الحسابات البنكية</h3><button class="btn-add" onclick="addBankAccount()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> إضافة حساب</button></div>
+                <div class="zatca-note">ℹ️ هذه الحسابات تظهر للعملاء عند اختيار التحويل البنكي في صفحة الدفع — الحسابات المعطّلة لا تظهر.</div>
+                <div id="bankAccountsList"><div class="admin-empty">⏳ جاري التحميل...</div></div>
+            </div>
+
+            <div class="tab-content" id="payment_methodsTab">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg> طرق الدفع</h3><button class="btn-add" onclick="openPaymentMethodModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> إضافة طريقة</button></div>
+                <div class="zatca-note">ℹ️ صفحة الدفع (checkout) تقرأ هذا الجدول مباشرة — تظهر للعميل الطرق المفعّلة فقط ومرتبة حسب "الترتيب".</div>
+                <table><thead><tr><th>#</th><th>الأيقونة</th><th>الاسم</th><th>الترتيب</th><th>الحالة</th><th>الإجراءات</th></tr></thead><tbody id="paymentMethodsTable"><tr><td colspan="6">⏳ جاري التحميل...</td></tr></tbody></table>
+            </div>
+
+            <div class="tab-content" id="shippingTab">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg> الشحن — أسعار التوصيل حسب المدينة</h3><button class="btn-add" onclick="openShippingRateModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> إضافة سعر</button></div>
+                <div class="afaky-form" style="margin-bottom:24px">
+                    <h4>⚙️ الإعدادات العامة للشحن</h4>
+                    <div class="form-group"><label>سعر الشحن الافتراضي (ر.س) — يُستخدم عند عدم وجود سعر خاص بمدينة العميل</label><input type="number" id="shippingDefaultPrice" step="0.01" min="0" placeholder="25"></div>
+                    <button class="btn-save" onclick="saveShippingSettings()">💾 حفظ إعدادات الشحن</button>
+                </div>
+                <table><thead><tr><th>#</th><th>من مدينة</th><th>إلى مدينة</th><th>الوزن (كجم)</th><th>السعر</th><th>مدة التوصيل</th><th>الإجراءات</th></tr></thead><tbody id="shippingRatesTable"><tr><td colspan="7">⏳ جاري التحميل...</td></tr></tbody></table>
+            </div>
+
+            <div class="tab-content" id="gatewaysTab">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line><line x1="6" y1="15" x2="10" y2="15"></line></svg> بوابات الدفع — Moyasar / Tap / HyperPay</h3><button class="btn-add" onclick="loadPaymentGateways()">🔄 تحديث</button></div>
+                <div class="zatca-note">ℹ️ بيانات هذا التبويب محمية بسياسات RLS — لا تُقرأ ولا تُحدَّث إلا بجلسة دخول حقيقية (بريد + كلمة مرور) من Supabase Authentication.</div>
+                <div class="gateways-grid" id="gatewaysList"><div class="admin-empty">⏳ جاري التحميل...</div></div>
+            </div>
+
+            <div class="tab-content" id="staffTab">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px"><h3><svg width="18" height="18" style="vertical-align:middle;margin-left:8px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> إدارة الموظفين</h3></div>
+                <div class="zatca-note">ℹ️ أضف إيميل الموظف هنا ← ثم أخبره أن يفتح الموقع وينشئ حساباً <b>بنفس الإيميل</b> ويختار كلمة المرور التي تعجبه ← تصبح كلمته الأساسية تلقائياً ويتحول حسابه لحساب موظف بصلاحيات المتابعة فقط.</div>
+                <form onsubmit="return addStaff(event)" style="display:flex;gap:10px;margin:16px 0;flex-wrap:wrap">
+                    <input type="email" id="newStaffEmail" required placeholder="employee@email.com" style="flex:1;min-width:240px;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;font-family:inherit;direction:ltr;text-align:right">
+                    <button type="submit" class="btn-add">+ إضافة موظف</button>
+                </form>
+                <div id="staffList"><div class="admin-empty">⏳ جاري التحميل...</div></div>
+            </div>
+
+            <div class="tab-content" id="securityTab">
+                <h3 style="margin-bottom:16px"><svg style="vertical-align:middle;margin-left:8px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> تغيير كلمة المرور الخاصة بي</h3>
+                <div class="zatca-note">🔐 كل مستخدم يغيّر كلمة مروره بنفسه فقط — لا يستطيع أي أدمن رؤية أو تغيير كلمة مرور غيره.</div>
+                <form onsubmit="return changeMyPassword(event)" style="max-width:420px;display:grid;gap:12px;margin-top:16px">
+                    <label style="color:#B9BCE0;font-size:13px;font-weight:700">كلمة المرور الجديدة</label>
+                    <input type="password" id="myNewPassword" required minlength="6" autocomplete="new-password" style="padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;font-family:inherit">
+                    <label style="color:#B9BCE0;font-size:13px;font-weight:700">تأكيد كلمة المرور الجديدة</label>
+                    <input type="password" id="myNewPassword2" required minlength="6" autocomplete="new-password" style="padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;font-family:inherit">
+                    <button type="submit" class="btn-add" style="justify-self:start">حفظ كلمة المرور</button>
+                </form>
+            </div>
+
+            <div class="tab-content" id="settingsTab">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82.33l.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> الإعدادات العامة</h3></div>
+                <form class="afaky-form" onsubmit="return saveSettings(event)">
+                    <h4>🏪 إعدادات المتجر</h4>
+                    <div class="admin-form-grid">
+                        <div class="form-group"><label>اسم المتجر</label><input type="text" id="setStoreName" placeholder="شركة درة فارس الشمال"></div>
+                        <div class="form-group"><label>العملة</label><input type="text" id="setCurrency" placeholder="ر.س"></div>
+                        <div class="form-group"><label>نسبة الضريبة %</label><input type="number" id="setTaxPercent" step="0.01" min="0" placeholder="15"></div>
+                        <div class="form-group"><label>حد الشحن المجاني (ر.س) — 0 لتعطيل الشحن المجاني</label><input type="number" id="setFreeShippingMin" step="0.01" min="0" placeholder="200"></div>
+                        <div class="form-group form-group-full"><label>رقم الواتساب</label><input type="text" id="setWhatsapp" dir="ltr" style="text-align:left" placeholder="9665XXXXXXXX"></div>
+                    </div>
+                    <button type="submit" class="btn-save">💾 حفظ الإعدادات العامة</button>
+                </form>
+
+                <form class="afaky-form" onsubmit="return saveSocialLinks(event)" style="margin-top:24px">
+                    <h4>🔗 روابط السوشيال ميديا</h4>
+                    <p style="color:var(--text-muted,#9CA3AF);font-size:13px;margin-bottom:12px">الأيقونات ظاهرة في الموقع بدون روابط حاليًا. عند إنشاء الحسابات الرسمية، الصق الروابط هنا واحفظ — وستتفعّل الأيقونات تلقائيًا في كل صفحات الموقع. اترك الحقل فارغًا لإبقاء الأيقونة بدون رابط.</p>
+                    <div class="admin-form-grid">
+                        <div class="form-group"><label>📘 فيسبوك</label><input type="url" id="setSocialFacebook" dir="ltr" style="text-align:left" placeholder="https://facebook.com/..."></div>
+                        <div class="form-group"><label>📸 انستقرام</label><input type="url" id="setSocialInstagram" dir="ltr" style="text-align:left" placeholder="https://instagram.com/..."></div>
+                        <div class="form-group"><label>🐦 تويتر / X</label><input type="url" id="setSocialTwitter" dir="ltr" style="text-align:left" placeholder="https://x.com/..."></div>
+                        <div class="form-group"><label>💼 لينكدإن</label><input type="url" id="setSocialLinkedin" dir="ltr" style="text-align:left" placeholder="https://linkedin.com/company/..."></div>
+                    </div>
+                    <button type="submit" class="btn-save">💾 حفظ روابط السوشيال</button>
+                </form>
+
+                <form class="afaky-form" onsubmit="return saveStoreStatus(event)" style="margin-top:24px">
+                    <h4>🛒 حالة المتجر (تشغيل / إيقاف البيع)</h4>
+                    <p style="color:var(--text-muted,#9CA3AF);font-size:13px;margin-bottom:12px">عند اختيار «مغلق للتجهيز» يستطيع الزوار تصفح المنتجات فقط، ويظهر لهم «المتجر تحت التجهيز — قريباً» بدل إتمام الشراء. عند الانتهاء من إضافة المنتجات اختر «مفتوح» واحفظ — ويتفعّل البيع فورًا في كل الأجهزة.</p>
+                    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+                        <span id="storeStatusBadge" style="padding:6px 16px;border-radius:20px;font-weight:800;font-size:14px">...</span>
+                    </div>
+                    <div class="admin-form-grid">
+                        <div class="form-group"><label>حالة البيع</label>
+                            <select id="setStoreStatus">
+                                <option value="closed">🔴 مغلق للتجهيز — إيقاف البيع مؤقتًا</option>
+                                <option value="open">🟢 مفتوح — البيع مفعّل</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-save">💾 حفظ حالة المتجر</button>
+                </form>
+            </div>
+
+            <div class="tab-content" id="company_infoTab">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> بيانات الشركة</h3></div>
+                <form class="afaky-form" onsubmit="return saveCompanyInfo(event)">
+                    <h4>🏢 البيانات الرسمية للشركة</h4>
+                    <div class="admin-form-grid">
+                        <div class="form-group form-group-full"><label>الاسم الرسمي</label><input type="text" id="compOfficialName" placeholder="شركة درة فارس الشمال للتجارة"></div>
+                        <div class="form-group"><label>السجل التجاري</label><input type="text" id="compCR" dir="ltr" style="text-align:left" placeholder="1010XXXXXX"></div>
+                        <div class="form-group"><label>الرقم الضريبي</label><input type="text" id="compTaxNumber" dir="ltr" style="text-align:left" placeholder="3XXXXXXXXXXXX3"></div>
+                        <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="compEmail" dir="ltr" style="text-align:left" placeholder="info@example.com"></div>
+                        <div class="form-group"><label>الهاتف</label><input type="text" id="compPhone" dir="ltr" style="text-align:left" placeholder="9665XXXXXXXX"></div>
+                        <div class="form-group form-group-full"><label>العنوان</label><textarea id="compAddress" rows="2" placeholder="المدينة — الحي — الشارع"></textarea></div>
+                    </div>
+                    <button type="submit" class="btn-save">💾 حفظ بيانات الشركة</button>
+                </form>
+            </div>
+
+            <div class="tab-content" id="gov_docsTab">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg> التوثيق الحكومي</h3></div>
+                <div class="afaky-status-card">
+                    <div class="afaky-status-badge" id="govDocsStatus">⚪ غير موثق</div>
+                    <div class="afaky-status-note" id="govDocsStatusNote">التوثيق غير مكتمل — أدخل رقم السجل التجاري والرقم الضريبي ثم احفظ.</div>
+                </div>
+                <form class="afaky-form" onsubmit="return saveGovDocs(event)">
+                    <h4>🛡️ أرقام وروابط التوثيق</h4>
+                    <div class="admin-form-grid">
+                        <div class="form-group"><label>رقم السجل التجاري</label><input type="text" id="govCR" dir="ltr" style="text-align:left" placeholder="1010XXXXXX"></div>
+                        <div class="form-group"><label>الرقم الضريبي</label><input type="text" id="govTaxNumber" dir="ltr" style="text-align:left" placeholder="3XXXXXXXXXXXX3"></div>
+                        <div class="form-group form-group-full"><label>رابط منصة "معروف"</label><input type="url" id="govMaroofUrl" dir="ltr" style="text-align:left" placeholder="https://maroof.sa/..."></div>
+                        <div class="form-group form-group-full"><label>ملاحظات</label><textarea id="govNotes" rows="3" placeholder="أي ملاحظات إضافية عن التوثيق (شهادات، تراخيص، تواريخ تجديد...)"></textarea></div>
+                    </div>
+                    <button type="submit" class="btn-save">💾 حفظ بيانات التوثيق</button>
+                </form>
+            </div>
+
+            <div class="tab-content" id="marketingTab">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> التسويق</h3></div>
+                <div class="afaky-status-card">
+                    <div class="afaky-status-badge" id="marketingStatus">⚪ معطل</div>
+                    <div class="afaky-status-note" id="marketingStatusNote">التسويق معطل حالياً — فعّل الحملة واحفظ لتظهر للزوار.</div>
+                </div>
+                <form class="afaky-form" onsubmit="return saveMarketing(event)">
+                    <h4>⚡ إعدادات الحملة التسويقية</h4>
+                    <label class="afaky-check"><input type="checkbox" id="mktEnabled"> تفعيل الحملة التسويقية (البانر الترويجي + الكوبون الترحيبي)</label>
+                    <div class="form-group"><label>كود الكوبون الترحيبي</label><input type="text" id="mktWelcomeCoupon" dir="ltr" style="text-align:left" placeholder="WELCOME10"></div>
+                    <div class="form-group"><label>رسالة البانر الترويجي</label><textarea id="mktBannerMessage" rows="3" placeholder="🎉 خصم ترحيبي على أول طلب — استخدم كود الكوبون عند الدفع"></textarea></div>
+                    <button type="submit" class="btn-save">💾 حفظ إعدادات التسويق</button>
+                </form>
+            </div>
+
+            <div class="tab-content" id="filesTab">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:8px"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> الملفات الثابتة للموقع</h3><button class="btn-add" onclick="loadSiteFiles()">🔄 تحديث</button></div>
+                <div class="zatca-note">ℹ️ هذه قائمة قراءة فقط بالملفات المعروفة في الموقع — يمكن فتحها أو نسخ روابطها، والرفع غير متاح من اللوحة.</div>
+                <div id="siteFilesList"><div class="admin-empty">⏳ جاري التحميل...</div></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div class="modal" id="zatcaQrModal">
+    <div class="modal-content">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+            <h3 style="color:white;margin:0">🧾 QR الفاتورة الإلكترونية</h3>
+            <button onclick="closeZatcaQrModal()" style="background:rgba(255,255,255,0.1);border:none;color:white;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:16px">✕</button>
+        </div>
+        <div class="zatca-qr-wrap"><img id="zatcaQrImage" alt="ZATCA QR"></div>
+        <div class="form-group" style="margin-top:16px"><label>نص TLV بصيغة Base64</label><textarea id="zatcaQrBase64" rows="4" readonly dir="ltr" style="text-align:left;font-family:monospace;font-size:12px"></textarea></div>
+        <button class="btn-save" onclick="copyZatcaQr()">📋 نسخ Base64</button>
+    </div>
+</div>
+
+<div class="modal" id="productModal">
+    <div class="modal-content">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+            <h3 id="productModalTitle" style="color:white;margin:0">📦 إضافة منتج</h3>
+            <button onclick="closeProductModal()" style="background:rgba(255,255,255,0.1);border:none;color:white;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:16px">✕</button>
+        </div>
+        <form id="productForm" onsubmit="return saveProduct(event)">
+            <input type="hidden" id="productId">
+            <div class="form-group"><label>اسم المنتج</label><input type="text" id="productName" required></div>
+            <div class="form-group"><label>الوصف</label><textarea id="productDesc" rows="3"></textarea></div>
+            <div class="form-group"><label>السعر (ر.س)</label><input type="number" id="productPrice" step="0.01" required></div>
+            <div class="form-group"><label>السعر القديم (اختياري)</label><input type="number" id="productOldPrice" step="0.01"></div>
+            <div class="form-group"><label>المخزون</label><input type="number" id="productStock" value="0" required></div>
+            <div class="form-group"><label>التصنيف</label><select id="productCategory"><option value="printers">طابعات</option><option value="computers">كمبيوتر</option><option value="ram">رامات</option><option value="storage">هاردات</option><option value="cables">وصلات</option><option value="projectors">بروجكتور</option><option value="accessories">إكسسوارات</option><option value="ink">أحبار</option><option value="food">مواد غذائية</option></select></div>
+            <div class="form-group"><label>الشارة</label><select id="productBadge"><option value="">بدون</option><option value="جديد">جديد</option><option value="خصم">خصم</option><option value="الأكثر مبيعاً">الأكثر مبيعاً</option></select></div>
+            <div class="form-group"><label>رابط الصورة</label><input type="url" id="productImage" placeholder="https://..."></div>
+            <div class="form-group"><label>التقييم</label><input type="number" id="productRating" value="0" min="0" max="5" step="0.1"></div>
+            <button type="submit" class="btn-save">💾 حفظ المنتج</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="bankAccountModal">
+    <div class="modal-content">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+            <h3 id="bankAccountModalTitle" style="color:white;margin:0">🏦 إضافة حساب بنكي</h3>
+            <button onclick="closeBankAccountModal()" style="background:rgba(255,255,255,0.1);border:none;color:white;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:16px">✕</button>
+        </div>
+        <form id="bankAccountForm" onsubmit="return saveBankAccount(event)">
+            <input type="hidden" id="bankAccountId">
+            <div class="form-group"><label>اسم البنك</label><input type="text" id="bankName" required placeholder="مصرف الراجحي"></div>
+            <div class="form-group"><label>اسم صاحب الحساب</label><input type="text" id="bankAccountName" placeholder="شركة درة فارس الشمال للتجارة"></div>
+            <div class="form-group"><label>رقم الحساب</label><input type="text" id="bankAccountNumber" required dir="ltr" style="text-align:left"></div>
+            <div class="form-group"><label>الآيبان (IBAN)</label><input type="text" id="bankIban" dir="ltr" style="text-align:left" placeholder="SA..."></div>
+            <div class="form-group"><label>الترتيب</label><input type="number" id="bankSortOrder" value="1"></div>
+            <label class="afaky-check"><input type="checkbox" id="bankIsActive" checked> حساب مفعّل (يظهر للعملاء)</label>
+            <button type="submit" class="btn-save">💾 حفظ الحساب البنكي</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="paymentMethodModal">
+    <div class="modal-content">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+            <h3 id="paymentMethodModalTitle" style="color:white;margin:0">💳 إضافة طريقة دفع</h3>
+            <button onclick="closePaymentMethodModal()" style="background:rgba(255,255,255,0.1);border:none;color:white;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:16px">✕</button>
+        </div>
+        <form id="paymentMethodForm" onsubmit="return savePaymentMethod(event)">
+            <input type="hidden" id="paymentMethodId">
+            <div class="form-group"><label>اسم طريقة الدفع</label><input type="text" id="pmName" required placeholder="تحويل بنكي"></div>
+            <div class="form-group"><label>الأيقونة (إيموجي)</label><input type="text" id="pmIcon" placeholder="💳" maxlength="8"></div>
+            <div class="form-group"><label>الترتيب</label><input type="number" id="pmSortOrder" value="1"></div>
+            <label class="afaky-check"><input type="checkbox" id="pmIsActive" checked> طريقة مفعّلة (تظهر في صفحة الدفع)</label>
+            <button type="submit" class="btn-save">💾 حفظ طريقة الدفع</button>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="shippingRateModal">
+    <div class="modal-content">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+            <h3 id="shippingRateModalTitle" style="color:white;margin:0">🚚 إضافة سعر شحن</h3>
+            <button onclick="closeShippingRateModal()" style="background:rgba(255,255,255,0.1);border:none;color:white;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:16px">✕</button>
+        </div>
+        <form id="shippingRateForm" onsubmit="return saveShippingRate(event)">
+            <input type="hidden" id="shippingRateId">
+            <div class="form-group"><label>من مدينة</label><input type="text" id="shipFromCity" placeholder="الرياض"></div>
+            <div class="form-group"><label>إلى مدينة</label><input type="text" id="shipToCity" required placeholder="جدة"></div>
+            <div class="form-group"><label>الوزن (كجم) — اختياري</label><input type="number" id="shipWeight" step="0.1" min="0" placeholder="1"></div>
+            <div class="form-group"><label>السعر (ر.س)</label><input type="number" id="shipPrice" step="0.01" min="0" required placeholder="25"></div>
+            <div class="form-group"><label>مدة التوصيل (أيام) — اختياري</label><input type="number" id="shipDays" min="0" placeholder="3"></div>
+            <button type="submit" class="btn-save">💾 حفظ سعر الشحن</button>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+const SUPABASE_URL = 'https://kcbmvxuzjlaooknwhqqb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjYm12eHV6amxhb29rbndocXFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5NzkyMjAsImV4cCI6MjA5OTU1NTIyMH0.ayDpkfCKL90GcUKjbHQs7OvS5sxF1VSraWg58NHJ7ek';
+window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
+<script src="admin-v2.js"></script>
+<script src="site-content.js"></script>
+</body>
+</html>
