@@ -1,0 +1,103 @@
+/* ═══════════════ HAZEM ERP — ثيم داكن فاخر ═══════════════ */
+:root{
+  --bg:#0B0D1A; --bg2:#12152B; --bg3:#1A1E3A;
+  --gold:#D4AF37; --gold-dim:#a8892c;
+  --white:#F5F5F7; --muted:#9aa0b8;
+  --red:#e5484d; --green:#3dd68c;
+  --radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,Arial,sans-serif}
+body{background:var(--bg);color:var(--white);min-height:100vh}
+.hidden{display:none!important}
+
+/* ───── شاشات الدخول ───── */
+.auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.auth-card{background:var(--bg2);border:1px solid rgba(212,175,55,.25);border-radius:16px;
+  padding:40px 32px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.brand{color:var(--white);font-size:32px;letter-spacing:2px;margin-bottom:8px}
+.brand span{color:var(--gold)}
+.auth-sub{color:var(--muted);margin-bottom:24px}
+.lbl{display:block;color:var(--muted);font-size:13px;margin:10px 0 4px}
+
+/* ───── حقول وأزرار ───── */
+input,select{width:100%;padding:12px 14px;margin-bottom:12px;background:var(--bg3);
+  border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);color:var(--white);font-size:15px}
+input:focus,select:focus{outline:none;border-color:var(--gold)}
+.btn{padding:10px 18px;border:none;border-radius:var(--radius);cursor:pointer;font-size:15px;font-weight:600;transition:.2s}
+.btn-gold{background:var(--gold);color:#0B0D1A}
+.btn-gold:hover{background:var(--gold-dim)}
+.btn-ghost{background:transparent;color:var(--white);border:1px solid rgba(255,255,255,.15)}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn-block{width:100%;margin-top:8px}
+.btn-danger{background:transparent;color:var(--red);border:1px solid var(--red);padding:6px 12px;font-size:13px}
+.btn-sm{padding:6px 12px;font-size:13px}
+
+/* ───── هيكل التطبيق ───── */
+.app{display:flex;min-height:100vh}
+.sidebar{width:230px;background:var(--bg2);border-left:1px solid rgba(212,175,55,.15);
+  padding:24px 12px;flex-shrink:0}
+.sidebar-brand{color:var(--white);font-size:22px;font-weight:700;padding:0 12px 24px}
+.sidebar-brand span{color:var(--gold)}
+.nav-btn{display:block;width:100%;text-align:right;background:transparent;border:none;color:var(--muted);
+  padding:12px 16px;margin-bottom:4px;border-radius:var(--radius);cursor:pointer;font-size:15px}
+.nav-btn:hover{background:var(--bg3);color:var(--white)}
+.nav-btn.active{background:var(--bg3);color:var(--gold);border-right:3px solid var(--gold)}
+.main{flex:1;padding:20px 28px;min-width:0}
+
+/* ───── الشريط العلوي ───── */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px;
+  padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.07)}
+.topbar h2{font-size:20px;color:var(--gold)}
+.btn-menu{display:none}
+
+/* ───── البطاقات ───── */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px}
+.card{background:var(--bg2);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius);
+  padding:24px;text-align:center}
+.card-gold{border-color:var(--gold)}
+.card-num{font-size:34px;font-weight:700;color:var(--gold)}
+.card-lbl{color:var(--muted);margin-top:6px}
+
+/* ───── الجداول ───── */
+.toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.toolbar select{width:auto;min-width:200px;margin-bottom:0}
+.table-wrap{overflow-x:auto;background:var(--bg2);border:1px solid rgba(255,255,255,.07);border-radius:var(--radius)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{background:var(--bg3);color:var(--gold);padding:12px 14px;text-align:right;white-space:nowrap}
+td{padding:11px 14px;border-top:1px solid rgba(255,255,255,.05);color:var(--white)}
+tr:hover td{background:rgba(212,175,55,.04)}
+td .btn{margin-inline-start:6px}
+.report-box{margin-bottom:32px}
+.report-box h3{color:var(--gold);margin-bottom:12px}
+
+/* ───── النافذة المنبثقة ───── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;
+  justify-content:center;z-index:100;padding:20px}
+.modal{background:var(--bg2);border:1px solid rgba(212,175,55,.3);border-radius:16px;
+  padding:28px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto}
+.modal h3{color:var(--gold);margin-bottom:18px}
+.modal .row{display:flex;gap:10px}
+.modal .row>*{flex:1}
+.modal-actions{display:flex;gap:10px;justify-content:flex-start;margin-top:16px}
+
+/* ───── سطور الفاتورة ───── */
+.inv-line{display:grid;grid-template-columns:2fr 1fr 1fr 40px;gap:8px;margin-bottom:8px;align-items:center}
+.inv-line select,.inv-line input{margin-bottom:0}
+.inv-total{text-align:left;font-size:22px;color:var(--gold);font-weight:700;margin-top:12px}
+.del-line{background:transparent;border:none;color:var(--red);cursor:pointer;font-size:18px}
+
+/* ───── Toast ───── */
+.toast{position:fixed;bottom:24px;right:24px;padding:14px 22px;border-radius:var(--radius);
+  color:#0B0D1A;font-weight:600;z-index:200;animation:tin .3s;max-width:90vw}
+.toast.ok{background:var(--green)}
+.toast.err{background:var(--red);color:#fff}
+@keyframes tin{from{transform:translateY(20px);opacity:0}}
+
+/* ───── الموبايل ───── */
+@media (max-width:768px){
+  .sidebar{position:fixed;right:-260px;top:0;bottom:0;z-index:90;transition:right .3s}
+  .sidebar.open{right:0}
+  .btn-menu{display:block}
+  .main{padding:14px}
+  .inv-line{grid-template-columns:1fr 1fr;gap:6px}
+}

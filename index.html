@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HAZEM ERP — نظام المحاسبة</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- مكتبات خارجية من jsdelivr فقط -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <!-- ═══════════ شاشة تسجيل الدخول ═══════════ -->
+  <div id="auth-screen" class="auth-screen hidden">
+    <div class="auth-card">
+      <h1 class="brand">HAZEM <span>ERP</span></h1>
+      <p class="auth-sub">نظام محاسبة وإدارة مخزون متكامل</p>
+      <input type="email" id="auth-email" placeholder="البريد الإلكتروني" autocomplete="email">
+      <input type="password" id="auth-password" placeholder="كلمة المرور" autocomplete="current-password">
+      <button id="btn-login" class="btn btn-gold btn-block">تسجيل الدخول</button>
+      <button id="btn-signup" class="btn btn-ghost btn-block">إنشاء حساب جديد</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ شاشة إنشاء الشركة (Onboarding) ═══════════ -->
+  <div id="onboarding-screen" class="auth-screen hidden">
+    <div class="auth-card">
+      <h1 class="brand">أنشئ شركتك</h1>
+      <p class="auth-sub">خطوة أولى: بيانات شركتك الأساسية</p>
+      <input type="text" id="company-name" placeholder="اسم الشركة">
+      <input type="text" id="company-currency" placeholder="العملة" value="SAR" maxlength="3">
+      <label class="lbl">بداية السنة المالية</label>
+      <input type="date" id="company-fy">
+      <button id="btn-create-company" class="btn btn-gold btn-block">إنشاء الشركة</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ التطبيق الرئيسي ═══════════ -->
+  <div id="app-screen" class="app hidden">
+    <!-- السايدبار -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">HAZEM <span>ERP</span></div>
+      <nav>
+        <button class="nav-btn active" data-tab="dashboard">📊 لوحة المؤشرات</button>
+        <button class="nav-btn" data-tab="items">📦 الأصناف</button>
+        <button class="nav-btn" data-tab="parties">👥 العملاء والموردون</button>
+        <button class="nav-btn" data-tab="invoices">🧾 فواتير المبيعات</button>
+        <button class="nav-btn" data-tab="reports">📈 تقارير</button>
+      </nav>
+    </aside>
+
+    <!-- المحتوى -->
+    <main class="main">
+      <header class="topbar">
+        <button id="btn-menu" class="btn btn-ghost btn-menu">☰</button>
+        <h2 id="company-title">—</h2>
+        <button id="btn-logout" class="btn btn-ghost">تسجيل خروج</button>
+      </header>
+
+      <!-- لوحة المؤشرات -->
+      <section id="tab-dashboard" class="tab">
+        <div class="cards">
+          <div class="card"><div class="card-num" id="c-items">0</div><div class="card-lbl">الأصناف</div></div>
+          <div class="card"><div class="card-num" id="c-customers">0</div><div class="card-lbl">العملاء</div></div>
+          <div class="card"><div class="card-num" id="c-suppliers">0</div><div class="card-lbl">الموردون</div></div>
+          <div class="card"><div class="card-num" id="c-invoices">0</div><div class="card-lbl">الفواتير</div></div>
+          <div class="card card-gold"><div class="card-num" id="c-sales">0</div><div class="card-lbl">مبيعات الشهر</div></div>
+        </div>
+      </section>
+
+      <!-- الأصناف -->
+      <section id="tab-items" class="tab hidden">
+        <div class="toolbar">
+          <button id="btn-add-item" class="btn btn-gold">+ إضافة صنف</button>
+          <button id="btn-import-afaq" class="btn btn-ghost">📥 استيراد من آفاق</button>
+          <input type="file" id="file-afaq" accept=".xlsx,.xls,.csv" class="hidden">
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>الكود</th><th>الاسم</th><th>الوحدة</th><th>سعر البيع</th><th>الرصيد (المخزن الرئيسي)</th><th>إجراءات</th></tr></thead>
+          <tbody id="tbl-items"></tbody>
+        </table></div>
+      </section>
+
+      <!-- العملاء والموردون -->
+      <section id="tab-parties" class="tab hidden">
+        <div class="toolbar">
+          <button id="btn-add-party" class="btn btn-gold">+ إضافة (عميل/مورد)</button>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>الاسم</th><th>الجوال</th><th>النوع</th><th>الرصيد</th><th>إجراءات</th></tr></thead>
+          <tbody id="tbl-parties"></tbody>
+        </table></div>
+      </section>
+
+      <!-- فواتير المبيعات -->
+      <section id="tab-invoices" class="tab hidden">
+        <div class="toolbar">
+          <button id="btn-new-invoice" class="btn btn-gold">+ فاتورة جديدة</button>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>الرقم</th><th>التاريخ</th><th>العميل</th><th>الإجمالي</th><th>الحالة</th></tr></thead>
+          <tbody id="tbl-invoices"></tbody>
+        </table></div>
+      </section>
+
+      <!-- تقارير -->
+      <section id="tab-reports" class="tab hidden">
+        <div class="report-box">
+          <h3>أرصدة الأصناف (صنف / مخزن / رصيد)</h3>
+          <div class="table-wrap"><table>
+            <thead><tr><th>الصنف</th><th>المخزن</th><th>الرصيد</th></tr></thead>
+            <tbody id="tbl-item-balances"></tbody>
+          </table></div>
+        </div>
+        <div class="report-box">
+          <h3>كشف حساب عميل</h3>
+          <div class="toolbar">
+            <select id="stmt-party"></select>
+            <button id="btn-run-stmt" class="btn btn-gold">عرض الكشف</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>التاريخ</th><th>البيان</th><th>مدين</th><th>دائن</th><th>الرصيد التراكمي</th></tr></thead>
+            <tbody id="tbl-statement"></tbody>
+          </table></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ═══════════ نافذة منبثقة عامة ═══════════ -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal" id="modal-body"></div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
