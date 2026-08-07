@@ -120,6 +120,27 @@ $$('.nav-btn').forEach(b => b.onclick = () => {
 });
 $('#btn-menu').onclick = () => $('.sidebar').classList.toggle('open');
 
+// ─────────── ٥-ب) الاختصار السري للمالك: Ctrl+Alt+H يفتح لوحة المطوّر من أي صفحة ───────────
+// الحماية الحقيقية في قاعدة البيانات: أي مستخدم غير المالك يجرب الاختصار
+// هتفتحله اللوحة فاضية والسيرفر هيرفض البيانات برسالة «غير مصرح»
+document.addEventListener('keydown', async (e) => {
+  if (!(e.ctrlKey && e.altKey && (e.key === 'h' || e.key === 'H' || e.code === 'KeyH'))) return;
+  e.preventDefault();
+  const nb = $('#nav-dev');
+  if (nb) nb.classList.remove('hidden');
+  // لو لسه على شاشة إنشاء الشركة — ادخل لواجهة التطبيق مباشرة
+  if (!$('#app-screen') || $('#app-screen').classList.contains('hidden')) {
+    if (state.user) showScreen('app-screen'); else return toast('سجّل دخولك الأول', false);
+  }
+  // فعّل تبويب لوحة المطوّر
+  $$('.nav-btn').forEach(x => x.classList.remove('active'));
+  if (nb) nb.classList.add('active');
+  $$('.tab').forEach(t => t.classList.add('hidden'));
+  const devTab = $('#tab-dev');
+  if (devTab) { devTab.classList.remove('hidden'); loadDevPanel(); }
+  toast('🛠️ لوحة المطوّر — خاصة بمالك النظام');
+});
+
 // ─────────── ٦) لوحة المؤشرات ───────────
 async function refreshDashboard() {
   const count = async (table, filter) => {
