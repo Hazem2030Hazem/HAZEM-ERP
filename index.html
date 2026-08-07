@@ -75,9 +75,9 @@
       <div class="mb-item">
         <button class="mb-btn">الأستاذ العام</button>
         <div class="mb-drop">
-          <button class="mb-leaf" disabled>شجرة الحسابات</button>
-          <button class="mb-leaf" disabled>قيود اليومية</button>
-          <button class="mb-leaf" disabled>قيد افتتاحي</button>
+          <button class="mb-leaf" data-tab="accounts">شجرة الحسابات</button>
+          <button class="mb-leaf" data-tab="journal">قيود اليومية</button>
+          <button class="mb-leaf" data-action="opening-entry">قيد افتتاحي</button>
         </div>
       </div>
       <div class="mb-item">
@@ -155,6 +155,8 @@
         <button class="nav-btn active" data-tab="dashboard">📊 لوحة المؤشرات</button>
         <button class="nav-btn" data-tab="items">📦 الأصناف</button>
         <button class="nav-btn" data-tab="parties">👥 العملاء والموردون</button>
+        <button class="nav-btn" data-tab="accounts">📒 شجرة الحسابات</button>
+        <button class="nav-btn" data-tab="journal">📖 قيود اليومية</button>
         <button class="nav-btn" data-tab="invoices">🧾 فواتير المبيعات</button>
         <button class="nav-btn" data-tab="reports">📈 تقارير</button>
         <button class="nav-btn" data-tab="settings">⚙️ الإعدادات</button>
@@ -223,6 +225,28 @@
         <div class="table-wrap"><table>
           <thead><tr><th>الرقم</th><th>التاريخ</th><th>العميل</th><th>الإجمالي</th><th>الحالة</th></tr></thead>
           <tbody id="tbl-invoices"></tbody>
+        </table></div>
+      </section>
+
+      <!-- شجرة الحسابات (الأستاذ العام) -->
+      <section id="tab-accounts" class="tab hidden">
+        <div class="toolbar">
+          <button id="btn-add-account" class="btn btn-gold">+ حساب جديد</button>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>الكود</th><th>الاسم</th><th>النوع</th><th>مدين إجمالي</th><th>دائن إجمالي</th><th>الرصيد</th></tr></thead>
+          <tbody id="tbl-accounts"></tbody>
+        </table></div>
+      </section>
+
+      <!-- قيود اليومية -->
+      <section id="tab-journal" class="tab hidden">
+        <div class="toolbar">
+          <button id="btn-new-entry" class="btn btn-gold">+ قيد جديد</button>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>الرقم</th><th>التاريخ</th><th>البيان</th><th>مدين</th><th>دائن</th><th></th></tr></thead>
+          <tbody id="tbl-journal"></tbody>
         </table></div>
       </section>
 

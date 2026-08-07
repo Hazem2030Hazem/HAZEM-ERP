@@ -111,6 +111,7 @@ $('#btn-create-company').onclick = async () => {
 const TAB_TITLES = {
   dashboard: 'لوحة المؤشرات', items: 'الأصناف', parties: 'العملاء والموردون',
   invoices: 'فواتير المبيعات', reports: 'التقارير', settings: 'الإعدادات', dev: 'لوحة المطوّر',
+  accounts: 'شجرة الحسابات', journal: 'قيود اليومية',
 };
 
 // دالة عامة لتبديل التبويب — يستدعيها السايدبار وشريط القوائم الكلاسيكي
@@ -126,6 +127,8 @@ function switchTab(tabName) {
   if (tabName === 'reports') loadReports();
   if (tabName === 'settings') loadSettings();
   if (tabName === 'dev') loadDevPanel();
+  if (tabName === 'accounts') loadAccounts();
+  if (tabName === 'journal') loadJournal();
 }
 window.switchTab = switchTab;
 
@@ -165,6 +168,7 @@ $$('#menubar .mb-leaf').forEach(leaf => {
     closeAllMenus();
     if (leaf.dataset.tab) return switchTab(leaf.dataset.tab);
     if (leaf.dataset.action === 'logout') return $('#btn-logout').click();
+    if (leaf.dataset.action === 'opening-entry') return openOpeningEntry();
     if (leaf.dataset.action === 'sysinfo') return openModal(`
       <h3>🖥️ معلومات النظام</h3>
       <div class="table-wrap"><table><tbody>
@@ -855,6 +859,201 @@ $('#btn-build-package').onclick = async () => {
     toast('فشل تجهيز النسخة: ' + err.message, false);
   }
 };
+
+// ─────────── ١١-هـ) الأستاذ العام: شجرة الحسابات + قيود اليومية ───────────
+const ACCOUNT_KINDS = {
+  asset: 'أصول', liability: 'خصوم', equity: 'حقوق ملكية',
+  revenue: 'إيرادات', expense: 'مصروفات',
+};
+let _glSeeded = false; // زرع الحسابات الافتراضية مرة واحدة لكل جلسة
+
+async function loadAccounts() {
+  // زرع شجرة الحسابات الافتراضية عند أول فتح (الدالة idempotent)
+  if (!_glSeeded) {
+    const { error } = await sb.rpc('seed_default_accounts', { p_tenant: state.tenant });
+    if (error) toast('تعذر تجهيز الحسابات الافتراضية: ' + error.message, false);
+    else _glSeeded = true;
+  }
+  const [{ data: accs }, { data: lines }] = await Promise.all([
+    sb.from('accounts').select('*').order('code'),
+    sb.from('journal_entry_lines').select('account_id, debit, credit'),
+  ]);
+  state.accounts = accs || [];
+  const sums = {};
+  (lines || []).forEach(l => {
+    const s = sums[l.account_id] = sums[l.account_id] || { d: 0, c: 0 };
+    s.d += Number(l.debit); s.c += Number(l.credit);
+  });
+  $('#tbl-accounts').innerHTML = state.accounts.map(a => {
+    const s = sums[a.id] || { d: 0, c: 0 };
+    return `<tr>
+      <td>${esc(a.code)}</td><td>${esc(a.name)}</td>
+      <td>${ACCOUNT_KINDS[a.kind] || esc(a.kind || '—')}</td>
+      <td>${fmt(s.d)}</td><td>${fmt(s.c)}</td><td>${fmt(s.d - s.c)}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" style="color:#7A6A5C">لا توجد حسابات بعد</td></tr>';
+}
+
+$('#btn-add-account').onclick = () => {
+  openModal(`
+    <h3>حساب جديد</h3>
+    <label class="lbl">الكود (4 أرقام)</label>
+    <input id="f-acode" inputmode="numeric" maxlength="4" placeholder="مثال: 1120">
+    <label class="lbl">اسم الحساب</label>
+    <input id="f-aname" placeholder="اسم الحساب">
+    <label class="lbl">النوع</label>
+    <select id="f-akind">
+      ${Object.entries(ACCOUNT_KINDS).map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}
+    </select>
+    <div class="modal-actions">
+      <button class="btn btn-gold" id="f-asave">حفظ</button>
+      <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+    </div>`);
+  $('#f-asave').onclick = async () => {
+    const rec = { p_tenant: state.tenant, p_code: $('#f-acode').value.trim(),
+      p_name: $('#f-aname').value.trim(), p_kind: $('#f-akind').value };
+    if (!rec.p_code || !rec.p_name) return toast('أدخل الكود والاسم', false);
+    const { error } = await sb.rpc('add_account', rec);
+    if (error) return toast('خطأ: ' + error.message, false);
+    toast('تمت إضافة الحساب بنجاح'); closeModal(); loadAccounts();
+  };
+};
+
+// ─── قيود اليومية: القائمة ───
+async function loadJournal() {
+  const [{ data: entries }, { data: lines }] = await Promise.all([
+    sb.from('journal_entries').select('*')
+      .order('number', { ascending: false }).limit(50),
+    sb.from('journal_entry_lines').select('entry_id, debit, credit'),
+  ]);
+  const sums = {};
+  (lines || []).forEach(l => {
+    const s = sums[l.entry_id] = sums[l.entry_id] || { d: 0, c: 0 };
+    s.d += Number(l.debit); s.c += Number(l.credit);
+  });
+  $('#tbl-journal').innerHTML = (entries || []).map(e => {
+    const s = sums[e.id] || { d: 0, c: 0 };
+    return `<tr>
+      <td>${e.number}</td>
+      <td>${new Date(e.created_at).toLocaleDateString('ar-EG')}</td>
+      <td>${esc(e.memo || '—')}</td>
+      <td>${fmt(s.d)}</td><td>${fmt(s.c)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="viewEntry('${e.id}')">عرض</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" style="color:#7A6A5C">لا توجد قيود بعد</td></tr>';
+}
+
+// تفاصيل قيد (قراءة فقط — السطور لا تُعدَّل ولا تُحذف)
+window.viewEntry = async (id) => {
+  const { data, error } = await sb.from('journal_entry_lines')
+    .select('debit, credit, accounts(code, name), parties(name)')
+    .eq('entry_id', id);
+  if (error) return toast('خطأ: ' + error.message, false);
+  openModal(`
+    <h3>تفاصيل القيد</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>الحساب</th><th>الطرف</th><th>مدين</th><th>دائن</th></tr></thead>
+      <tbody>${(data || []).map(l => `<tr>
+        <td>${esc(l.accounts?.code)} — ${esc(l.accounts?.name)}</td>
+        <td>${esc(l.parties?.name || '—')}</td>
+        <td>${fmt(l.debit)}</td><td>${fmt(l.credit)}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>
+    <div class="modal-actions"><button class="btn btn-gold" onclick="closeModal()">إغلاق</button></div>`);
+};
+
+// ─── نموذج قيد (جديد / افتتاحي) ───
+async function entryForm(opening = false) {
+  if (!state.accounts || !state.accounts.length) await loadAccounts();
+  if (!state.accounts.length) return toast('أضف حساباً أولاً من شجرة الحسابات', false);
+  if (!state.parties.length) await loadParties();
+
+  const accOpts = () => state.accounts.map(a =>
+    `<option value="${a.id}">${esc(a.code)} — ${esc(a.name)}</option>`).join('');
+  const partyOpts = () => '<option value="">— بدون طرف —</option>' + state.parties.map(p =>
+    `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  const today = new Date().toISOString().slice(0, 10);
+
+  openModal(`
+    <h3>${opening ? 'قيد افتتاحي' : 'قيد يومية جديد'}</h3>
+    <div class="row">
+      <div><label class="lbl">التاريخ</label><input type="date" id="je-date" value="${today}"></div>
+      <div><label class="lbl">البيان</label><input id="je-memo" placeholder="بيان القيد" value="${opening ? 'قيد افتتاحي' : ''}"></div>
+    </div>
+    <div id="je-lines"></div>
+    <button class="btn btn-ghost btn-sm" id="je-add-line">+ إضافة سطر</button>
+    <div class="je-totals">
+      <span class="t-d">إجمالي مدين: <span id="je-total-d">0</span></span>
+      <span class="t-c">إجمالي دائن: <span id="je-total-c">0</span></span>
+      <span class="je-balance bad" id="je-balance">غير متوازن ✗</span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-gold" id="je-save" disabled>حفظ وترحيل</button>
+      <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+    </div>`);
+  // توسيع النافذة لسطور القيد
+  $('#modal-body').classList.add('modal-lg');
+
+  const addLine = () => {
+    const d = document.createElement('div');
+    d.className = 'je-line';
+    d.innerHTML = `
+      <select class="je-acc">${accOpts()}</select>
+      <select class="je-party">${partyOpts()}</select>
+      <input class="je-debit" type="number" min="0" step="any" placeholder="مدين">
+      <input class="je-credit" type="number" min="0" step="any" placeholder="دائن">
+      <button class="del-line" title="حذف السطر">✕</button>`;
+    // مدين/دائن متبادلان: تعبئة أحدهما تصفّر الآخر
+    const dIn = d.querySelector('.je-debit'), cIn = d.querySelector('.je-credit');
+    dIn.oninput = () => { if (Number(dIn.value) > 0) cIn.value = ''; recalc(); };
+    cIn.oninput = () => { if (Number(cIn.value) > 0) dIn.value = ''; recalc(); };
+    d.querySelector('.del-line').onclick = () => { d.remove(); recalc(); };
+    $('#je-lines').appendChild(d);
+    recalc();
+  };
+
+  function recalc() {
+    let td = 0, tc = 0, n = 0;
+    $$('#je-lines .je-line').forEach(l => {
+      td += Number(l.querySelector('.je-debit').value) || 0;
+      tc += Number(l.querySelector('.je-credit').value) || 0;
+      n++;
+    });
+    $('#je-total-d').textContent = fmt(td);
+    $('#je-total-c').textContent = fmt(tc);
+    const balanced = n >= 2 && td > 0 && td === tc;
+    const ind = $('#je-balance');
+    ind.textContent = balanced ? 'متوازن ✓' : 'غير متوازن ✗';
+    ind.className = 'je-balance ' + (balanced ? 'ok' : 'bad');
+    $('#je-save').disabled = !balanced;
+  }
+
+  $('#je-add-line').onclick = addLine;
+  addLine(); addLine();
+
+  $('#je-save').onclick = async () => {
+    const lines = $$('#je-lines .je-line').map(l => ({
+      account_id: l.querySelector('.je-acc').value,
+      party_id: l.querySelector('.je-party').value || null,
+      debit: Number(l.querySelector('.je-debit').value) || 0,
+      credit: Number(l.querySelector('.je-credit').value) || 0,
+    }));
+    const { data, error } = await sb.rpc('post_manual_entry', {
+      p_tenant: state.tenant, p_memo: $('#je-memo').value.trim(), p_lines: lines });
+    if (error) return toast('فشل الترحيل: ' + error.message, false);
+    closeModal();
+    toast(`تم ترحيل القيد رقم ${data?.number ?? ''} بنجاح`);
+    loadJournal();
+  };
+}
+
+$('#btn-new-entry').onclick = () => entryForm(false);
+window.openOpeningEntry = () => entryForm(true);
+
+// إعادة ضبط قياس النافذة المنبثقة عند الإغلاق
+const _origCloseModal = closeModal;
+closeModal = function () { $('#modal-body').classList.remove('modal-lg'); _origCloseModal(); };
+window.closeModal = closeModal;
 
 // ─────────── ١٢) نقطة البداية ───────────
 (async () => {
