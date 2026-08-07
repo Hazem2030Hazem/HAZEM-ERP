@@ -77,7 +77,8 @@ async function boot() {
   state.user = user;
 
   // 🛠️ إظهار زر لوحة المطوّر لمالك النظام فقط (حسب إيميله في config.js)
-  if (typeof HAZEM_OWNER_EMAIL !== 'undefined' && state.user && state.user.email === HAZEM_OWNER_EMAIL) {
+  if (typeof HAZEM_OWNER_EMAIL !== 'undefined' && state.user && state.user.email &&
+      state.user.email.toLowerCase() === String(HAZEM_OWNER_EMAIL).trim().toLowerCase()) {
     const nb = $('#nav-dev'); if (nb) nb.classList.remove('hidden');
   }
 
