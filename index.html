@@ -58,6 +58,7 @@
       <header class="topbar">
         <button id="btn-menu" class="btn btn-ghost btn-menu">☰</button>
         <h2 id="company-title">—</h2>
+        <img id="tenant-logo" class="tenant-logo hidden" alt="شعار الشركة">
         <button id="btn-logout" class="btn btn-ghost">تسجيل خروج</button>
       </header>
 
@@ -133,17 +134,19 @@
       <section id="tab-settings" class="tab hidden">
         <div class="report-box">
           <h3>🖼️ شعار الشركة (اللوجو)</h3>
-          <p style="color:#94a3b8;font-size:13px;margin:0 0 14px">ارفع شعار شركتك — هيظهر في واجهة النظام لشركتك فقط. الصيغ المدعومة: PNG / JPG / SVG / WebP — بحد أقصى 2 ميجا</p>
+          <div class="logo-note">🔒 شعار النسر هو الهوية الرسمية لنظام <b>H. ERP SYSTEM MANAGER</b> وهو محمي ولا يمكن تغييره أو استخدامه. شعار شركتك الذي ترفعه هنا يظهر <b>داخل لوحة حسابك فقط</b> (بجانب اسم شركتك في الأعلى) ولا يظهر لأي شركة أخرى.</div>
+          <p style="color:#7A6A5C;font-size:13px;margin:0 0 14px">الصيغ المدعومة: PNG / JPG / SVG / WebP — بحد أقصى 2 ميجا</p>
           <div class="logo-settings">
-            <img id="set-logo-preview" src="logo.png" class="logo-preview" alt="الشعار الحالي">
+            <img id="set-logo-preview" class="logo-preview hidden" alt="شعار شركتك">
+            <div id="no-logo-msg" style="color:#7A6A5C;font-size:14px">لا يوجد شعار مرفوع لشركتك بعد</div>
             <div>
               <input type="file" id="set-logo-file" accept=".png,.jpg,.jpeg,.svg,.webp" class="hidden">
               <button id="btn-pick-logo" class="btn btn-ghost">📂 اختيار صورة</button>
               <button id="btn-save-logo" class="btn btn-gold">💾 حفظ الشعار</button>
-              <button id="btn-reset-logo" class="btn btn-ghost">↩️ استعادة الافتراضي</button>
+              <button id="btn-reset-logo" class="btn btn-danger">🗑️ إزالة شعار الشركة</button>
             </div>
           </div>
-          <div id="logo-file-name" style="color:#D4AF37;font-size:13px;margin-top:8px"></div>
+          <div id="logo-file-name" style="color:#B42318;font-size:13px;margin-top:8px"></div>
         </div>
         <div class="report-box">
           <h3>🏢 بيانات الشركة</h3>

@@ -8,16 +8,16 @@ const _cfgOk = /^https:\/\/.+\.supabase\.co\/?$/.test(HAZEM_SUPABASE_URL || '') 
 const sb = _cfgOk ? window.supabase.createClient(HAZEM_SUPABASE_URL, HAZEM_SUPABASE_KEY) : null;
 if (!_cfgOk) {
   document.addEventListener('DOMContentLoaded', () => {
-    document.body.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#0B0D1A;color:#fff;font-family:inherit;direction:rtl">' +
-      '<div style="max-width:560px;background:#141830;border:1px solid #D4AF37;border-radius:16px;padding:32px;line-height:2">' +
-      '<h1 style="color:#D4AF37;margin:0 0 12px">⚙️ خطوة واحدة باقية — إعداد الاتصال</h1>' +
+    document.body.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#FFFFFF;color:#141210;font-family:inherit;direction:rtl">' +
+      '<div style="max-width:560px;background:#FAF6F1;border:1px solid #E7DDD1;border-top:4px solid #B42318;border-radius:16px;padding:32px;line-height:2">' +
+      '<h1 style="color:#B42318;margin:0 0 12px">⚙️ خطوة واحدة باقية — إعداد الاتصال</h1>' +
       '<p>تطبيق <b>H. ERP SYSTEM MANAGER</b> شغال، بس محتاج مفاتيح مشروع Supabase الجديد:</p>' +
       '<ol style="margin:0;padding-right:20px">' +
       '<li>افتح مشروعك في Supabase ← <b>Project Settings ← API</b></li>' +
       '<li>انسخ <b>Project URL</b> و <b>anon public key</b></li>' +
-      '<li>افتح ملف <code style="color:#D4AF37">config.js</code> والصقهما مكان الكلمتين المؤقتتين</li>' +
+      '<li>افتح ملف <code style="color:#7B4B26">config.js</code> والصقهما مكان الكلمتين المؤقتتين</li>' +
       '<li>ارفع الملف على GitHub وحدّث الصفحة</li>' +
-      '</ol><p style="color:#9aa5b9;font-size:13px;margin-bottom:0">ولا تنسى تشغيل ملف schema.sql في SQL Editor مرة واحدة قبل أول استخدام.</p>' +
+      '</ol><p style="color:#7A6A5C;font-size:13px;margin-bottom:0">ولا تنسى تشغيل ملف schema.sql في SQL Editor مرة واحدة قبل أول استخدام.</p>' +
       '</div></div>';
   });
   throw new Error('H. ERP SYSTEM MANAGER: config.js غير مُعدّ بعد');
@@ -458,23 +458,23 @@ $('#btn-run-stmt').onclick = async () => {
 };
 
 // ─────────── ١١-ب) الهوية والإعدادات — شعار الشركة لكل مستأجر ───────────
-const DEFAULT_LOGO = 'logo.png';
+// 🔒 الشعار الرسمي (النسر) ثابت في كل الواجهات — ملك للبرنامج ولا يتغير أبداً.
+// شعار الشركة المرفوع يظهر فقط داخل لوحة حسابها (بجانب اسم الشركة في الأعلى).
 
-// تطبيق الشعار على واجهة النظام (الشريط الجانبي + صفحة الدخول + أيقونة المتصفح)
+// تطبيق شعار الشركة على لوحتها فقط — لا يمس هوية النظام الرسمية
 function applyBrandLogo() {
-  const url = state.logoUrl || DEFAULT_LOGO;
-  const side = $('#sidebar-logo');
-  if (side) side.src = url;
-  const authLogo = document.querySelector('.brand-logo');
-  if (authLogo) authLogo.src = url;
-  const fav = document.querySelector('link[rel="icon"]');
-  if (fav) fav.href = url;
+  const tl = $('#tenant-logo');
+  if (!tl) return;
+  if (state.logoUrl) { tl.src = state.logoUrl; tl.classList.remove('hidden'); }
+  else { tl.removeAttribute('src'); tl.classList.add('hidden'); }
 }
 
 // تعبئة شاشة الإعدادات
 function loadSettings() {
   $('#set-company-name').textContent = state.tenantName || '—';
-  $('#set-logo-preview').src = state.logoUrl || DEFAULT_LOGO;
+  const prev = $('#set-logo-preview');
+  if (state.logoUrl) { prev.src = state.logoUrl; prev.classList.remove('hidden'); $('#no-logo-msg').classList.add('hidden'); }
+  else { prev.removeAttribute('src'); prev.classList.add('hidden'); $('#no-logo-msg').classList.remove('hidden'); }
   $('#logo-file-name').textContent = '';
   $('#set-logo-file').value = '';
 }
@@ -494,7 +494,7 @@ $('#set-logo-file').onchange = (e) => {
   _logoFile = f;
   $('#logo-file-name').textContent = '📎 ' + f.name + ' (' + Math.round(f.size / 1024) + ' ك.ب)';
   const rd = new FileReader();
-  rd.onload = () => { $('#set-logo-preview').src = rd.result; };
+  rd.onload = () => { const p = $('#set-logo-preview'); p.src = rd.result; p.classList.remove('hidden'); $('#no-logo-msg').classList.add('hidden'); };
   rd.readAsDataURL(f);
 };
 
@@ -513,17 +513,17 @@ $('#btn-save-logo').onclick = async () => {
   _logoFile = null;
   applyBrandLogo();
   loadSettings();
-  toast('تم حفظ شعار شركتك بنجاح ✅');
+  toast('تم حفظ شعار شركتك — هيظهر في لوحتك فقط ✅');
 };
 
-// استعادة الشعار الافتراضي (النسر الرسمي للنظام)
+// إزالة شعار الشركة (الشعار الرسمي للنظام لا يتأثر — ثابت دائماً)
 $('#btn-reset-logo').onclick = async () => {
   const { error } = await sb.from('tenants').update({ logo_url: null }).eq('id', state.tenant);
-  if (error) return toast('فشل الاستعادة: ' + error.message, false);
+  if (error) return toast('فشلت الإزالة: ' + error.message, false);
   state.logoUrl = null;
   applyBrandLogo();
   loadSettings();
-  toast('تمت استعادة الشعار الافتراضي للنظام');
+  toast('تمت إزالة شعار الشركة من لوحتك');
 };
 
 // ─────────── ١٢) نقطة البداية ───────────
