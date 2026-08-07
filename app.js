@@ -110,6 +110,7 @@ $$('.nav-btn').forEach(b => b.onclick = () => {
   if (b.dataset.tab === 'dashboard') refreshDashboard();
   if (b.dataset.tab === 'reports') loadReports();
   if (b.dataset.tab === 'settings') loadSettings();
+  if (b.dataset.tab === 'download') loadDownloadTab();
 });
 $('#btn-menu').onclick = () => $('.sidebar').classList.toggle('open');
 
@@ -524,6 +525,144 @@ $('#btn-reset-logo').onclick = async () => {
   applyBrandLogo();
   loadSettings();
   toast('تمت إزالة شعار الشركة من لوحتك');
+};
+
+// ─────────── ١١-ج) تصدير نسخة كاملة من البرنامج (ZIP) ───────────
+// المالك يجهّز نسخة جاهزة للحرق على فلاشة/DVD/CD وتسليمها للعملاء.
+// ملاحظة: config.js لا يُجلب من السيرفر — يولَّد قالب نظيف بلا مفاتيح.
+
+function loadDownloadTab() {
+  const st = $('#dl-status');
+  if (st) st.textContent = '';
+  if (!$('#dl-version').value.trim()) $('#dl-version').value = '1.0.0';
+}
+
+// قالب config.js للنسخة المُصدَّرة (بدون أي مفاتيح حقيقية)
+const DL_CONFIG_TEMPLATE =
+'/* ═══════════════════════════════════════════════\n' +
+'   H. ERP SYSTEM MANAGER — ملف إعداد الاتصال بقاعدة البيانات\n' +
+'   ضع مفاتيح مشروع Supabase الخاص بك في السطرين التاليين:\n' +
+'   (Project Settings ← API ← Project URL و anon public key)\n' +
+'   ═══════════════════════════════════════════════ */\n' +
+'const HAZEM_SUPABASE_URL = "PUT_YOUR_URL";      // ← رابط المشروع، مثال: https://xxxx.supabase.co\n' +
+'const HAZEM_SUPABASE_KEY = "PUT_YOUR_ANON_KEY"; // ← مفتاح anon public\n';
+
+// صفحة Launcher «ابدأ-هنا.html» بنفس الهوية البصرية
+function dlLauncherHtml(version, customer) {
+  return '<!DOCTYPE html>\n<html lang="ar" dir="rtl">\n<head>\n<meta charset="UTF-8">\n' +
+'<meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
+'<title>H. ERP SYSTEM MANAGER — ابدأ هنا</title>\n<style>\n' +
+'body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#FFFFFF;color:#1C1712;font-family:Tahoma,Arial,sans-serif;direction:rtl;padding:20px;box-sizing:border-box}\n' +
+'.card{max-width:560px;width:100%;background:#FAF6F1;border:1px solid #E7DDD1;border-top:5px solid #B42318;border-radius:18px;padding:36px;text-align:center;box-shadow:0 10px 30px rgba(28,23,18,.08)}\n' +
+'img.logo{width:110px;height:110px;object-fit:contain;margin-bottom:14px}\n' +
+'h1{margin:0 0 4px;color:#1C1712;font-size:26px}h1 span{color:#B42318}\n' +
+'.sub{color:#7B4B26;margin:0 0 22px;font-size:14px}\n' +
+'.btn{display:block;background:#B42318;color:#fff;text-decoration:none;font-weight:700;font-size:18px;padding:14px;border-radius:12px;margin-bottom:14px}\n' +
+'.links a{color:#7B4B26;text-decoration:none;font-size:13px;margin:0 8px}\n' +
+'.meta{color:#7A6A5C;font-size:12px;margin-top:18px;line-height:1.9}\n' +
+'</style>\n</head>\n<body>\n<div class="card">\n' +
+'<img class="logo" src="logo.png" alt="H. ERP" onerror="this.style.display=\'none\'">\n' +
+'<h1>H. ERP <span>SYSTEM MANAGER</span></h1>\n' +
+'<p class="sub">نظام محاسبة وإدارة مخزون متكامل</p>\n' +
+'<a class="btn" href="index.html">🚀 تشغيل البرنامج</a>\n' +
+'<div class="links"><a href="اقرأني-التثبيت.txt">📖 دليل التثبيت</a> · <a href="VERSION.txt">ℹ️ معلومات الإصدار</a></div>\n' +
+'<div class="meta">الإصدار: ' + esc(version) + (customer ? '<br>مرخَّص لصالح: ' + esc(customer) : '') + '</div>\n' +
+'</div>\n</body>\n</html>\n';
+}
+
+// دليل التثبيت العربي «اقرأني-التثبيت.txt»
+function dlReadmeTxt(version, customer, dateStr) {
+  return [
+'═══════════════════════════════════════════════════════',
+'   H. ERP SYSTEM MANAGER — دليل التثبيت خطوة بخطوة',
+'═══════════════════════════════════════════════════════',
+'',
+'الإصدار: ' + version + (customer ? '   |   مرخَّص لصالح: ' + customer : '') + '   |   تاريخ التصدير: ' + dateStr,
+'',
+'النسخة تحتوي: كل ملفات النظام + قاعدة البيانات (schema.sql و hazem-branding.sql) + هذا الدليل.',
+'',
+'── الخطوة 1: إنشاء مشروع Supabase مجاني ──',
+'1) افتح https://supabase.com وأنشئ حساباً مجانياً.',
+'2) اضغط New Project واختر اسماً وكلمة مرور لقاعدة البيانات واحفظها.',
+'',
+'── الخطوة 2: إنشاء قاعدة البيانات ──',
+'1) داخل المشروع افتح SQL Editor من القائمة الجانبية.',
+'2) افتح ملف schema.sql بنص عادي، انسخ محتواه كاملاً والصقه في SQL Editor ثم اضغط Run.',
+'3) كرر نفس الخطوة مع ملف hazem-branding.sql (مرة واحدة فقط لكل ملف).',
+'',
+'── الخطوة 3: ضبط ملف config.js ──',
+'1) في Supabase افتح: Project Settings ← API.',
+'2) انسخ Project URL وضعه مكان PUT_YOUR_URL في ملف config.js.',
+'3) انسخ anon public key وضعه مكان PUT_YOUR_ANON_KEY في نفس الملف.',
+'',
+'── الخطوة 4: النشر والتشغيل ──',
+'اختر أحد الخيارات:',
+'أ) GitHub Pages: أنشئ مستودعاً مجانياً، ارفع كل الملفات، وفعّل Pages من الإعدادات.',
+'ب) أي استضافة ملفات ثابتة (Netlify / Vercel / استضافة عادية): ارفع الملفات كما هي.',
+'ج) تشغيل محلي: شغّل سيرفر بسيطاً في المجلد مثل: python -m http.server ثم افتح المتصفح على العنوان الظاهر.',
+'',
+'── الخطوة 5: أول استخدام ──',
+'1) افتح الموقع، اضغط «إنشاء حساب جديد» وسجّل بريدك وكلمة مرور.',
+'2) أنشئ شركتك من شاشة البداية وابدأ العمل فوراً.',
+'',
+'ملاحظة: لتشغيل البرنامج يحتاج العميل اتصالاً بالإنترنت (قاعدة البيانات سحابية).',
+'بالتوفيق! — فريق H. ERP SYSTEM MANAGER',
+  ].join('\r\n');
+}
+
+// جمع الملفات من المسارات النسبية وبناء حزمة ZIP وتحميلها
+$('#btn-build-package').onclick = async () => {
+  const version = $('#dl-version').value.trim() || '1.0.0';
+  const customer = $('#dl-customer').value.trim();
+  const includeLogo = $('#dl-include-logo').checked;
+  const st = $('#dl-status');
+  const setStatus = (t) => { st.textContent = t; };
+  try {
+    if (typeof JSZip === 'undefined') throw new Error('مكتبة الضغط JSZip لم تُحمَّل — تحقق من الاتصال بالإنترنت');
+
+    setStatus('⏳ جاري جمع الملفات...');
+    const files = ['index.html', 'app.js', 'styles.css', 'schema.sql', 'hazem-branding.sql'];
+    if (includeLogo) files.push('logo.png');
+
+    const zip = new JSZip();
+    for (const f of files) {
+      const res = await fetch(f);
+      if (!res.ok) throw new Error('تعذر جلب الملف: ' + f);
+      zip.file(f, await res.blob());
+    }
+
+    // config.js: قالب نظيف بدون مفاتيح حقيقية
+    zip.file('config.js', DL_CONFIG_TEMPLATE);
+
+    // ملفات إضافية داخل الحزمة
+    const dateStr = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+    zip.file('اقرأني-التثبيت.txt', dlReadmeTxt(version, customer, dateStr));
+    zip.file('ابدأ-هنا.html', dlLauncherHtml(version, customer));
+    zip.file('VERSION.txt',
+      'H. ERP SYSTEM MANAGER\r\n' +
+      'الإصدار: ' + version + '\r\n' +
+      'تاريخ التصدير: ' + dateStr + '\r\n' +
+      'المرخَّص له: ' + (customer || 'غير محدد') + '\r\n');
+
+    setStatus('⏳ جاري الضغط...');
+    const blob = await zip.generateAsync({ type: 'blob' });
+
+    // تحميل عبر رابط مؤقت
+    const a = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    a.href = url;
+    a.download = 'H-ERP-SYSTEM-MANAGER-v' + version + '.zip';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+
+    setStatus('تم ✅ — تم تحميل النسخة ' + a.download);
+    toast('تم تجهيز النسخة وتحميلها بنجاح ✅');
+  } catch (err) {
+    setStatus('❌ فشل التجهيز');
+    toast('فشل تجهيز النسخة: ' + err.message, false);
+  }
 };
 
 // ─────────── ١٢) نقطة البداية ───────────

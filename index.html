@@ -9,6 +9,7 @@
   <!-- مكتبات خارجية من jsdelivr فقط -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 </head>
 <body>
 
@@ -50,6 +51,7 @@
         <button class="nav-btn" data-tab="invoices">🧾 فواتير المبيعات</button>
         <button class="nav-btn" data-tab="reports">📈 تقارير</button>
         <button class="nav-btn" data-tab="settings">⚙️ الإعدادات</button>
+        <button class="nav-btn" data-tab="download">⬇️ تحميل نسخة</button>
       </nav>
     </aside>
 
@@ -156,6 +158,30 @@
               <tr><td style="color:#94a3b8">النظام</td><td>H. ERP SYSTEM MANAGER</td></tr>
             </tbody>
           </table></div>
+        </div>
+      </section>
+
+      <!-- تحميل نسخة كاملة من البرنامج -->
+      <section id="tab-download" class="tab hidden">
+        <div class="report-box" style="max-width:680px">
+          <h3>💿 تصدير نسخة كاملة من البرنامج</h3>
+          <p style="color:#7A6A5C;line-height:2;margin:0 0 16px">
+            النسخة المُصدَّرة تحتوي على <b>كل ملفات النظام + قاعدة البيانات + دليل التثبيت</b> —
+            جاهزة للحرق على فلاشة أو DVD أو CD وتسليمها للعميل الذي يشتري البرنامج.
+          </p>
+          <label class="lbl">رقم الإصدار</label>
+          <input type="text" id="dl-version" value="1.0.0" placeholder="1.0.0">
+          <label class="lbl">اسم العميل / الشركة المرخَّص لها (اختياري)</label>
+          <input type="text" id="dl-customer" placeholder="مثال: شركة النور للتجارة">
+          <label style="display:flex;align-items:center;gap:8px;margin:12px 0;font-size:14px">
+            <input type="checkbox" id="dl-include-logo" checked style="width:auto">
+            تضمين اللوجو الرسمي (logo.png)
+          </label>
+          <button id="btn-build-package" class="btn btn-gold" style="font-size:16px;padding:14px 28px;width:100%">📦 تجهيز النسخة وتحميلها</button>
+          <div id="dl-status" style="margin-top:14px;color:#7B4B26;font-weight:700;min-height:24px"></div>
+          <p style="color:#7A6A5C;font-size:12px;margin:14px 0 0">
+            📌 بعد التحميل: فك الضغط وانسخ الملفات على الفلاشة/DVD كما هي.
+          </p>
         </div>
       </section>
     </main>
