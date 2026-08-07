@@ -76,6 +76,11 @@ async function boot() {
   if (!user) return showScreen('auth-screen');
   state.user = user;
 
+  // 🛠️ إظهار زر لوحة المطوّر لمالك النظام فقط (حسب إيميله في config.js)
+  if (typeof HAZEM_OWNER_EMAIL !== 'undefined' && state.user && state.user.email === HAZEM_OWNER_EMAIL) {
+    const nb = $('#nav-dev'); if (nb) nb.classList.remove('hidden');
+  }
+
   const { data: ms } = await sb.from('memberships').select('tenant_id, tenants(name, logo_url)').limit(1);
   if (!ms || ms.length === 0) return showScreen('onboarding-screen');
 
@@ -110,7 +115,7 @@ $$('.nav-btn').forEach(b => b.onclick = () => {
   if (b.dataset.tab === 'dashboard') refreshDashboard();
   if (b.dataset.tab === 'reports') loadReports();
   if (b.dataset.tab === 'settings') loadSettings();
-  if (b.dataset.tab === 'download') loadDownloadTab();
+  if (b.dataset.tab === 'dev') loadDevPanel();
 });
 $('#btn-menu').onclick = () => $('.sidebar').classList.toggle('open');
 
@@ -535,6 +540,39 @@ function loadDownloadTab() {
   const st = $('#dl-status');
   if (st) st.textContent = '';
   if (!$('#dl-version').value.trim()) $('#dl-version').value = '1.0.0';
+}
+
+// ─────────── ١١-د) لوحة المطوّر — لمالك النظام فقط ───────────
+// البيانات تجي من دوال security definer في hazem-dev-panel.sql
+// والحماية النهائية في فحص الإيميل داخل الدالة نفسها في قاعدة البيانات.
+async function loadDevPanel() {
+  // تهيئة قسم تحميل النسخة (صار جزءاً من لوحة المطوّر)
+  loadDownloadTab();
+
+  // (أ) إحصائيات المنصة
+  const { data: stats, error: e1 } = await sb.rpc('dev_platform_stats');
+  if (e1) {
+    const msg = /غير مصرح/.test(e1.message)
+      ? 'غير مصرح — تأكد أن الإيميل في hazem-dev-panel.sql و config.js هو نفس إيميل دخولك'
+      : 'فشل جلب إحصائيات المنصة: ' + e1.message;
+    return toast(msg, false);
+  }
+  $('#dv-tenants').textContent  = fmt(stats.tenants);
+  $('#dv-users').textContent    = fmt(stats.users);
+  $('#dv-invoices').textContent = fmt(stats.invoices);
+  $('#dv-parties').textContent  = fmt(stats.parties);
+  $('#dv-items').textContent    = fmt(stats.items);
+
+  // (ب) قائمة الشركات المشتركة
+  const { data: companies, error: e2 } = await sb.rpc('dev_list_companies');
+  if (e2) return toast('فشل جلب قائمة الشركات: ' + e2.message, false);
+  $('#dv-companies').innerHTML = (companies || []).map(c => `
+    <tr>
+      <td>${esc(c.company_name)}</td>
+      <td>${c.created_at ? new Date(c.created_at).toLocaleDateString('ar-EG') : '—'}</td>
+      <td>${fmt(c.members)}</td>
+      <td>${fmt(c.invoices_count)}</td>
+    </tr>`).join('') || '<tr><td colspan="4" style="color:#7A6A5C">لا توجد شركات بعد</td></tr>';
 }
 
 // قالب config.js للنسخة المُصدَّرة (بدون أي مفاتيح حقيقية)

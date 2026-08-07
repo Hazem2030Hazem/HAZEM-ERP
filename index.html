@@ -51,7 +51,7 @@
         <button class="nav-btn" data-tab="invoices">🧾 فواتير المبيعات</button>
         <button class="nav-btn" data-tab="reports">📈 تقارير</button>
         <button class="nav-btn" data-tab="settings">⚙️ الإعدادات</button>
-        <button class="nav-btn" data-tab="download">⬇️ تحميل نسخة</button>
+        <button id="nav-dev" class="nav-btn hidden" data-tab="dev">🛠️ لوحة المطوّر</button>
       </nav>
     </aside>
 
@@ -161,8 +161,30 @@
         </div>
       </section>
 
-      <!-- تحميل نسخة كاملة من البرنامج -->
-      <section id="tab-download" class="tab hidden">
+      <!-- 🛠️ لوحة المطوّر — تظهر فقط لمالك النظام -->
+      <section id="tab-dev" class="tab hidden">
+        <div class="logo-note" style="margin-bottom:16px">🔒 هذه اللوحة تظهر لك فقط كمالك للنظام — لا يراها أي عميل</div>
+
+        <div class="report-box">
+          <h3>📊 إحصائيات المنصة</h3>
+          <div class="cards">
+            <div class="card"><div class="card-num" id="dv-tenants">—</div><div class="card-lbl">الشركات المشتركة</div></div>
+            <div class="card"><div class="card-num" id="dv-users">—</div><div class="card-lbl">المستخدمون</div></div>
+            <div class="card"><div class="card-num" id="dv-invoices">—</div><div class="card-lbl">الفواتير</div></div>
+            <div class="card"><div class="card-num" id="dv-parties">—</div><div class="card-lbl">العملاء والموردون</div></div>
+            <div class="card"><div class="card-num" id="dv-items">—</div><div class="card-lbl">الأصناف</div></div>
+          </div>
+        </div>
+
+        <div class="report-box">
+          <h3>🏢 الشركات المشتركة</h3>
+          <div class="table-wrap"><table>
+            <thead><tr><th>الشركة</th><th>تاريخ الاشتراك</th><th>الأعضاء</th><th>الفواتير</th></tr></thead>
+            <tbody id="dv-companies"></tbody>
+          </table></div>
+        </div>
+
+        <!-- تحميل نسخة كاملة من البرنامج (خاص بالمالك فقط — داخل لوحة المطوّر) -->
         <div class="report-box" style="max-width:680px">
           <h3>💿 تصدير نسخة كاملة من البرنامج</h3>
           <p style="color:#7A6A5C;line-height:2;margin:0 0 16px">
