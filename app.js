@@ -111,7 +111,7 @@ $('#btn-create-company').onclick = async () => {
 const TAB_TITLES = {
   dashboard: 'لوحة المؤشرات', items: 'الأصناف', parties: 'العملاء والموردون',
   invoices: 'فواتير المبيعات', reports: 'التقارير', settings: 'الإعدادات', dev: 'لوحة المطوّر',
-  accounts: 'شجرة الحسابات', journal: 'قيود اليومية',
+  accounts: 'شجرة الحسابات', journal: 'قيود اليومية', vouchers: 'السندات والخزن',
 };
 
 // دالة عامة لتبديل التبويب — يستدعيها السايدبار وشريط القوائم الكلاسيكي
@@ -129,6 +129,7 @@ function switchTab(tabName) {
   if (tabName === 'dev') loadDevPanel();
   if (tabName === 'accounts') loadAccounts();
   if (tabName === 'journal') loadJournal();
+  if (tabName === 'vouchers') loadVouchers();
 }
 window.switchTab = switchTab;
 
@@ -169,6 +170,9 @@ $$('#menubar .mb-leaf').forEach(leaf => {
     if (leaf.dataset.tab) return switchTab(leaf.dataset.tab);
     if (leaf.dataset.action === 'logout') return $('#btn-logout').click();
     if (leaf.dataset.action === 'opening-entry') return openOpeningEntry();
+    if (leaf.dataset.action === 'voucher-receipt') return openVoucher('receipt');
+    if (leaf.dataset.action === 'voucher-payment') return openVoucher('payment');
+    if (leaf.dataset.action === 'voucher-transfer') return openVoucher('transfer');
     if (leaf.dataset.action === 'sysinfo') return openModal(`
       <h3>🖥️ معلومات النظام</h3>
       <div class="table-wrap"><table><tbody>
@@ -1054,6 +1058,133 @@ window.openOpeningEntry = () => entryForm(true);
 const _origCloseModal = closeModal;
 closeModal = function () { $('#modal-body').classList.remove('modal-lg'); _origCloseModal(); };
 window.closeModal = closeModal;
+
+// ─────────── ١١-و) المعاملات المالية: السندات والخزن ───────────
+// أنواع السندات واتجاهات قيودها (المنطق النهائي في دالة create_voucher):
+//   receipt:  مدين حساب الخزينة (to) / دائن الحساب المقابل 1200 العملاء (from)
+//   payment:  مدين الحساب المقابل 2100 الموردون (from) / دائن الخزينة (to)
+//   transfer: مدين الخزينة المحوَّل إليها (to) / دائن المحوَّل منها (from)
+const VOUCHER_TYPES = { receipt: 'سند قبض', payment: 'سند صرف', transfer: 'تحويل بين الخزن' };
+// الحساب المقابل الافتراضي لكل نوع حسب كوده في شجرة الحسابات
+const VOUCHER_COUNTER_CODE = { receipt: '1200', payment: '2100' };
+
+// حسابات الخزن/الصناديق: أصول أكوادها تبدأ بـ 11 (1100 النقدية، 1110 البنك...)
+function treasuryAccounts() {
+  return (state.accounts || []).filter(a => a.kind === 'asset' && String(a.code).startsWith('11'));
+}
+
+// تحميل التبويب: بطاقات أرصدة الخزن + جدول السندات
+async function loadVouchers() {
+  // ضمان وجود الحسابات والأطراف (زرع الحسابات الافتراضية عند الحاجة)
+  if (!state.accounts || !state.accounts.length) await loadAccounts();
+  if (!state.parties.length) await loadParties();
+
+  const [{ data: vouchers }, { data: lines }] = await Promise.all([
+    sb.from('vouchers').select('*, parties(name)').order('number', { ascending: false }).limit(100),
+    sb.from('journal_entry_lines').select('account_id, debit, credit'),
+  ]);
+
+  // بطاقات أرصدة الخزن من سطور القيود (مدين - دائن)
+  const sums = {};
+  (lines || []).forEach(l => {
+    sums[l.account_id] = (sums[l.account_id] || 0) + Number(l.debit) - Number(l.credit);
+  });
+  $('#vch-treasury-cards').innerHTML = treasuryAccounts().map(a => `
+    <div class="card treasury-card">
+      <div class="card-num">${fmt(sums[a.id] || 0)}</div>
+      <div class="card-lbl">${esc(a.code)} — ${esc(a.name)}</div>
+    </div>`).join('') ||
+    '<div class="card"><div class="card-lbl">لا توجد حسابات خزن (11xx) — أضفها من شجرة الحسابات</div></div>';
+
+  // جدول السندات — الأحدث أولاً
+  $('#tbl-vouchers').innerHTML = (vouchers || []).map(v => `
+    <tr>
+      <td>${v.number}</td>
+      <td>${new Date(v.created_at).toLocaleDateString('ar-EG')}</td>
+      <td>${VOUCHER_TYPES[v.voucher_type] || esc(v.voucher_type)}</td>
+      <td>${esc(v.parties?.name || '—')}</td>
+      <td>${fmt(v.amount)}</td>
+      <td>${esc(v.memo || '—')}</td>
+    </tr>`).join('') || '<tr><td colspan="6" style="color:#7A6A5C">لا توجد سندات بعد</td></tr>';
+}
+
+// نموذج سند (قبض / صرف / تحويل)
+async function voucherForm(type) {
+  if (!VOUCHER_TYPES[type]) return;
+  if (!state.accounts || !state.accounts.length) await loadAccounts();
+  if (!state.parties.length) await loadParties();
+
+  const treas = treasuryAccounts();
+  if (!treas.length) return toast('لا توجد حسابات خزن (11xx) — أضفها من شجرة الحسابات أولاً', false);
+
+  const treasOpts = () => treas.map(a =>
+    `<option value="${a.id}">${esc(a.code)} — ${esc(a.name)}</option>`).join('');
+
+  let partyField = '';
+  let counterAcc = null;
+  if (type !== 'transfer') {
+    // الحساب المقابل: 1200 العملاء للقبض / 2100 الموردون للصرف
+    counterAcc = state.accounts.find(a => a.code === VOUCHER_COUNTER_CODE[type]);
+    if (!counterAcc) return toast('حساب ' + VOUCHER_COUNTER_CODE[type] + ' غير موجود — زرع الحسابات الافتراضية من شجرة الحسابات', false);
+    if (!state.parties.length) return toast('أضف عميلاً/مورداً أولاً من شاشة العملاء والموردون', false);
+    // قبض: العملاء أولاً / صرف: الموردون أولاً — مع إتاحة كل الأطراف
+    const preferred = type === 'receipt' ? 'customer' : 'supplier';
+    const sorted = [...state.parties].sort((a, b) =>
+      (a.kind === preferred ? 0 : 1) - (b.kind === preferred ? 0 : 1));
+    partyField = `
+      <label class="lbl">${type === 'receipt' ? 'الطرف (العميل)' : 'الطرف (المورد)'}</label>
+      <select id="vch-party">
+        ${sorted.map(p => `<option value="${p.id}">${esc(p.name)} (${p.kind === 'customer' ? 'عميل' : 'مورد'})</option>`).join('')}
+      </select>`;
+  }
+
+  const isTransfer = type === 'transfer';
+  openModal(`
+    <h3>${VOUCHER_TYPES[type]}</h3>
+    ${partyField}
+    <div class="row">
+      ${isTransfer ? `<div><label class="lbl">من خزينة</label><select id="vch-from">${treasOpts()}</select></div>` : ''}
+      <div><label class="lbl">${isTransfer ? 'إلى خزينة' : (type === 'receipt' ? 'الخزينة/البنك المستلِم' : 'الخزينة/البنك المدفوع منه')}</label>
+        <select id="vch-to">${treasOpts()}</select></div>
+    </div>
+    <label class="lbl">المبلغ</label>
+    <input id="vch-amount" type="number" min="0" step="any" placeholder="0.00">
+    <label class="lbl">البيان</label>
+    <input id="vch-memo" placeholder="بيان السند (اختياري)">
+    <div class="modal-actions">
+      <button class="btn btn-gold" id="vch-save">حفظ السند</button>
+      <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+    </div>`);
+  $('#vch-amount').focus();
+
+  $('#vch-save').onclick = async () => {
+    const amount = Number($('#vch-amount').value) || 0;
+    if (amount <= 0) return toast('أدخل مبلغاً أكبر من صفر', false);
+    const fromAcc = isTransfer ? $('#vch-from').value : counterAcc.id;
+    const toAcc = isTransfer ? $('#vch-to').value : $('#vch-to').value;
+    if (isTransfer && fromAcc === toAcc) return toast('لا يمكن التحويل من حساب إلى نفسه — اختر خزنتين مختلفتين', false);
+    const { data, error } = await sb.rpc('create_voucher', {
+      p_tenant: state.tenant,
+      p_type: type,
+      p_party: isTransfer ? null : $('#vch-party').value,
+      p_from_account: fromAcc,
+      p_to_account: toAcc,
+      p_amount: amount,
+      p_memo: $('#vch-memo').value.trim() || null,
+    });
+    if (error) return toast('فشل حفظ السند: ' + error.message, false);
+    closeModal();
+    toast(`تم حفظ ${VOUCHER_TYPES[type]} رقم ${data?.number ?? ''} بنجاح`);
+    loadVouchers();
+  };
+}
+
+$('#btn-vch-receipt').onclick = () => voucherForm('receipt');
+$('#btn-vch-payment').onclick = () => voucherForm('payment');
+$('#btn-vch-transfer').onclick = () => voucherForm('transfer');
+
+// بنود قائمة «معاملات مالية» الكلاسيكية: تفتح التبويب ثم نموذج السند مباشرة
+window.openVoucher = (type) => { switchTab('vouchers'); voucherForm(type); };
 
 // ─────────── ١٢) نقطة البداية ───────────
 (async () => {

@@ -114,6 +114,16 @@ td .btn{margin-inline-start:6px}
 .modal.modal-lg{max-width:900px}
 @media (max-width:768px){.je-line{grid-template-columns:1fr 1fr;gap:6px}}
 
+/* ───── السندات والخزن: أزرار المعاملات المالية ───── */
+.btn-vch-receipt{background:var(--green);color:#fff;font-size:16px;padding:12px 24px}
+.btn-vch-receipt:hover{background:#0F5C38}
+.btn-vch-payment{background:var(--red);color:#fff;font-size:16px;padding:12px 24px}
+.btn-vch-payment:hover{background:var(--red-d)}
+.btn-vch-transfer{background:var(--brown);color:#fff;font-size:16px;padding:12px 24px}
+.btn-vch-transfer:hover{background:var(--brown-d)}
+.treasury-card{border-top:3px solid var(--brown)}
+.treasury-card .card-num{font-size:26px}
+
 /* ───── Toast ───── */
 .toast{position:fixed;bottom:24px;right:24px;padding:14px 22px;border-radius:var(--radius);
   color:#fff;font-weight:600;z-index:200;animation:tin .3s;max-width:90vw;box-shadow:0 8px 24px rgba(0,0,0,.2)}

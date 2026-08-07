@@ -83,9 +83,9 @@
       <div class="mb-item">
         <button class="mb-btn">معاملات مالية</button>
         <div class="mb-drop">
-          <button class="mb-leaf" disabled>سند قبض</button>
-          <button class="mb-leaf" disabled>سند صرف</button>
-          <button class="mb-leaf" disabled>تحويل بين الخزن</button>
+          <button class="mb-leaf" data-action="voucher-receipt">سند قبض</button>
+          <button class="mb-leaf" data-action="voucher-payment">سند صرف</button>
+          <button class="mb-leaf" data-action="voucher-transfer">تحويل بين الخزن</button>
         </div>
       </div>
       <div class="mb-item">
@@ -157,6 +157,7 @@
         <button class="nav-btn" data-tab="parties">👥 العملاء والموردون</button>
         <button class="nav-btn" data-tab="accounts">📒 شجرة الحسابات</button>
         <button class="nav-btn" data-tab="journal">📖 قيود اليومية</button>
+        <button class="nav-btn" data-tab="vouchers">💰 السندات والخزن</button>
         <button class="nav-btn" data-tab="invoices">🧾 فواتير المبيعات</button>
         <button class="nav-btn" data-tab="reports">📈 تقارير</button>
         <button class="nav-btn" data-tab="settings">⚙️ الإعدادات</button>
@@ -247,6 +248,20 @@
         <div class="table-wrap"><table>
           <thead><tr><th>الرقم</th><th>التاريخ</th><th>البيان</th><th>مدين</th><th>دائن</th><th></th></tr></thead>
           <tbody id="tbl-journal"></tbody>
+        </table></div>
+      </section>
+
+      <!-- السندات والخزن (المعاملات المالية) -->
+      <section id="tab-vouchers" class="tab hidden">
+        <div class="cards" id="vch-treasury-cards"></div>
+        <div class="toolbar" style="margin-top:18px">
+          <button id="btn-vch-receipt" class="btn btn-vch-receipt">+ سند قبض</button>
+          <button id="btn-vch-payment" class="btn btn-vch-payment">+ سند صرف</button>
+          <button id="btn-vch-transfer" class="btn btn-vch-transfer">+ تحويل بين الخزن</button>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>الرقم</th><th>التاريخ</th><th>النوع</th><th>الطرف</th><th>المبلغ</th><th>البيان</th></tr></thead>
+          <tbody id="tbl-vouchers"></tbody>
         </table></div>
       </section>
 
