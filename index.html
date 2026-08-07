@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HAZEM ERP — نظام المحاسبة</title>
+  <title>H. ERP SYSTEM MANAGER — نظام المحاسبة والإدارة</title>
+  <link rel="icon" href="logo.png" type="image/png">
   <link rel="stylesheet" href="styles.css">
   <!-- مكتبات خارجية من jsdelivr فقط -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -14,7 +15,8 @@
   <!-- ═══════════ شاشة تسجيل الدخول ═══════════ -->
   <div id="auth-screen" class="auth-screen hidden">
     <div class="auth-card">
-      <h1 class="brand">HAZEM <span>ERP</span></h1>
+      <img src="logo.png" class="brand-logo" alt="H. ERP">
+      <h1 class="brand">H. ERP <span>SYSTEM MANAGER</span></h1>
       <p class="auth-sub">نظام محاسبة وإدارة مخزون متكامل</p>
       <input type="email" id="auth-email" placeholder="البريد الإلكتروني" autocomplete="email">
       <input type="password" id="auth-password" placeholder="كلمة المرور" autocomplete="current-password">
@@ -40,13 +42,14 @@
   <div id="app-screen" class="app hidden">
     <!-- السايدبار -->
     <aside class="sidebar">
-      <div class="sidebar-brand">HAZEM <span>ERP</span></div>
+      <div class="sidebar-brand"><img src="logo.png" id="sidebar-logo" class="sidebar-logo" alt=""> H. ERP <span>SYSTEM MANAGER</span></div>
       <nav>
         <button class="nav-btn active" data-tab="dashboard">📊 لوحة المؤشرات</button>
         <button class="nav-btn" data-tab="items">📦 الأصناف</button>
         <button class="nav-btn" data-tab="parties">👥 العملاء والموردون</button>
         <button class="nav-btn" data-tab="invoices">🧾 فواتير المبيعات</button>
         <button class="nav-btn" data-tab="reports">📈 تقارير</button>
+        <button class="nav-btn" data-tab="settings">⚙️ الإعدادات</button>
       </nav>
     </aside>
 
@@ -122,6 +125,33 @@
           <div class="table-wrap"><table>
             <thead><tr><th>التاريخ</th><th>البيان</th><th>مدين</th><th>دائن</th><th>الرصيد التراكمي</th></tr></thead>
             <tbody id="tbl-statement"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- الإعدادات -->
+      <section id="tab-settings" class="tab hidden">
+        <div class="report-box">
+          <h3>🖼️ شعار الشركة (اللوجو)</h3>
+          <p style="color:#94a3b8;font-size:13px;margin:0 0 14px">ارفع شعار شركتك — هيظهر في واجهة النظام لشركتك فقط. الصيغ المدعومة: PNG / JPG / SVG / WebP — بحد أقصى 2 ميجا</p>
+          <div class="logo-settings">
+            <img id="set-logo-preview" src="logo.png" class="logo-preview" alt="الشعار الحالي">
+            <div>
+              <input type="file" id="set-logo-file" accept=".png,.jpg,.jpeg,.svg,.webp" class="hidden">
+              <button id="btn-pick-logo" class="btn btn-ghost">📂 اختيار صورة</button>
+              <button id="btn-save-logo" class="btn btn-gold">💾 حفظ الشعار</button>
+              <button id="btn-reset-logo" class="btn btn-ghost">↩️ استعادة الافتراضي</button>
+            </div>
+          </div>
+          <div id="logo-file-name" style="color:#D4AF37;font-size:13px;margin-top:8px"></div>
+        </div>
+        <div class="report-box">
+          <h3>🏢 بيانات الشركة</h3>
+          <div class="table-wrap"><table>
+            <tbody>
+              <tr><td style="color:#94a3b8">اسم الشركة</td><td id="set-company-name" style="font-weight:700">—</td></tr>
+              <tr><td style="color:#94a3b8">النظام</td><td>H. ERP SYSTEM MANAGER</td></tr>
+            </tbody>
           </table></div>
         </div>
       </section>

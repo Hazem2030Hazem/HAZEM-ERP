@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   HAZEM ERP — منطق التطبيق كاملاً (SPA خالص بدون build step)
+   H. ERP SYSTEM MANAGER — منطق التطبيق كاملاً (SPA خالص بدون build step)
    ═══════════════════════════════════════════════════════════════ */
 
 // ─────────── ١) تهيئة Supabase ───────────
@@ -11,7 +11,7 @@ if (!_cfgOk) {
     document.body.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#0B0D1A;color:#fff;font-family:inherit;direction:rtl">' +
       '<div style="max-width:560px;background:#141830;border:1px solid #D4AF37;border-radius:16px;padding:32px;line-height:2">' +
       '<h1 style="color:#D4AF37;margin:0 0 12px">⚙️ خطوة واحدة باقية — إعداد الاتصال</h1>' +
-      '<p>تطبيق <b>HAZEM ERP</b> شغال، بس محتاج مفاتيح مشروع Supabase الجديد:</p>' +
+      '<p>تطبيق <b>H. ERP SYSTEM MANAGER</b> شغال، بس محتاج مفاتيح مشروع Supabase الجديد:</p>' +
       '<ol style="margin:0;padding-right:20px">' +
       '<li>افتح مشروعك في Supabase ← <b>Project Settings ← API</b></li>' +
       '<li>انسخ <b>Project URL</b> و <b>anon public key</b></li>' +
@@ -20,7 +20,7 @@ if (!_cfgOk) {
       '</ol><p style="color:#9aa5b9;font-size:13px;margin-bottom:0">ولا تنسى تشغيل ملف schema.sql في SQL Editor مرة واحدة قبل أول استخدام.</p>' +
       '</div></div>';
   });
-  throw new Error('HAZEM ERP: config.js غير مُعدّ بعد');
+  throw new Error('H. ERP SYSTEM MANAGER: config.js غير مُعدّ بعد');
 }
 
 // حالة عامة
@@ -76,11 +76,14 @@ async function boot() {
   if (!user) return showScreen('auth-screen');
   state.user = user;
 
-  const { data: ms } = await sb.from('memberships').select('tenant_id, tenants(name)').limit(1);
+  const { data: ms } = await sb.from('memberships').select('tenant_id, tenants(name, logo_url)').limit(1);
   if (!ms || ms.length === 0) return showScreen('onboarding-screen');
 
   state.tenant = ms[0].tenant_id;
-  $('#company-title').textContent = ms[0].tenants.name;
+  state.tenantName = ms[0].tenants.name;
+  state.logoUrl = ms[0].tenants.logo_url || null;
+  $('#company-title').textContent = state.tenantName;
+  applyBrandLogo();
   showScreen('app-screen');
   await refreshDashboard();
   await Promise.all([loadItems(), loadParties(), loadInvoices()]);
@@ -106,6 +109,7 @@ $$('.nav-btn').forEach(b => b.onclick = () => {
   $('.sidebar').classList.remove('open');
   if (b.dataset.tab === 'dashboard') refreshDashboard();
   if (b.dataset.tab === 'reports') loadReports();
+  if (b.dataset.tab === 'settings') loadSettings();
 });
 $('#btn-menu').onclick = () => $('.sidebar').classList.toggle('open');
 
@@ -451,6 +455,75 @@ $('#btn-run-stmt').onclick = async () => {
       <td>${esc(l.journal_entries.memo)}</td>
       <td>${fmt(l.debit)}</td><td>${fmt(l.credit)}</td><td>${fmt(run)}</td></tr>`;
   }).join('');
+};
+
+// ─────────── ١١-ب) الهوية والإعدادات — شعار الشركة لكل مستأجر ───────────
+const DEFAULT_LOGO = 'logo.png';
+
+// تطبيق الشعار على واجهة النظام (الشريط الجانبي + صفحة الدخول + أيقونة المتصفح)
+function applyBrandLogo() {
+  const url = state.logoUrl || DEFAULT_LOGO;
+  const side = $('#sidebar-logo');
+  if (side) side.src = url;
+  const authLogo = document.querySelector('.brand-logo');
+  if (authLogo) authLogo.src = url;
+  const fav = document.querySelector('link[rel="icon"]');
+  if (fav) fav.href = url;
+}
+
+// تعبئة شاشة الإعدادات
+function loadSettings() {
+  $('#set-company-name').textContent = state.tenantName || '—';
+  $('#set-logo-preview').src = state.logoUrl || DEFAULT_LOGO;
+  $('#logo-file-name').textContent = '';
+  $('#set-logo-file').value = '';
+}
+
+let _logoFile = null;
+
+// زر اختيار الصورة يفتح مربع حوار الملفات
+$('#btn-pick-logo').onclick = () => $('#set-logo-file').click();
+
+// معاينة فورية عند اختيار ملف
+$('#set-logo-file').onchange = (e) => {
+  const f = e.target.files[0];
+  if (!f) { _logoFile = null; return; }
+  const okExt = /\.(png|jpe?g|svg|webp)$/i.test(f.name);
+  if (!okExt) { _logoFile = null; return toast('صيغة غير مدعومة — المسموح: PNG / JPG / SVG / WebP', false); }
+  if (f.size > 2 * 1024 * 1024) { _logoFile = null; return toast('حجم الصورة أكبر من 2 ميجا', false); }
+  _logoFile = f;
+  $('#logo-file-name').textContent = '📎 ' + f.name + ' (' + Math.round(f.size / 1024) + ' ك.ب)';
+  const rd = new FileReader();
+  rd.onload = () => { $('#set-logo-preview').src = rd.result; };
+  rd.readAsDataURL(f);
+};
+
+// حفظ الشعار: رفع على Storage ثم تحديث tenants.logo_url
+$('#btn-save-logo').onclick = async () => {
+  if (!_logoFile) return toast('اختر صورة أولاً بزر «اختيار صورة»', false);
+  const ext = (_logoFile.name.match(/\.([a-z0-9]+)$/i) || [null, 'png'])[1].toLowerCase();
+  const path = state.tenant + '/logo.' + ext;
+  const { error: upErr } = await sb.storage.from('logos').upload(path, _logoFile, { upsert: true });
+  if (upErr) return toast('فشل رفع الصورة: ' + upErr.message + ' — تأكد أنك نفّذت ملف hazem-branding.sql', false);
+  const { data: pub } = sb.storage.from('logos').getPublicUrl(path);
+  const url = pub.publicUrl + '?v=' + Date.now(); // كسر الكاش ليظهر الجديد فوراً
+  const { error: tErr } = await sb.from('tenants').update({ logo_url: url }).eq('id', state.tenant);
+  if (tErr) return toast('فشل حفظ الرابط: ' + tErr.message, false);
+  state.logoUrl = url;
+  _logoFile = null;
+  applyBrandLogo();
+  loadSettings();
+  toast('تم حفظ شعار شركتك بنجاح ✅');
+};
+
+// استعادة الشعار الافتراضي (النسر الرسمي للنظام)
+$('#btn-reset-logo').onclick = async () => {
+  const { error } = await sb.from('tenants').update({ logo_url: null }).eq('id', state.tenant);
+  if (error) return toast('فشل الاستعادة: ' + error.message, false);
+  state.logoUrl = null;
+  applyBrandLogo();
+  loadSettings();
+  toast('تمت استعادة الشعار الافتراضي للنظام');
 };
 
 // ─────────── ١٢) نقطة البداية ───────────
