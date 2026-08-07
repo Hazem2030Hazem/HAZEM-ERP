@@ -120,25 +120,78 @@ $$('.nav-btn').forEach(b => b.onclick = () => {
 });
 $('#btn-menu').onclick = () => $('.sidebar').classList.toggle('open');
 
-// ─────────── ٥-ب) الاختصار السري للمالك: Ctrl+Alt+H يفتح لوحة المطوّر من أي صفحة ───────────
-// الحماية الحقيقية في قاعدة البيانات: أي مستخدم غير المالك يجرب الاختصار
-// هتفتحله اللوحة فاضية والسيرفر هيرفض البيانات برسالة «غير مصرح»
-document.addEventListener('keydown', async (e) => {
-  if (!(e.ctrlKey && e.altKey && (e.key === 'h' || e.key === 'H' || e.code === 'KeyH'))) return;
-  e.preventDefault();
+// ─────────── ٥-ب) الاختصار السري للمالك: Ctrl+Alt+H — بوابة دخول مستقلة للوحة المطوّر ───────────
+// البوابة بتطلب الإيميل والباسوورد وتتحقق منهم فعلياً من Supabase،
+// ولازم الإيميل يكون إيميل المالك — غير كده ممنوع نهائياً.
+// والحماية مضاعفة من قاعدة البيانات (الدوال نفسها بترفض غير المالك).
+
+const _ownerEmail = () => (typeof HAZEM_OWNER_EMAIL !== 'undefined' ? String(HAZEM_OWNER_EMAIL) : '').trim().toLowerCase();
+
+// فتح اللوحة بعد نجاح التحقق
+function _openDevPanel() {
   const nb = $('#nav-dev');
   if (nb) nb.classList.remove('hidden');
-  // لو لسه على شاشة إنشاء الشركة — ادخل لواجهة التطبيق مباشرة
-  if (!$('#app-screen') || $('#app-screen').classList.contains('hidden')) {
-    if (state.user) showScreen('app-screen'); else return toast('سجّل دخولك الأول', false);
-  }
-  // فعّل تبويب لوحة المطوّر
+  if ($('#app-screen').classList.contains('hidden')) showScreen('app-screen');
   $$('.nav-btn').forEach(x => x.classList.remove('active'));
   if (nb) nb.classList.add('active');
   $$('.tab').forEach(t => t.classList.add('hidden'));
   const devTab = $('#tab-dev');
   if (devTab) { devTab.classList.remove('hidden'); loadDevPanel(); }
-  toast('🛠️ لوحة المطوّر — خاصة بمالك النظام');
+  toast('🛠️ أهلاً بك في لوحة المطوّر');
+}
+
+// بوابة الدخول المستقلة (إيميل + باسوورد)
+function _showDevGate() {
+  openModal(`
+    <h3 style="text-align:center">🔐 بوابة مالك النظام</h3>
+    <p style="color:var(--muted);font-size:13px;text-align:center;margin-bottom:16px">
+      هذه المنطقة خاصة بمالك H. ERP SYSTEM MANAGER فقط — سجّل بياناتك للمتابعة</p>
+    <label class="lbl">البريد الإلكتروني</label>
+    <input type="email" id="dg-email" dir="ltr" autocomplete="username">
+    <label class="lbl">كلمة المرور</label>
+    <input type="password" id="dg-pass" dir="ltr" autocomplete="current-password">
+    <div class="modal-actions">
+      <button id="dg-enter" class="btn btn-gold">🔓 دخول</button>
+      <button id="dg-cancel" class="btn btn-ghost">إلغاء</button>
+    </div>`);
+  $('#dg-email').focus();
+  $('#dg-cancel').onclick = closeModal;
+  const tryEnter = async () => {
+    const email = $('#dg-email').value.trim();
+    const pass = $('#dg-pass').value;
+    if (!email || !pass) return toast('أدخل البريد وكلمة المرور', false);
+    const btn = $('#dg-enter'); btn.disabled = true; btn.textContent = '⏳ جاري التحقق...';
+    try {
+      // تحقق حقيقي من Supabase — الباسوورد الغلط بيرفض هنا
+      const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+      if (error) { btn.disabled = false; btn.textContent = '🔓 دخول'; return toast('بيانات الدخول غير صحيحة', false); }
+      // لازم يكون إيميل المالك تحديداً
+      if (!data.user || (data.user.email || '').toLowerCase() !== _ownerEmail()) {
+        await sb.auth.signOut(); // رجّع الحالة زي ما كانت
+        btn.disabled = false; btn.textContent = '🔓 دخول';
+        return toast('⛔ هذه اللوحة خاصة بمالك النظام فقط', false);
+      }
+      state.user = data.user;
+      closeModal();
+      _openDevPanel();
+    } catch (err) {
+      btn.disabled = false; btn.textContent = '🔓 دخول';
+      toast('حدث خطأ: ' + err.message, false);
+    }
+  };
+  $('#dg-enter').onclick = tryEnter;
+  $('#dg-pass').onkeydown = (ev) => { if (ev.key === 'Enter') tryEnter(); };
+}
+
+// الاختصار: Ctrl + Alt + H
+document.addEventListener('keydown', (e) => {
+  if (!(e.ctrlKey && e.altKey && (e.key === 'h' || e.key === 'H' || e.code === 'KeyH'))) return;
+  e.preventDefault();
+  // لو المالك مسجل دخول أصلاً بإيميله — يفتح مباشرة بدون البوابة
+  const myEmail = (state.user && state.user.email || '').toLowerCase();
+  if (myEmail && myEmail === _ownerEmail()) return _openDevPanel();
+  // غير كده — بوابة الإيميل والباسوورد
+  _showDevGate();
 });
 
 // ─────────── ٦) لوحة المؤشرات ───────────
