@@ -107,18 +107,96 @@ $('#btn-create-company').onclick = async () => {
 };
 
 // ─────────── ٥) التنقل بين التبويبات ───────────
-$$('.nav-btn').forEach(b => b.onclick = () => {
-  $$('.nav-btn').forEach(x => x.classList.remove('active'));
-  b.classList.add('active');
+// أسماء التبويبات لشريط العنوان الكلاسيكي
+const TAB_TITLES = {
+  dashboard: 'لوحة المؤشرات', items: 'الأصناف', parties: 'العملاء والموردون',
+  invoices: 'فواتير المبيعات', reports: 'التقارير', settings: 'الإعدادات', dev: 'لوحة المطوّر',
+};
+
+// دالة عامة لتبديل التبويب — يستدعيها السايدبار وشريط القوائم الكلاسيكي
+function switchTab(tabName) {
+  if (!TAB_TITLES[tabName] || !$('#tab-' + tabName)) return;
+  $$('.nav-btn').forEach(x => x.classList.toggle('active', x.dataset.tab === tabName));
   $$('.tab').forEach(t => t.classList.add('hidden'));
-  $('#tab-' + b.dataset.tab).classList.remove('hidden');
+  $('#tab-' + tabName).classList.remove('hidden');
   $('.sidebar').classList.remove('open');
-  if (b.dataset.tab === 'dashboard') refreshDashboard();
-  if (b.dataset.tab === 'reports') loadReports();
-  if (b.dataset.tab === 'settings') loadSettings();
-  if (b.dataset.tab === 'dev') loadDevPanel();
-});
+  const wt = $('#window-title');
+  if (wt) wt.textContent = TAB_TITLES[tabName];
+  if (tabName === 'dashboard') refreshDashboard();
+  if (tabName === 'reports') loadReports();
+  if (tabName === 'settings') loadSettings();
+  if (tabName === 'dev') loadDevPanel();
+}
+window.switchTab = switchTab;
+
+$$('.nav-btn').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
 $('#btn-menu').onclick = () => $('.sidebar').classList.toggle('open');
+
+// ─────────── ٥-أ) شريط القوائم الكلاسيكي (Win98/XP) ───────────
+function closeAllMenus() {
+  $$('#menubar .mb-item.open').forEach(m => m.classList.remove('open'));
+}
+
+// فتح/قفل القوائم المنسدلة
+$$('#menubar .mb-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const item = btn.closest('.mb-item');
+    const wasOpen = item.classList.contains('open');
+    closeAllMenus();
+    if (!wasOpen) item.classList.add('open');
+  });
+  // عند وجود قائمة مفتوحة، المرور على بند آخر ينقل الفتح إليه
+  btn.addEventListener('mouseenter', () => {
+    if ($('#menubar .mb-item.open') && !btn.closest('.mb-item').classList.contains('open')) {
+      closeAllMenus();
+      btn.closest('.mb-item').classList.add('open');
+    }
+  });
+});
+// الضغط خارج القوائم يقفلها، وEscape كذلك
+document.addEventListener('click', (e) => { if (!e.target.closest('#menubar')) closeAllMenus(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAllMenus(); });
+
+// عناصر القوائم: تبويب أو إجراء
+$$('#menubar .mb-leaf').forEach(leaf => {
+  if (leaf.disabled) return; // البنود المعطلة «قريباً 🚧» لا تفعل شيئاً
+  leaf.addEventListener('click', () => {
+    closeAllMenus();
+    if (leaf.dataset.tab) return switchTab(leaf.dataset.tab);
+    if (leaf.dataset.action === 'logout') return $('#btn-logout').click();
+    if (leaf.dataset.action === 'sysinfo') return openModal(`
+      <h3>🖥️ معلومات النظام</h3>
+      <div class="table-wrap"><table><tbody>
+        <tr><td style="color:#94a3b8">النظام</td><td style="font-weight:700">H. ERP SYSTEM MANAGER</td></tr>
+        <tr><td style="color:#94a3b8">الشركة</td><td>${esc(state.tenantName || '—')}</td></tr>
+        <tr><td style="color:#94a3b8">المستخدم</td><td dir="ltr">${esc(state.user?.email || '—')}</td></tr>
+        <tr><td style="color:#94a3b8">الإصدار</td><td>1.0.0</td></tr>
+        <tr><td style="color:#94a3b8">التاريخ</td><td>${new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}</td></tr>
+      </tbody></table></div>
+      <div class="modal-actions"><button class="btn btn-gold" onclick="closeModal()">موافق</button></div>`);
+    if (leaf.dataset.action === 'about') return openModal(`
+      <h3 style="text-align:center">H. ERP SYSTEM MANAGER</h3>
+      <p style="text-align:center;color:var(--muted);line-height:2.2;margin:0">
+        الإصدار 1.0.0<br>نظام محاسبة وإدارة متكامل<br>
+        <span style="font-size:12px">جميع الحقوق محفوظة © ${new Date().getFullYear()}</span></p>
+      <div class="modal-actions" style="justify-content:center">
+        <button class="btn btn-gold" onclick="closeModal()">موافق</button></div>`);
+  });
+});
+
+// بند «تحميل نسخة من البرنامج» يظهر للمالك فقط — يتزامن مع ظهور #nav-dev
+function _syncDevMenuItem() {
+  const dl = $('#mb-dev-dl');
+  if (dl) dl.classList.toggle('hidden', !$('#nav-dev') || $('#nav-dev').classList.contains('hidden'));
+}
+new MutationObserver(_syncDevMenuItem)
+  .observe($('#nav-dev'), { attributes: true, attributeFilter: ['class'] });
+_syncDevMenuItem();
+
+// زر ✕ في شريط العنوان الكلاسيكي ينقل للداشبورد (شكلي)
+const _wc = $('#win-close');
+if (_wc) _wc.onclick = () => switchTab('dashboard');
 
 // ─────────── ٥-ب) الاختصار السري للمالك: Ctrl+Alt+H — بوابة دخول مستقلة للوحة المطوّر ───────────
 // البوابة بتطلب الإيميل والباسوورد وتتحقق منهم فعلياً من Supabase،

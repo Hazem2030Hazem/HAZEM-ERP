@@ -41,7 +41,114 @@
 
   <!-- ═══════════ التطبيق الرئيسي ═══════════ -->
   <div id="app-screen" class="app hidden">
-    <!-- السايدبار -->
+    <!-- ═══ شريط القوائم الكلاسيكي (سطح المكتب) ═══ -->
+    <nav class="menubar" id="menubar">
+      <img src="logo.png" class="menubar-logo" alt="H. ERP">
+      <div class="mb-item">
+        <button class="mb-btn">ملف</button>
+        <div class="mb-drop">
+          <button class="mb-leaf" data-tab="dashboard">فتح لوحة المؤشرات</button>
+          <button class="mb-leaf" disabled>طباعة / معاينة</button>
+          <button class="mb-leaf" disabled>تصدير Excel</button>
+          <div class="mb-sep"></div>
+          <button class="mb-leaf" data-action="logout">تسجيل الخروج</button>
+        </div>
+      </div>
+      <div class="mb-item">
+        <button class="mb-btn">النظام</button>
+        <div class="mb-drop">
+          <button class="mb-leaf" data-action="sysinfo">معلومات النظام</button>
+          <button class="mb-leaf" disabled>النسخ الاحتياطي</button>
+          <div class="mb-sep"></div>
+          <button class="mb-leaf hidden" id="mb-dev-dl" data-tab="dev">تحميل نسخة من البرنامج</button>
+        </div>
+      </div>
+      <div class="mb-item">
+        <button class="mb-btn">الإعدادات</button>
+        <div class="mb-drop">
+          <button class="mb-leaf" data-tab="settings">الإعدادات العامة</button>
+          <button class="mb-leaf" disabled>المستخدمون والصلاحيات</button>
+          <button class="mb-leaf" disabled>الفروع</button>
+          <button class="mb-leaf" disabled>الفترات المالية</button>
+        </div>
+      </div>
+      <div class="mb-item">
+        <button class="mb-btn">الأستاذ العام</button>
+        <div class="mb-drop">
+          <button class="mb-leaf" disabled>شجرة الحسابات</button>
+          <button class="mb-leaf" disabled>قيود اليومية</button>
+          <button class="mb-leaf" disabled>قيد افتتاحي</button>
+        </div>
+      </div>
+      <div class="mb-item">
+        <button class="mb-btn">معاملات مالية</button>
+        <div class="mb-drop">
+          <button class="mb-leaf" disabled>سند قبض</button>
+          <button class="mb-leaf" disabled>سند صرف</button>
+          <button class="mb-leaf" disabled>تحويل بين الخزن</button>
+        </div>
+      </div>
+      <div class="mb-item">
+        <button class="mb-btn">المخازن</button>
+        <div class="mb-drop">
+          <button class="mb-leaf" data-tab="items">الأصناف</button>
+          <button class="mb-leaf" disabled>المستودعات</button>
+          <button class="mb-leaf" disabled>تحويل بين المستودعات</button>
+          <button class="mb-leaf" disabled>الجرد</button>
+        </div>
+      </div>
+      <div class="mb-item">
+        <button class="mb-btn">المشتريات</button>
+        <div class="mb-drop">
+          <button class="mb-leaf" disabled>فاتورة شراء</button>
+          <button class="mb-leaf" disabled>مرتجع مشتريات</button>
+          <button class="mb-leaf" data-tab="parties">الموردون</button>
+        </div>
+      </div>
+      <div class="mb-item">
+        <button class="mb-btn">المبيعات</button>
+        <div class="mb-drop">
+          <button class="mb-leaf" data-tab="invoices">فاتورة مبيعات جديدة</button>
+          <button class="mb-leaf" disabled>مرتجع مبيعات</button>
+          <button class="mb-leaf" disabled>عرض أسعار</button>
+          <button class="mb-leaf" data-tab="parties">العملاء</button>
+        </div>
+      </div>
+      <div class="mb-item">
+        <button class="mb-btn">نقاط البيع</button>
+        <div class="mb-drop">
+          <button class="mb-leaf" disabled>شاشة الكاشير</button>
+          <button class="mb-leaf" disabled>ورديات الكاشير</button>
+        </div>
+      </div>
+      <div class="mb-item">
+        <button class="mb-btn">تقارير الحسابات</button>
+        <div class="mb-drop">
+          <button class="mb-leaf" disabled>ميزان المراجعة</button>
+          <button class="mb-leaf" disabled>قائمة الدخل</button>
+          <button class="mb-leaf" disabled>الميزانية العمومية</button>
+          <button class="mb-leaf" data-tab="reports">كشف حساب عميل</button>
+        </div>
+      </div>
+      <div class="mb-item">
+        <button class="mb-btn">التقارير</button>
+        <div class="mb-drop">
+          <button class="mb-leaf" data-tab="reports">تقارير المخزون</button>
+          <button class="mb-leaf" disabled>تقارير المبيعات</button>
+          <button class="mb-leaf" disabled>تقارير المشتريات</button>
+        </div>
+      </div>
+      <div class="mb-item">
+        <button class="mb-btn">مساعدة</button>
+        <div class="mb-drop">
+          <button class="mb-leaf" disabled>دليل الاستخدام</button>
+          <button class="mb-leaf" data-action="about">عن البرنامج</button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="app-body">
+    <!-- السايدبار (للموبايل فقط) -->
     <aside class="sidebar">
       <div class="sidebar-brand"><img src="logo.png" id="sidebar-logo" class="sidebar-logo" alt=""> H. ERP <span>SYSTEM MANAGER</span></div>
       <nav>
@@ -57,9 +164,18 @@
 
     <!-- المحتوى -->
     <main class="main">
+      <!-- شريط عنوان النافذة الكلاسيكي (XP) -->
+      <div class="win-titlebar">
+        <h2 id="company-title">—</h2>
+        <span id="window-title">لوحة المؤشرات</span>
+        <div class="win-btns">
+          <button class="win-btn" tabindex="-1" title="تصغير">_</button>
+          <button class="win-btn" tabindex="-1" title="تكبير">▢</button>
+          <button class="win-btn win-close" id="win-close" title="إغلاق">✕</button>
+        </div>
+      </div>
       <header class="topbar">
         <button id="btn-menu" class="btn btn-ghost btn-menu">☰</button>
-        <h2 id="company-title">—</h2>
         <img id="tenant-logo" class="tenant-logo hidden" alt="شعار الشركة">
         <button id="btn-logout" class="btn btn-ghost">تسجيل خروج</button>
       </header>
@@ -207,6 +323,7 @@
         </div>
       </section>
     </main>
+    </div><!-- /.app-body -->
   </div>
 
   <!-- ═══════════ نافذة منبثقة عامة ═══════════ -->
