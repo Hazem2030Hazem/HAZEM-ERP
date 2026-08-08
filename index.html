@@ -92,16 +92,16 @@
         <button class="mb-btn">المخازن</button>
         <div class="mb-drop">
           <button class="mb-leaf" data-tab="items">الأصناف</button>
-          <button class="mb-leaf" disabled>المستودعات</button>
-          <button class="mb-leaf" disabled>تحويل بين المستودعات</button>
-          <button class="mb-leaf" disabled>الجرد</button>
+          <button class="mb-leaf" data-action="warehouses">المستودعات</button>
+          <button class="mb-leaf" data-action="stock-transfer">تحويل بين المستودعات</button>
+          <button class="mb-leaf" data-action="stock-count">الجرد</button>
         </div>
       </div>
       <div class="mb-item">
         <button class="mb-btn">المشتريات</button>
         <div class="mb-drop">
-          <button class="mb-leaf" disabled>فاتورة شراء</button>
-          <button class="mb-leaf" disabled>مرتجع مشتريات</button>
+          <button class="mb-leaf" data-action="purchase-invoice">فاتورة شراء</button>
+          <button class="mb-leaf" data-action="purchase-return">مرتجع مشتريات</button>
           <button class="mb-leaf" data-tab="parties">الموردون</button>
         </div>
       </div>
@@ -109,16 +109,16 @@
         <button class="mb-btn">المبيعات</button>
         <div class="mb-drop">
           <button class="mb-leaf" data-tab="invoices">فاتورة مبيعات جديدة</button>
-          <button class="mb-leaf" disabled>مرتجع مبيعات</button>
-          <button class="mb-leaf" disabled>عرض أسعار</button>
+          <button class="mb-leaf" data-action="sales-return">مرتجع مبيعات</button>
+          <button class="mb-leaf" data-action="quote">عرض أسعار</button>
           <button class="mb-leaf" data-tab="parties">العملاء</button>
         </div>
       </div>
       <div class="mb-item">
         <button class="mb-btn">نقاط البيع</button>
         <div class="mb-drop">
-          <button class="mb-leaf" disabled>شاشة الكاشير</button>
-          <button class="mb-leaf" disabled>ورديات الكاشير</button>
+          <button class="mb-leaf" data-tab="pos">شاشة الكاشير</button>
+          <button class="mb-leaf" data-tab="shifts">ورديات الكاشير</button>
         </div>
       </div>
       <div class="mb-item">
@@ -159,6 +159,12 @@
         <button class="nav-btn" data-tab="journal">📖 قيود اليومية</button>
         <button class="nav-btn" data-tab="vouchers">💰 السندات والخزن</button>
         <button class="nav-btn" data-tab="invoices">🧾 فواتير المبيعات</button>
+        <button class="nav-btn" data-tab="purchases">🛒 المشتريات</button>
+        <button class="nav-btn" data-tab="returns">↩️ المرتجعات</button>
+        <button class="nav-btn" data-tab="quotes">📋 عروض الأسعار</button>
+        <button class="nav-btn" data-tab="warehouses">🏬 المستودعات والجرد</button>
+        <button class="nav-btn" data-tab="pos">🖥️ شاشة الكاشير</button>
+        <button class="nav-btn" data-tab="shifts">🕐 ورديات الكاشير</button>
         <button class="nav-btn" data-tab="reports">📈 تقارير</button>
         <button class="nav-btn" data-tab="settings">⚙️ الإعدادات</button>
         <button id="nav-dev" class="nav-btn hidden" data-tab="dev">🛠️ لوحة المطوّر</button>
@@ -226,6 +232,135 @@
         <div class="table-wrap"><table>
           <thead><tr><th>الرقم</th><th>التاريخ</th><th>العميل</th><th>الإجمالي</th><th>الحالة</th></tr></thead>
           <tbody id="tbl-invoices"></tbody>
+        </table></div>
+      </section>
+
+      <!-- المشتريات: فواتير الشراء + مرتجعات المشتريات -->
+      <section id="tab-purchases" class="tab hidden">
+        <div class="toolbar">
+          <button id="btn-new-purchase" class="btn btn-gold">+ فاتورة شراء</button>
+          <button id="btn-new-purchase-return" class="btn btn-ghost">+ مرتجع مشتريات</button>
+        </div>
+        <div class="toolbar sub-tabs">
+          <button class="btn btn-ghost btn-sm sub-tab active" id="sub-pi" data-sub="pi">فواتير الشراء</button>
+          <button class="btn btn-ghost btn-sm sub-tab" id="sub-pr" data-sub="pr">مرتجعات المشتريات</button>
+        </div>
+        <div id="purch-pane-pi" class="table-wrap"><table>
+          <thead><tr><th>الرقم</th><th>التاريخ</th><th>المورد</th><th>الإجمالي</th><th>الحالة</th></tr></thead>
+          <tbody id="tbl-purchases"></tbody>
+        </table></div>
+        <div id="purch-pane-pr" class="table-wrap hidden"><table>
+          <thead><tr><th>الرقم</th><th>التاريخ</th><th>المورد</th><th>الإجمالي</th></tr></thead>
+          <tbody id="tbl-purchase-returns"></tbody>
+        </table></div>
+      </section>
+
+      <!-- المرتجعات (قرار التصميم: مرتجعات المشتريات تعيش في تبويب المشتريات بجانب فواتيرها،
+           وهذا التبويب مستقل لمرتجعات المبيعات) -->
+      <section id="tab-returns" class="tab hidden">
+        <div class="toolbar">
+          <button id="btn-new-sales-return" class="btn btn-gold">+ مرتجع مبيعات</button>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>الرقم</th><th>التاريخ</th><th>العميل</th><th>الإجمالي</th><th>البيان</th></tr></thead>
+          <tbody id="tbl-sales-returns"></tbody>
+        </table></div>
+      </section>
+
+      <!-- عروض الأسعار -->
+      <section id="tab-quotes" class="tab hidden">
+        <div class="toolbar">
+          <button id="btn-new-quote" class="btn btn-gold">+ عرض أسعار</button>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>الرقم</th><th>التاريخ</th><th>العميل</th><th>الإجمالي</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+          <tbody id="tbl-quotes"></tbody>
+        </table></div>
+      </section>
+
+      <!-- المستودعات + التحويل + الجرد (تابات فرعية داخل تبويب واحد) -->
+      <section id="tab-warehouses" class="tab hidden">
+        <div class="toolbar sub-tabs" style="margin-top:0">
+          <button class="btn btn-ghost btn-sm sub-tab active" id="sub-wh-list" data-sub="list">🏬 المستودعات</button>
+          <button class="btn btn-ghost btn-sm sub-tab" id="sub-wh-transfer" data-sub="transfer">⇄ تحويل بين المستودعات</button>
+          <button class="btn btn-ghost btn-sm sub-tab" id="sub-wh-count" data-sub="count">🧮 الجرد</button>
+        </div>
+
+        <!-- المستودعات -->
+        <div id="wh-pane-list">
+          <div class="toolbar">
+            <button id="btn-add-warehouse" class="btn btn-gold">+ مستودع جديد</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>الاسم</th><th>النوع</th><th>عدد الأصناف (لها رصيد)</th><th>إجمالي القطع</th></tr></thead>
+            <tbody id="tbl-warehouses"></tbody>
+          </table></div>
+        </div>
+
+        <!-- التحويل بين المستودعات -->
+        <div id="wh-pane-transfer" class="hidden">
+          <div class="toolbar">
+            <button id="btn-new-transfer" class="btn btn-gold">+ تحويل جديد</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>التاريخ</th><th>الصنف</th><th>من مستودع</th><th>إلى مستودع</th><th>الكمية</th></tr></thead>
+            <tbody id="tbl-transfers"></tbody>
+          </table></div>
+        </div>
+
+        <!-- الجرد -->
+        <div id="wh-pane-count" class="hidden">
+          <div class="toolbar">
+            <select id="count-wh"></select>
+            <button id="btn-apply-count" class="btn btn-gold">✅ اعتماد التسوية (للأصناف المختلفة فقط)</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>الصنف</th><th>الرصيد الدفتري</th><th>العدد الفعلي</th><th>الفرق</th></tr></thead>
+            <tbody id="tbl-count"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- نقطة البيع — شاشة الكاشير -->
+      <section id="tab-pos" class="tab hidden">
+        <!-- شاشة فتح وردية (تظهر لو لا توجد وردية مفتوحة) -->
+        <div id="pos-open" class="hidden">
+          <div class="report-box" style="max-width:460px;margin:40px auto;text-align:center">
+            <h3>🕐 لا توجد وردية مفتوحة</h3>
+            <p style="color:var(--muted);margin-bottom:14px">افتح وردية جديدة لبدء البيع — أدخل رصيد الصندوق الافتتاحي</p>
+            <label class="lbl" style="text-align:right">الرصيد الافتتاحي (نقدية الصندوق)</label>
+            <input id="shift-opening-cash" type="number" min="0" step="any" value="0" dir="ltr" style="text-align:center;font-size:20px;font-weight:700">
+            <button id="btn-open-shift" class="btn btn-gold btn-block" style="font-size:17px;padding:14px">🔓 فتح وردية</button>
+          </div>
+        </div>
+
+        <!-- شاشة البيع -->
+        <div id="pos-screen" class="hidden">
+          <div class="toolbar pos-topbar">
+            <span class="pos-shift-badge">وردية رقم <b id="pos-shift-no">—</b></span>
+            <button id="btn-pos-checkout" class="btn btn-gold" style="font-size:16px;padding:12px 26px">💵 تحصيل (F9)</button>
+            <button id="btn-close-shift" class="btn btn-ghost">🔒 قفل الوردية</button>
+          </div>
+          <div class="pos-layout">
+            <div>
+              <input id="pos-search" placeholder="🔍 بحث سريع عن صنف...">
+              <div id="pos-grid" class="pos-grid"></div>
+            </div>
+            <aside class="pos-cart">
+              <h3>🛒 السلة</h3>
+              <div id="pos-cart-lines"></div>
+              <div class="pos-total">الإجمالي: <span id="pos-total">0</span></div>
+              <button id="btn-cart-clear" class="btn btn-danger" style="width:100%">🗑️ تفريغ السلة</button>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <!-- ورديات الكاشير -->
+      <section id="tab-shifts" class="tab hidden">
+        <div class="table-wrap"><table>
+          <thead><tr><th>الرقم</th><th>الكاشير</th><th>الفتح</th><th>القفل</th><th>افتتاحي</th><th>ختامي</th><th>مبيعات الوردية</th><th>الحالة</th></tr></thead>
+          <tbody id="tbl-shifts"></tbody>
         </table></div>
       </section>
 

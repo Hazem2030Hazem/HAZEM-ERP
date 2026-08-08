@@ -112,6 +112,8 @@ const TAB_TITLES = {
   dashboard: 'لوحة المؤشرات', items: 'الأصناف', parties: 'العملاء والموردون',
   invoices: 'فواتير المبيعات', reports: 'التقارير', settings: 'الإعدادات', dev: 'لوحة المطوّر',
   accounts: 'شجرة الحسابات', journal: 'قيود اليومية', vouchers: 'السندات والخزن',
+  purchases: 'المشتريات', returns: 'مرتجعات المبيعات', quotes: 'عروض الأسعار',
+  warehouses: 'المستودعات والجرد', pos: 'نقطة البيع — الكاشير', shifts: 'ورديات الكاشير',
 };
 
 // دالة عامة لتبديل التبويب — يستدعيها السايدبار وشريط القوائم الكلاسيكي
@@ -130,6 +132,12 @@ function switchTab(tabName) {
   if (tabName === 'accounts') loadAccounts();
   if (tabName === 'journal') loadJournal();
   if (tabName === 'vouchers') loadVouchers();
+  if (tabName === 'purchases') loadPurchases();
+  if (tabName === 'returns') loadSalesReturns();
+  if (tabName === 'quotes') loadQuotes();
+  if (tabName === 'warehouses') loadWarehouses();
+  if (tabName === 'pos') loadPos();
+  if (tabName === 'shifts') loadShifts();
 }
 window.switchTab = switchTab;
 
@@ -173,6 +181,13 @@ $$('#menubar .mb-leaf').forEach(leaf => {
     if (leaf.dataset.action === 'voucher-receipt') return openVoucher('receipt');
     if (leaf.dataset.action === 'voucher-payment') return openVoucher('payment');
     if (leaf.dataset.action === 'voucher-transfer') return openVoucher('transfer');
+    if (leaf.dataset.action === 'purchase-invoice') return openPurchaseInvoice();
+    if (leaf.dataset.action === 'purchase-return') return openPurchaseReturn();
+    if (leaf.dataset.action === 'sales-return') return openSalesReturn();
+    if (leaf.dataset.action === 'quote') return openQuote();
+    if (leaf.dataset.action === 'warehouses') return openWarehouses('list');
+    if (leaf.dataset.action === 'stock-transfer') return openWarehouses('transfer');
+    if (leaf.dataset.action === 'stock-count') return openWarehouses('count');
     if (leaf.dataset.action === 'sysinfo') return openModal(`
       <h3>🖥️ معلومات النظام</h3>
       <div class="table-wrap"><table><tbody>
@@ -1185,6 +1200,648 @@ $('#btn-vch-transfer').onclick = () => voucherForm('transfer');
 
 // بنود قائمة «معاملات مالية» الكلاسيكية: تفتح التبويب ثم نموذج السند مباشرة
 window.openVoucher = (type) => { switchTab('vouchers'); voucherForm(type); };
+
+// ─────────── ١١-ز) المشتريات + المرتجعات + عروض الأسعار ───────────
+// قرار التصميم: مرتجعات المشتريات تعيش داخل تبويب «المشتريات» كتاب-فرعي بجانب
+// فواتير الشراء، ومرتجعات المبيعات في تبويب مستقل «المرتجعات» لأن زرها وبند
+// قائمتها في المبيعات — كده كل مستند جنب أقرب شاشة له.
+//
+// اتجاهات القيود (المنطق النهائي في hazem-purchases.sql):
+//   فاتورة شراء:    مدين 1300 المخزون  / دائن 2100 الموردون + مخزون موجب
+//   مرتجع مشتريات:  مدين 2100 الموردون / دائن 1300 المخزون  + مخزون سالب
+//   مرتجع مبيعات:   مدين 4100 المبيعات / دائن 1200 العملاء  + مخزون موجب
+//   عرض أسعار:      بلا قيد وبلا مخزون
+const DOC_KINDS = {
+  purchase_invoice: { title: 'فاتورة شراء جديدة',   party: 'supplier', partyLbl: 'المورد',
+    priceField: 'cost',  priceLbl: 'التكلفة', rpc: 'create_purchase_invoice',
+    done: (d) => `تم حفظ فاتورة الشراء رقم ${d?.number ?? ''} بنجاح (الإجمالي ${fmt(d?.total)})` },
+  purchase_return:  { title: 'مرتجع مشتريات جديد',  party: 'supplier', partyLbl: 'المورد',
+    priceField: 'cost',  priceLbl: 'التكلفة', rpc: 'create_purchase_return',
+    done: (d) => `تم حفظ مرتجع المشتريات رقم ${d?.number ?? ''} بنجاح` },
+  sales_return:     { title: 'مرتجع مبيعات جديد',   party: 'customer', partyLbl: 'العميل',
+    priceField: 'price', priceLbl: 'السعر',   rpc: 'create_sales_return',
+    done: (d) => `تم حفظ مرتجع المبيعات رقم ${d?.number ?? ''} بنجاح` },
+  quote:            { title: 'عرض أسعار جديد',      party: 'customer', partyLbl: 'العميل',
+    priceField: 'price', priceLbl: 'السعر',   rpc: 'create_quote',
+    done: (d) => `تم حفظ عرض الأسعار رقم ${d?.number ?? ''} بنجاح` },
+};
+
+// ─── تحميل الجداول ───
+async function loadPurchases() {
+  const [{ data: invs }, { data: rets }] = await Promise.all([
+    sb.from('purchase_invoices').select('*, parties(name)').order('number', { ascending: false }),
+    sb.from('purchase_returns').select('*, parties(name)').order('number', { ascending: false }),
+  ]);
+  $('#tbl-purchases').innerHTML = (invs || []).map(v => `
+    <tr>
+      <td>${v.number}</td>
+      <td>${new Date(v.created_at).toLocaleDateString('ar-EG')}</td>
+      <td>${esc(v.parties?.name)}</td>
+      <td>${fmt(v.total)}</td>
+      <td>${v.status === 'posted' ? 'مرحّلة' : esc(v.status)}</td>
+    </tr>`).join('') || '<tr><td colspan="5" style="color:#7A6A5C">لا توجد فواتير شراء بعد</td></tr>';
+  $('#tbl-purchase-returns').innerHTML = (rets || []).map(v => `
+    <tr>
+      <td>${v.number}</td>
+      <td>${new Date(v.created_at).toLocaleDateString('ar-EG')}</td>
+      <td>${esc(v.parties?.name)}</td>
+      <td>${fmt(v.total)}</td>
+    </tr>`).join('') || '<tr><td colspan="4" style="color:#7A6A5C">لا توجد مرتجعات مشتريات بعد</td></tr>';
+}
+
+async function loadSalesReturns() {
+  const { data } = await sb.from('sales_returns')
+    .select('*, parties(name)').order('number', { ascending: false });
+  $('#tbl-sales-returns').innerHTML = (data || []).map(v => `
+    <tr>
+      <td>${v.number}</td>
+      <td>${new Date(v.created_at).toLocaleDateString('ar-EG')}</td>
+      <td>${esc(v.parties?.name)}</td>
+      <td>${fmt(v.total)}</td>
+      <td>${esc(v.memo || '—')}</td>
+    </tr>`).join('') || '<tr><td colspan="5" style="color:#7A6A5C">لا توجد مرتجعات مبيعات بعد</td></tr>';
+}
+
+const QUOTE_STATUS = { open: 'مفتوح', converted: 'محوَّل لفاتورة', cancelled: 'ملغي' };
+
+async function loadQuotes() {
+  const { data } = await sb.from('quotes')
+    .select('*, parties(name)').order('number', { ascending: false });
+  state.quotes = data || [];
+  $('#tbl-quotes').innerHTML = state.quotes.map(q => `
+    <tr>
+      <td>${q.number}</td>
+      <td>${new Date(q.created_at).toLocaleDateString('ar-EG')}</td>
+      <td>${esc(q.parties?.name)}</td>
+      <td>${fmt(q.total)}</td>
+      <td>${QUOTE_STATUS[q.status] || esc(q.status)}</td>
+      <td>${q.status === 'open' ? `
+        <button class="btn btn-gold btn-sm" onclick="convertQuote('${q.id}')">تحويل لفاتورة</button>
+        <button class="btn btn-danger" onclick="cancelQuote('${q.id}')">إلغاء</button>` : ''}</td>
+    </tr>`).join('') || '<tr><td colspan="6" style="color:#7A6A5C">لا توجد عروض أسعار بعد</td></tr>';
+}
+
+// ─── تحويل / إلغاء عرض الأسعار ───
+window.convertQuote = async (id) => {
+  const q = (state.quotes || []).find(x => x.id === id);
+  if (!q) return;
+  if (!confirm(`تحويل عرض الأسعار رقم ${q.number} إلى فاتورة مبيعات حقيقية؟\nسيتم ترحيل القيد وتخفيض المخزون.`)) return;
+  const { data, error } = await sb.rpc('convert_quote_to_invoice', { p_tenant: state.tenant, p_quote: id });
+  if (error) return toast('فشل التحويل: ' + error.message, false);
+  toast(`تم التحويل ✅ — فاتورة المبيعات رقم ${data?.invoice_number ?? ''}`);
+  loadQuotes();
+  loadInvoices();
+  loadItems(); // تحديث الأرصدة بعد حركة المخزون
+};
+
+window.cancelQuote = async (id) => {
+  const q = (state.quotes || []).find(x => x.id === id);
+  if (!q) return;
+  if (!confirm(`إلغاء عرض الأسعار رقم ${q.number}؟`)) return;
+  const { error } = await sb.rpc('cancel_quote', { p_tenant: state.tenant, p_quote: id });
+  if (error) return toast('فشل الإلغاء: ' + error.message, false);
+  toast(`تم إلغاء عرض الأسعار رقم ${q.number}`);
+  loadQuotes();
+};
+
+// ─── نموذج مستند موحد (فاتورة شراء / مرتجع / عرض أسعار) ───
+async function docForm(kind) {
+  const K = DOC_KINDS[kind];
+  if (!K) return;
+  if (!state.parties.length) await loadParties();
+  if (!state.items.length) await loadItems();
+  const parties = state.parties.filter(p => p.kind === K.party);
+  if (!parties.length) return toast(`أضف ${K.party === 'supplier' ? 'مورداً' : 'عميلاً'} أولاً`, false);
+  if (!state.items.length) return toast('أضف صنفاً أولاً', false);
+
+  const itemOpts = () => state.items.map(i =>
+    `<option value="${i.id}" data-price="${i.sale_price}">${esc(i.name)}</option>`).join('');
+
+  openModal(`
+    <h3>${K.title}</h3>
+    <label class="lbl">${K.partyLbl}</label>
+    <select id="doc-party">
+      ${parties.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}
+    </select>
+    <div id="doc-lines"></div>
+    <button class="btn btn-ghost btn-sm" id="doc-add-line">+ إضافة سطر</button>
+    <div class="inv-total">الإجمالي: <span id="doc-total">0</span></div>
+    <div class="modal-actions">
+      <button class="btn btn-gold" id="doc-save">حفظ وترحيل</button>
+      <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+    </div>`);
+  $('#modal-body').classList.add('modal-lg');
+
+  // سطر ديناميكي: صنف + كمية + (تكلفة|سعر) + إجمالي سطر لحظي
+  const addLine = () => {
+    const d = document.createElement('div');
+    d.className = 'inv-line doc-line';
+    d.innerHTML = `
+      <select class="ln-item">${itemOpts()}</select>
+      <input class="ln-qty" type="number" min="0" step="any" value="1" placeholder="الكمية">
+      <input class="ln-price" type="number" min="0" step="any" placeholder="${K.priceLbl}">
+      <span class="ln-sum" style="font-weight:700;color:#7B4B26">0</span>
+      <button class="del-line" title="حذف السطر">✕</button>`;
+    const sel = d.querySelector('.ln-item');
+    const priceIn = d.querySelector('.ln-price');
+    const syncPrice = () => { if (!priceIn.value) priceIn.value = sel.selectedOptions[0]?.dataset.price ?? 0; };
+    sel.onchange = () => { priceIn.value = sel.selectedOptions[0]?.dataset.price ?? 0; calcTotal(); };
+    syncPrice();
+    d.querySelectorAll('input').forEach(i => i.oninput = calcTotal);
+    d.querySelector('.del-line').onclick = () => { d.remove(); calcTotal(); };
+    $('#doc-lines').appendChild(d);
+    calcTotal();
+  };
+
+  // حساب إجمالي كل سطر وإجمالي المستند لحظياً
+  function calcTotal() {
+    let t = 0;
+    $$('#doc-lines .doc-line').forEach(l => {
+      const sum = (Number(l.querySelector('.ln-qty').value) || 0) *
+                  (Number(l.querySelector('.ln-price').value) || 0);
+      l.querySelector('.ln-sum').textContent = fmt(sum);
+      t += sum;
+    });
+    $('#doc-total').textContent = fmt(t);
+  }
+
+  $('#doc-add-line').onclick = addLine;
+  addLine();
+
+  // الحفظ عبر RPC فقط (كتابة تشغيلية حساسة — القيد والمخزون داخل الدالة ذرياً)
+  $('#doc-save').onclick = async () => {
+    const lines = $$('#doc-lines .doc-line').map(l => ({
+      item_id: l.querySelector('.ln-item').value,
+      qty: Number(l.querySelector('.ln-qty').value),
+      [K.priceField]: Number(l.querySelector('.ln-price').value),
+    }));
+    if (!lines.length) return toast('أضف سطراً واحداً على الأقل', false);
+    if (lines.some(l => !l.qty || l.qty <= 0))
+      return toast('تحقق من السطور (كمية > 0)', false);
+    if (lines.some(l => l[K.priceField] < 0))
+      return toast(K.priceLbl + ' لا يمكن أن يكون سالباً', false);
+    const params = { p_tenant: state.tenant, p_lines: lines };
+    if (K.party === 'supplier') params.p_supplier = $('#doc-party').value;
+    else params.p_customer = $('#doc-party').value;
+    const { data, error } = await sb.rpc(K.rpc, params);
+    if (error) return toast('فشل الحفظ: ' + error.message, false);
+    closeModal();
+    toast(K.done(data));
+    // تحديث الجداول والمخزون بعد كل عملية ناجحة
+    loadItems();
+    if (kind === 'purchase_invoice' || kind === 'purchase_return') loadPurchases();
+    if (kind === 'sales_return') loadSalesReturns();
+    if (kind === 'quote') loadQuotes();
+  };
+}
+
+// أزرار التبويبات
+$('#btn-new-purchase').onclick = () => docForm('purchase_invoice');
+$('#btn-new-purchase-return').onclick = () => docForm('purchase_return');
+$('#btn-new-sales-return').onclick = () => docForm('sales_return');
+$('#btn-new-quote').onclick = () => docForm('quote');
+
+// بنود القوائم الكلاسيكية: تفتح التبويب المناسب وتفتح النموذج مباشرة (نمط السندات)
+window.openPurchaseInvoice = () => { switchTab('purchases'); docForm('purchase_invoice'); };
+window.openPurchaseReturn  = () => { switchTab('purchases'); switchPurchSub('pr'); docForm('purchase_return'); };
+window.openSalesReturn     = () => { switchTab('returns'); docForm('sales_return'); };
+window.openQuote           = () => { switchTab('quotes'); docForm('quote'); };
+
+// التابات الفرعية داخل تبويب المشتريات
+function switchPurchSub(sub) {
+  $$('#tab-purchases .sub-tab').forEach(b => b.classList.toggle('active', b.dataset.sub === sub));
+  $('#purch-pane-pi').classList.toggle('hidden', sub !== 'pi');
+  $('#purch-pane-pr').classList.toggle('hidden', sub !== 'pr');
+}
+$$('#tab-purchases .sub-tab').forEach(b => b.onclick = () => switchPurchSub(b.dataset.sub));
+
+// ─────────── ١١-ح) المخازن: المستودعات + التحويل + الجرد ───────────
+// قرارات التصميم (المنطق النهائي في hazem-warehouse-pos.sql):
+//   • الأرصدة مشتقة من stock_movements عبر v_item_balances — لا يوجد رصيد مُخزَّن.
+//   • التحويل = حركتان ذريتان (transfer_out سالبة + transfer_in موجبة بنفس ref_id).
+//   • الجرد = حركة تسوية adjustment بالفرق (فعلي - دفتري) لكل صنف مختلف فقط.
+//   • البنود الثلاثة في القائمة تفتح تبويباً واحداً «tab-warehouses» بتابات فرعية.
+let _whSub = 'list'; // التاب الفرعي الحالي
+
+function switchWhSub(sub) {
+  _whSub = sub;
+  $$('#tab-warehouses .sub-tab').forEach(b => b.classList.toggle('active', b.dataset.sub === sub));
+  $('#wh-pane-list').classList.toggle('hidden', sub !== 'list');
+  $('#wh-pane-transfer').classList.toggle('hidden', sub !== 'transfer');
+  $('#wh-pane-count').classList.toggle('hidden', sub !== 'count');
+  if (sub === 'transfer') loadTransfers();
+  if (sub === 'count') loadCount();
+}
+$$('#tab-warehouses .sub-tab').forEach(b => b.onclick = () => switchWhSub(b.dataset.sub));
+window.openWarehouses = (sub) => { switchTab('warehouses'); switchWhSub(sub || 'list'); };
+
+// تحميل المستودعات + الأرصدة المجمعة (للاستخدام في التابات الثلاثة)
+async function loadWarehouses() {
+  const [{ data: whs }, { data: bals }] = await Promise.all([
+    sb.from('warehouses').select('*').order('name'),
+    sb.from('v_item_balances').select('item_id, warehouse_id, balance'),
+  ]);
+  state.warehouses = whs || [];
+  state.balances = bals || [];
+
+  // جدول المستودعات: عدد الأصناف ذات الرصيد + إجمالي القطع
+  const stats = {};
+  state.balances.forEach(b => {
+    const s = stats[b.warehouse_id] = stats[b.warehouse_id] || { items: 0, qty: 0 };
+    if (Number(b.balance) !== 0) { s.items++; s.qty += Number(b.balance); }
+  });
+  $('#tbl-warehouses').innerHTML = state.warehouses.map(w => {
+    const s = stats[w.id] || { items: 0, qty: 0 };
+    return `<tr>
+      <td>${esc(w.name)}</td>
+      <td>${w.is_main ? '⭐ رئيسي' : 'فرعي'}</td>
+      <td>${fmt(s.items)}</td><td>${fmt(s.qty)}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="4" style="color:#7A6A5C">لا توجد مستودعات بعد</td></tr>';
+
+  // تحديث قوائم المستودعات في الجرد
+  $('#count-wh').innerHTML = state.warehouses.map(w =>
+    `<option value="${w.id}">${esc(w.name)}</option>`).join('');
+}
+
+// رصيد صنف في مستودع (من الأرصدة المشتقة المحمّلة)
+function balanceOf(itemId, whId) {
+  return (state.balances || [])
+    .filter(b => b.item_id === itemId && b.warehouse_id === whId)
+    .reduce((s, b) => s + Number(b.balance), 0);
+}
+
+// ─── إضافة مستودع ───
+$('#btn-add-warehouse').onclick = () => {
+  openModal(`
+    <h3>مستودع جديد</h3>
+    <label class="lbl">اسم المستودع</label>
+    <input id="f-whname" placeholder="مثال: مخزن الفرع الثاني">
+    <div class="modal-actions">
+      <button class="btn btn-gold" id="f-whsave">حفظ</button>
+      <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+    </div>`);
+  $('#f-whname').focus();
+  $('#f-whsave').onclick = async () => {
+    const name = $('#f-whname').value.trim();
+    if (!name) return toast('اسم المستودع مطلوب', false);
+    const { error } = await sb.rpc('add_warehouse', { p_tenant: state.tenant, p_name: name });
+    if (error) return toast('خطأ: ' + error.message, false);
+    toast('تمت إضافة المستودع «' + name + '» بنجاح');
+    closeModal(); loadWarehouses();
+  };
+};
+
+// ─── التحويل بين المستودعات: سجل التحويلات الأخيرة ───
+async function loadTransfers() {
+  // نجمع الحركتين (خروج/دخول) بـ ref_id المشترك لعرض «من → إلى»
+  const { data: mvts } = await sb.from('stock_movements')
+    .select('item_id, warehouse_id, qty, reason, ref_id, created_at, items(name), warehouses(name)')
+    .in('reason', ['transfer_out', 'transfer_in'])
+    .order('created_at', { ascending: false }).limit(200);
+  const pairs = {};
+  (mvts || []).forEach(m => {
+    const p = pairs[m.ref_id] = pairs[m.ref_id] || {};
+    if (m.reason === 'transfer_out') { p.out = m; p.date = m.created_at; }
+    else p.in = m;
+  });
+  const rows = Object.values(pairs).filter(p => p.out && p.in).slice(0, 50);
+  $('#tbl-transfers').innerHTML = rows.map(p => `
+    <tr>
+      <td>${new Date(p.date).toLocaleDateString('ar-EG')}</td>
+      <td>${esc(p.out.items?.name)}</td>
+      <td>${esc(p.out.warehouses?.name)}</td>
+      <td>${esc(p.in.warehouses?.name)}</td>
+      <td>${fmt(p.in.qty)}</td>
+    </tr>`).join('') || '<tr><td colspan="5" style="color:#7A6A5C">لا توجد تحويلات بعد</td></tr>';
+}
+
+// ─── نموذج تحويل جديد (مع الرصيد المتاح في المصدر لحظياً) ───
+$('#btn-new-transfer').onclick = async () => {
+  if (!state.warehouses || !state.warehouses.length) await loadWarehouses();
+  if (!state.items.length) await loadItems();
+  if (state.warehouses.length < 2) return toast('أضف مستودعاً ثانياً أولاً من تبويب «المستودعات»', false);
+  if (!state.items.length) return toast('أضف صنفاً أولاً', false);
+
+  const whOpts = () => state.warehouses.map(w =>
+    `<option value="${w.id}">${esc(w.name)}${w.is_main ? ' ⭐' : ''}</option>`).join('');
+
+  openModal(`
+    <h3>تحويل بين المستودعات</h3>
+    <label class="lbl">الصنف</label>
+    <select id="tr-item">${state.items.map(i =>
+      `<option value="${i.id}">${esc(i.name)}</option>`).join('')}</select>
+    <div class="row">
+      <div><label class="lbl">من مستودع</label><select id="tr-from">${whOpts()}</select></div>
+      <div><label class="lbl">إلى مستودع</label><select id="tr-to">${whOpts()}</select></div>
+    </div>
+    <div class="logo-note" id="tr-avail">الرصيد المتاح في المصدر: —</div>
+    <label class="lbl">الكمية</label>
+    <input id="tr-qty" type="number" min="0" step="any" value="1">
+    <div class="modal-actions">
+      <button class="btn btn-gold" id="tr-save">تنفيذ التحويل</button>
+      <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+    </div>`);
+  // الوجهة الافتراضية: أول مستودع مختلف عن المصدر
+  $('#tr-to').selectedIndex = state.warehouses.length > 1 ? 1 : 0;
+
+  const syncAvail = () => {
+    const avail = balanceOf($('#tr-item').value, $('#tr-from').value);
+    $('#tr-avail').textContent = 'الرصيد المتاح في المصدر: ' + fmt(avail);
+    $('#tr-avail').style.borderRightColor = avail > 0 ? 'var(--green)' : 'var(--red)';
+    return avail;
+  };
+  $('#tr-item').onchange = syncAvail;
+  $('#tr-from').onchange = syncAvail;
+  syncAvail();
+
+  $('#tr-save').onclick = async () => {
+    const qty = Number($('#tr-qty').value) || 0;
+    if (qty <= 0) return toast('أدخل كمية أكبر من صفر', false);
+    if ($('#tr-from').value === $('#tr-to').value)
+      return toast('لا يمكن التحويل من مستودع إلى نفسه', false);
+    const { data, error } = await sb.rpc('transfer_stock', {
+      p_tenant: state.tenant, p_item: $('#tr-item').value,
+      p_from_wh: $('#tr-from').value, p_to_wh: $('#tr-to').value, p_qty: qty });
+    if (error) return toast('فشل التحويل: ' + error.message, false);
+    closeModal();
+    toast(`تم تحويل ${fmt(qty)} من «${data?.item ?? ''}» بنجاح ✅`);
+    await loadWarehouses(); // تحديث الأرصدة المشتقة
+    loadTransfers();
+    loadItems();
+  };
+};
+
+// ─── الجرد: رصيد دفتري + عدد فعلي + فرق لحظي ───
+async function loadCount() {
+  if (!state.warehouses || !state.warehouses.length) await loadWarehouses();
+  if (!state.items.length) await loadItems();
+  const whId = $('#count-wh').value;
+  $('#tbl-count').innerHTML = state.items.map(i => {
+    const book = balanceOf(i.id, whId);
+    return `<tr data-item="${i.id}" data-book="${book}">
+      <td>${esc(i.name)}</td>
+      <td class="cnt-book">${fmt(book)}</td>
+      <td><input class="cnt-actual" type="number" min="0" step="any" value="${book}" style="margin:0;padding:8px;max-width:130px"></td>
+      <td class="cnt-diff" style="font-weight:700">0</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="4" style="color:#7A6A5C">لا توجد أصناف</td></tr>';
+  // الفرق يتحدث لحظياً مع كل إدخال
+  $$('#tbl-count .cnt-actual').forEach(inp => inp.oninput = () => {
+    const tr = inp.closest('tr');
+    const diff = (Number(inp.value) || 0) - Number(tr.dataset.book);
+    const cell = tr.querySelector('.cnt-diff');
+    cell.textContent = (diff > 0 ? '+' : '') + fmt(diff);
+    cell.style.color = diff === 0 ? 'var(--muted)' : (diff > 0 ? 'var(--green)' : 'var(--red)');
+  });
+}
+$('#count-wh').onchange = loadCount;
+
+// اعتماد التسوية: adjust_stock للأصناف المختلفة فقط
+$('#btn-apply-count').onclick = async () => {
+  const whId = $('#count-wh').value;
+  if (!whId) return toast('اختر مستودعاً أولاً', false);
+  const changed = $$('#tbl-count tr[data-item]').map(tr => ({
+    item_id: tr.dataset.item,
+    book: Number(tr.dataset.book),
+    counted: Number(tr.querySelector('.cnt-actual').value) || 0,
+  })).filter(r => r.counted !== r.book);
+  if (!changed.length) return toast('لا توجد فروقات — كل الأصناف مطابقة للدفتري ✅');
+  if (!confirm(`اعتماد تسوية الجرد لـ ${changed.length} صنفاً مختلفاً؟\nسيتم تسجيل حركة تسوية بالفرق لكل منها.`)) return;
+  let ok = 0, failed = [];
+  for (const r of changed) {
+    const { data, error } = await sb.rpc('adjust_stock', {
+      p_tenant: state.tenant, p_item: r.item_id, p_wh: whId,
+      p_counted: r.counted, p_memo: 'تسوية جرد' });
+    if (error) failed.push(error.message);
+    else if (Number(data?.diff ?? 0) !== (r.counted - r.book)) failed.push('فرق غير متوقع');
+    else ok++;
+  }
+  if (failed.length) toast('بعض التسويات فشلت: ' + failed[0], false);
+  else toast(`تم اعتماد تسوية الجرد لـ ${ok} صنفاً بنجاح ✅`);
+  await loadWarehouses();
+  loadCount();
+  loadItems();
+};
+
+// ─────────── ١١-ط) نقاط البيع: شاشة الكاشير + الورديات ───────────
+// قرارات التصميم (المنطق النهائي في hazem-warehouse-pos.sql):
+//   • «عميل نقدي» يُنشأ تلقائياً أول مرة (customer_id إلزامي) والقيد نقدي:
+//     مدين 1100 الخزينة / دائن 4100 المبيعات (بدون طرف) + مخزون سالب من
+//     المستودع الافتراضي، والفاتورة مرتبطة بالوردية عبر shift_id.
+//   • الوردية لكل مستخدم — لا يمكن فتح ورديتين مفتوحتين لنفس الكاشير.
+let _cart = []; // سلة الكاشير الحالية [{item_id, name, price, qty}]
+
+// ورديتي المفتوحة حالياً (إن وجدت)
+async function myOpenShift() {
+  const { data } = await sb.from('pos_shifts').select('*')
+    .eq('cashier', state.user.id).eq('status', 'open')
+    .order('number', { ascending: false }).limit(1);
+  return (data || [])[0] || null;
+}
+
+async function loadPos() {
+  if (!state.items.length) await loadItems();
+  state.shift = await myOpenShift();
+  const open = !!state.shift;
+  $('#pos-open').classList.toggle('hidden', open);
+  $('#pos-screen').classList.toggle('hidden', !open);
+  if (open) {
+    $('#pos-shift-no').textContent = state.shift.number;
+    renderPosGrid();
+    renderCart();
+  }
+}
+
+// فتح وردية
+$('#btn-open-shift').onclick = async () => {
+  const cash = Number($('#shift-opening-cash').value) || 0;
+  if (cash < 0) return toast('الرصيد الافتتاحي لا يمكن أن يكون سالباً', false);
+  const { data, error } = await sb.rpc('open_shift', { p_tenant: state.tenant, p_opening_cash: cash });
+  if (error) return toast('فشل فتح الوردية: ' + error.message, false);
+  toast(`تم فتح الوردية رقم ${data?.number ?? ''} — بالتوفيق! 🟢`);
+  _cart = [];
+  loadPos();
+};
+$('#shift-opening-cash').onkeydown = (e) => { if (e.key === 'Enter') $('#btn-open-shift').click(); };
+
+// شبكة الأصناف القابلة للضغط
+function renderPosGrid() {
+  const q = ($('#pos-search').value || '').trim();
+  const items = state.items.filter(i => !q || i.name.includes(q) || (i.sku || '').includes(q));
+  $('#pos-grid').innerHTML = items.map(i => `
+    <button class="pos-item" data-id="${i.id}">
+      <span class="pos-item-name">${esc(i.name)}</span>
+      <span class="pos-item-price">${fmt(i.sale_price)}</span>
+    </button>`).join('') || '<div style="color:var(--muted);padding:20px">لا توجد أصناف مطابقة</div>';
+  $$('#pos-grid .pos-item').forEach(b => b.onclick = () => addToCart(b.dataset.id));
+}
+$('#pos-search').oninput = renderPosGrid;
+
+// السلة
+function addToCart(itemId) {
+  const item = state.items.find(i => i.id === itemId);
+  if (!item) return;
+  const line = _cart.find(l => l.item_id === itemId);
+  if (line) line.qty++;
+  else _cart.push({ item_id: item.id, name: item.name, price: Number(item.sale_price) || 0, qty: 1 });
+  renderCart();
+}
+
+window.posLineQty = (itemId, delta) => {
+  const line = _cart.find(l => l.item_id === itemId);
+  if (!line) return;
+  line.qty += delta;
+  if (line.qty <= 0) _cart = _cart.filter(l => l.item_id !== itemId);
+  renderCart();
+};
+
+window.posLineDel = (itemId) => {
+  _cart = _cart.filter(l => l.item_id !== itemId);
+  renderCart();
+};
+
+function cartTotal() { return _cart.reduce((s, l) => s + l.qty * l.price, 0); }
+
+function renderCart() {
+  $('#pos-cart-lines').innerHTML = _cart.map(l => `
+    <div class="cart-line">
+      <span class="cart-name">${esc(l.name)}</span>
+      <span class="cart-qty">
+        <button class="qty-btn" onclick="posLineQty('${l.item_id}', 1)">+</button>
+        <b>${fmt(l.qty)}</b>
+        <button class="qty-btn" onclick="posLineQty('${l.item_id}', -1)">−</button>
+      </span>
+      <span class="cart-sum">${fmt(l.qty * l.price)}</span>
+      <button class="del-line" onclick="posLineDel('${l.item_id}')" title="حذف">✕</button>
+    </div>`).join('') || '<div style="color:var(--muted);padding:14px;text-align:center">السلة فارغة — اضغط على صنف لإضافته</div>';
+  $('#pos-total').textContent = fmt(cartTotal());
+}
+$('#btn-cart-clear').onclick = () => { _cart = []; renderCart(); };
+
+// ─── التحصيل (F9): المدفوع نقداً + الباقي لحظياً ───
+function openCheckout() {
+  if (!state.shift) return toast('لا توجد وردية مفتوحة — افتح وردية أولاً', false);
+  if (!_cart.length) return toast('السلة فارغة — أضف صنفاً على الأقل', false);
+  const total = cartTotal();
+  openModal(`
+    <h3>💵 تحصيل نقدي</h3>
+    <div class="pos-total" style="text-align:center;font-size:30px;margin-bottom:14px">الإجمالي: ${fmt(total)}</div>
+    <label class="lbl">المبلغ المدفوع نقداً</label>
+    <input id="pay-paid" type="number" min="0" step="any" value="${total}" dir="ltr"
+           style="text-align:center;font-size:24px;font-weight:700">
+    <div class="je-totals" style="justify-content:center">
+      <span>الباقي للعميل:</span>
+      <span id="pay-change" class="je-balance ok" style="font-size:22px">0</span>
+    </div>
+    <div class="modal-actions" style="justify-content:center">
+      <button class="btn btn-gold" id="pay-confirm" style="font-size:17px;padding:12px 30px">✅ تأكيد التحصيل</button>
+      <button class="btn btn-ghost" onclick="closeModal()">إلغاء (Esc)</button>
+    </div>`);
+  const syncChange = () => {
+    const change = (Number($('#pay-paid').value) || 0) - total;
+    const el = $('#pay-change');
+    el.textContent = fmt(change);
+    el.className = 'je-balance ' + (change >= 0 ? 'ok' : 'bad');
+    $('#pay-confirm').disabled = change < 0;
+  };
+  $('#pay-paid').oninput = syncChange;
+  syncChange();
+  $('#pay-paid').focus(); $('#pay-paid').select();
+  $('#pay-paid').onkeydown = (e) => { if (e.key === 'Enter') $('#pay-confirm').click(); };
+
+  $('#pay-confirm').onclick = async () => {
+    const paid = Number($('#pay-paid').value) || 0;
+    if (paid < total) return toast('المبلغ المدفوع أقل من الإجمالي', false);
+    const lines = _cart.map(l => ({ item_id: l.item_id, qty: l.qty, price: l.price }));
+    const btn = $('#pay-confirm'); btn.disabled = true; btn.textContent = '⏳ جاري الترحيل...';
+    const { data, error } = await sb.rpc('pos_checkout', {
+      p_tenant: state.tenant, p_shift: state.shift.id, p_lines: lines, p_paid: paid });
+    if (error) { btn.disabled = false; btn.textContent = '✅ تأكيد التحصيل'; return toast('فشل التحصيل: ' + error.message, false); }
+    _cart = [];
+    renderCart();
+    loadItems(); // تحديث الأرصدة بعد البيع
+    openModal(`
+      <h3 style="text-align:center">✅ تم البيع بنجاح</h3>
+      <div class="table-wrap"><table><tbody>
+        <tr><td style="color:var(--muted)">رقم الفاتورة</td><td style="font-weight:700;font-size:20px">${data?.invoice_number ?? '—'}</td></tr>
+        <tr><td style="color:var(--muted)">الإجمالي</td><td style="font-weight:700">${fmt(data?.total)}</td></tr>
+        <tr><td style="color:var(--muted)">المدفوع</td><td>${fmt(data?.paid)}</td></tr>
+        <tr><td style="color:var(--muted)">الباقي للعميل</td>
+            <td style="font-weight:700;font-size:24px;color:var(--green)">${fmt(data?.change)}</td></tr>
+      </tbody></table></div>
+      <div class="modal-actions" style="justify-content:center">
+        <button class="btn btn-gold" onclick="closeModal()">بيع جديد (F9)</button></div>`);
+  };
+}
+$('#btn-pos-checkout').onclick = openCheckout;
+
+// اختصار F9 للتحصيل (يعمل في شاشة الكاشير فقط)
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'F9') return;
+  if ($('#tab-pos').classList.contains('hidden')) return;
+  e.preventDefault();
+  // لو إيصال النجاح مفتوحاً: F9 يبدأ بيعاً جديداً
+  if (!$('#modal-overlay').classList.contains('hidden')) { closeModal(); return; }
+  openCheckout();
+});
+
+// ─── قفل الوردية: ملخص + رصيد ختامي ───
+$('#btn-close-shift').onclick = async () => {
+  if (!state.shift) return toast('لا توجد وردية مفتوحة', false);
+  // ملخص الوردية من فواتيرها
+  const { data: invs } = await sb.from('sales_invoices').select('total')
+    .eq('shift_id', state.shift.id);
+  const count = (invs || []).length;
+  const total = (invs || []).reduce((s, r) => s + Number(r.total), 0);
+  const expected = Number(state.shift.opening_cash) + total;
+  openModal(`
+    <h3>🔒 قفل الوردية رقم ${state.shift.number}</h3>
+    <div class="table-wrap"><table><tbody>
+      <tr><td style="color:var(--muted)">عدد فواتير الوردية</td><td style="font-weight:700">${fmt(count)}</td></tr>
+      <tr><td style="color:var(--muted)">إجمالي مبيعات الوردية</td><td style="font-weight:700">${fmt(total)}</td></tr>
+      <tr><td style="color:var(--muted)">الرصيد الافتتاحي</td><td>${fmt(state.shift.opening_cash)}</td></tr>
+      <tr><td style="color:var(--muted)">النقدية المتوقعة في الصندوق</td><td style="font-weight:700">${fmt(expected)}</td></tr>
+    </tbody></table></div>
+    <label class="lbl">الرصيد الختامي الفعلي (عدّ النقدية في الصندوق)</label>
+    <input id="shift-closing-cash" type="number" min="0" step="any" value="${expected}" dir="ltr"
+           style="text-align:center;font-size:22px;font-weight:700">
+    <div class="modal-actions">
+      <button class="btn btn-gold" id="btn-do-close-shift">🔒 تأكيد قفل الوردية</button>
+      <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+    </div>`);
+  $('#btn-do-close-shift').onclick = async () => {
+    const cash = Number($('#shift-closing-cash').value) || 0;
+    const { data, error } = await sb.rpc('close_shift', {
+      p_tenant: state.tenant, p_shift: state.shift.id, p_closing_cash: cash });
+    if (error) return toast('فشل قفل الوردية: ' + error.message, false);
+    closeModal();
+    const diff = Number(data?.cash_diff ?? 0);
+    toast(`تم قفل الوردية رقم ${data?.number ?? ''} ✅ — ` +
+      (diff === 0 ? 'الصندوق مطابق تماماً' : `فرق الصندوق: ${fmt(diff)}`), diff === 0);
+    state.shift = null;
+    _cart = [];
+    loadPos();
+  };
+};
+
+// ─────────── ١١-ي) ورديات الكاشير: الجدول ───────────
+const SHIFT_STATUS = { open: '🟢 مفتوحة', closed: '⚫ مقفلة' };
+async function loadShifts() {
+  const { data } = await sb.from('pos_shifts').select('*')
+    .order('number', { ascending: false }).limit(100);
+  $('#tbl-shifts').innerHTML = (data || []).map(s => `
+    <tr>
+      <td>${s.number}</td>
+      <td dir="ltr">${s.cashier === state.user?.id ? esc(state.user.email) + ' (أنت)' : esc(String(s.cashier).slice(0, 8)) + '…'}</td>
+      <td>${new Date(s.opened_at).toLocaleString('ar-EG')}</td>
+      <td>${s.closed_at ? new Date(s.closed_at).toLocaleString('ar-EG') : '—'}</td>
+      <td>${fmt(s.opening_cash)}</td>
+      <td>${s.closing_cash == null ? '—' : fmt(s.closing_cash)}</td>
+      <td>${s.sales_total == null ? '—' : fmt(s.sales_total)}</td>
+      <td>${SHIFT_STATUS[s.status] || esc(s.status)}</td>
+    </tr>`).join('') || '<tr><td colspan="8" style="color:#7A6A5C">لا توجد ورديات بعد</td></tr>';
+}
 
 // ─────────── ١٢) نقطة البداية ───────────
 (async () => {
