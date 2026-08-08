@@ -247,3 +247,91 @@ td .btn{margin-inline-start:6px}
 .pos-total{text-align:left;font-size:26px;color:var(--red);font-weight:700;
   padding:14px 0;border-top:2px solid var(--line);margin-top:8px}
 @media (max-width:900px){.pos-layout{grid-template-columns:1fr}.pos-cart{position:static}}
+
+/* ───── طباعة أساسية للتقارير (دفعة A — المعاينة الاحترافية الكاملة في دفعة B) ───── */
+@media print{
+  .menubar,.sidebar,.topbar,.win-titlebar,.toolbar,.win-btns{display:none!important}
+  .main{padding:0}
+  .report-box{break-inside:avoid}
+}
+
+/* ═══════════════ دفعة B — شاشة معاينة الطباعة الاحترافية ═══════════════ */
+/* الغلاف: نافذة داخلية شبه كاملة بنفس روح XP (شريط أدوات رمادي كلاسيكي) */
+.pv-overlay{position:fixed;inset:0;z-index:150;display:flex;flex-direction:column;
+  background:rgba(20,18,16,.6)}
+.pv-toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 10px;
+  background:linear-gradient(180deg,#FAFAFA 0%,#ECE9D8 45%,#D8D2C0 100%);
+  border-bottom:1px solid #ACA899;box-shadow:inset 0 1px 0 #FFFFFF;
+  font-family:Tahoma,Arial,sans-serif}
+.pv-title{font-weight:700;color:#141210;font-size:13px;margin-inline-end:8px}
+.pv-sep{width:1px;height:22px;background:#ACA899;box-shadow:1px 0 0 #fff;margin:0 4px}
+.pv-zoom-lbl{min-width:44px;text-align:center;font-weight:700;color:#5C3A1E;font-size:13px}
+.pv-wm-input{width:190px;margin-bottom:0;padding:6px 10px;font-size:13px;border-radius:8px}
+.pv-toolbar .btn{white-space:nowrap}
+#pv-close{margin-inline-start:auto;border-color:#B42318;color:#B42318;font-weight:700}
+
+.pv-scroll{flex:1;overflow:auto;padding:26px 16px 60px}
+.pv-sheet-wrap{display:flex;justify-content:center;min-width:min-content}
+
+/* ورقة المستند: A4 نظيفة */
+.pv-sheet{background:#fff;width:210mm;min-height:297mm;padding:16mm 14mm 20mm;
+  box-shadow:0 10px 40px rgba(0,0,0,.35);border-radius:4px;position:relative;
+  transform-origin:top center;color:#141210;direction:rtl;
+  font-family:'Segoe UI',Tahoma,Arial,sans-serif;font-size:13px;line-height:1.7}
+
+/* ترويسة المستند: شعار + شركة + عنوان + تاريخ */
+.doc-head{display:flex;align-items:center;gap:16px;border-bottom:3px double #B42318;
+  padding-bottom:12px;margin-bottom:14px}
+.doc-logo{height:64px;max-width:120px;object-fit:contain}
+.doc-head-txt{flex:1;text-align:center}
+.doc-company{font-size:20px;font-weight:700;color:#7B4B26}
+.doc-title{font-size:17px;font-weight:700;color:#B42318;margin-top:2px}
+.doc-date{color:#7A6A5C;font-size:12px;margin-top:2px}
+
+/* بيانات وصفية (رقم/عميل/حالة...) */
+.doc-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px 20px;
+  background:#FAF6F1;border:1px solid #E7DDD1;border-radius:10px;padding:10px 16px;margin-bottom:14px}
+.doc-meta .dm{display:flex;gap:8px;font-size:13px}
+.doc-meta .dm b{color:#7B4B26;white-space:nowrap}
+.doc-meta .dm span{font-weight:600}
+
+/* جداول المستند: حدود واضحة وخط عربي مقروء */
+.doc-caption{font-size:15px;font-weight:700;color:#B42318;margin:14px 0 6px}
+.doc-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px}
+.doc-table th{background:#F1EAE1;color:#5C3A1E;border:1px solid #C9BBA6;
+  padding:8px 10px;text-align:right;font-weight:700}
+.doc-table td{border:1px solid #DDD0BE;padding:7px 10px;text-align:right}
+.doc-table tr:nth-child(even) td{background:#FBF7F1}
+.doc-table tr:hover td{background:#FBF7F1} /* بلا hover داخل ورقة الطباعة */
+
+/* إجماليات وتذييل */
+.doc-totals{margin-top:10px;padding:10px 16px;background:#FAF6F1;border:1px solid #E7DDD1;
+  border-radius:10px;font-weight:700;color:#5C3A1E;display:flex;gap:26px;flex-wrap:wrap}
+.doc-totals .dt-net{color:#B42318;font-size:15px}
+.doc-note{color:#7A6A5C;font-size:12px;margin-top:8px}
+.doc-foot{position:absolute;bottom:8mm;left:14mm;right:14mm;text-align:center;
+  color:#7A6A5C;font-size:11px;border-top:1px solid #E7DDD1;padding-top:6px}
+.doc-foot b{color:#B42318;letter-spacing:1px}
+
+/* العلامة المائية: تتكرر قطرياً بشفافية خلف المحتوى (تُدرج فقط عند وجود نص) */
+.pv-wm-layer{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.pv-wm-layer span{position:absolute;color:#B42318;opacity:.09;font-weight:700;
+  font-size:30px;white-space:nowrap;transform:rotate(-32deg)}
+.pv-sheet>*:not(.pv-wm-layer):not(.doc-foot){position:relative;z-index:1}
+
+/* ───── الطباعة: ورقة المستند فقط ───── */
+@media print{
+  body.pv-printing>*:not(#pv-overlay){display:none!important}
+  body.pv-printing #pv-overlay{position:static;background:#fff}
+  body.pv-printing .pv-toolbar{display:none!important}
+  body.pv-printing .pv-scroll{overflow:visible;padding:0}
+  body.pv-printing .pv-sheet{width:auto;min-height:0;box-shadow:none;border-radius:0;
+    transform:none!important;margin:0;padding:0 0 18mm}
+  body.pv-printing .doc-foot{position:fixed;bottom:0}
+}
+
+/* الموبايل: الورقة تملأ العرض */
+@media (max-width:768px){
+  .pv-sheet{width:100%;min-height:auto;padding:10mm 6mm 18mm}
+  .pv-wm-input{width:130px}
+}

@@ -48,8 +48,8 @@
         <button class="mb-btn">ملف</button>
         <div class="mb-drop">
           <button class="mb-leaf" data-tab="dashboard">فتح لوحة المؤشرات</button>
-          <button class="mb-leaf" disabled>طباعة / معاينة</button>
-          <button class="mb-leaf" disabled>تصدير Excel</button>
+          <button class="mb-leaf" data-action="print-preview">طباعة / معاينة</button>
+          <button class="mb-leaf" data-action="export-excel">تصدير Excel</button>
           <div class="mb-sep"></div>
           <button class="mb-leaf" data-action="logout">تسجيل الخروج</button>
         </div>
@@ -67,8 +67,8 @@
         <button class="mb-btn">الإعدادات</button>
         <div class="mb-drop">
           <button class="mb-leaf" data-tab="settings">الإعدادات العامة</button>
-          <button class="mb-leaf" disabled>المستخدمون والصلاحيات</button>
-          <button class="mb-leaf" disabled>الفروع</button>
+          <button class="mb-leaf" data-tab="users">المستخدمون والصلاحيات</button>
+          <button class="mb-leaf" data-tab="branches">الفروع</button>
           <button class="mb-leaf" disabled>الفترات المالية</button>
         </div>
       </div>
@@ -124,18 +124,18 @@
       <div class="mb-item">
         <button class="mb-btn">تقارير الحسابات</button>
         <div class="mb-drop">
-          <button class="mb-leaf" disabled>ميزان المراجعة</button>
-          <button class="mb-leaf" disabled>قائمة الدخل</button>
-          <button class="mb-leaf" disabled>الميزانية العمومية</button>
-          <button class="mb-leaf" data-tab="reports">كشف حساب عميل</button>
+          <button class="mb-leaf" data-report="trial">ميزان المراجعة</button>
+          <button class="mb-leaf" data-report="income">قائمة الدخل</button>
+          <button class="mb-leaf" data-report="balance">الميزانية العمومية</button>
+          <button class="mb-leaf" data-report="stmt">كشف حساب عميل</button>
         </div>
       </div>
       <div class="mb-item">
         <button class="mb-btn">التقارير</button>
         <div class="mb-drop">
-          <button class="mb-leaf" data-tab="reports">تقارير المخزون</button>
-          <button class="mb-leaf" disabled>تقارير المبيعات</button>
-          <button class="mb-leaf" disabled>تقارير المشتريات</button>
+          <button class="mb-leaf" data-report="stock">تقارير المخزون</button>
+          <button class="mb-leaf" data-report="sales">تقارير المبيعات</button>
+          <button class="mb-leaf" data-report="purch">تقارير المشتريات</button>
         </div>
       </div>
       <div class="mb-item">
@@ -167,6 +167,8 @@
         <button class="nav-btn" data-tab="shifts">🕐 ورديات الكاشير</button>
         <button class="nav-btn" data-tab="reports">📈 تقارير</button>
         <button class="nav-btn" data-tab="settings">⚙️ الإعدادات</button>
+        <button class="nav-btn" data-tab="users">👤 المستخدمون والصلاحيات</button>
+        <button class="nav-btn" data-tab="branches">🏢 الفروع</button>
         <button id="nav-dev" class="nav-btn hidden" data-tab="dev">🛠️ لوحة المطوّر</button>
       </nav>
     </aside>
@@ -230,7 +232,7 @@
           <button id="btn-new-invoice" class="btn btn-gold">+ فاتورة جديدة</button>
         </div>
         <div class="table-wrap"><table>
-          <thead><tr><th>الرقم</th><th>التاريخ</th><th>العميل</th><th>الإجمالي</th><th>الحالة</th></tr></thead>
+          <thead><tr><th>الرقم</th><th>التاريخ</th><th>العميل</th><th>الإجمالي</th><th>الحالة</th><th>إجراءات</th></tr></thead>
           <tbody id="tbl-invoices"></tbody>
         </table></div>
       </section>
@@ -246,11 +248,11 @@
           <button class="btn btn-ghost btn-sm sub-tab" id="sub-pr" data-sub="pr">مرتجعات المشتريات</button>
         </div>
         <div id="purch-pane-pi" class="table-wrap"><table>
-          <thead><tr><th>الرقم</th><th>التاريخ</th><th>المورد</th><th>الإجمالي</th><th>الحالة</th></tr></thead>
+          <thead><tr><th>الرقم</th><th>التاريخ</th><th>المورد</th><th>الإجمالي</th><th>الحالة</th><th>إجراءات</th></tr></thead>
           <tbody id="tbl-purchases"></tbody>
         </table></div>
         <div id="purch-pane-pr" class="table-wrap hidden"><table>
-          <thead><tr><th>الرقم</th><th>التاريخ</th><th>المورد</th><th>الإجمالي</th></tr></thead>
+          <thead><tr><th>الرقم</th><th>التاريخ</th><th>المورد</th><th>الإجمالي</th><th>إجراءات</th></tr></thead>
           <tbody id="tbl-purchase-returns"></tbody>
         </table></div>
       </section>
@@ -262,7 +264,7 @@
           <button id="btn-new-sales-return" class="btn btn-gold">+ مرتجع مبيعات</button>
         </div>
         <div class="table-wrap"><table>
-          <thead><tr><th>الرقم</th><th>التاريخ</th><th>العميل</th><th>الإجمالي</th><th>البيان</th></tr></thead>
+          <thead><tr><th>الرقم</th><th>التاريخ</th><th>العميل</th><th>الإجمالي</th><th>البيان</th><th>إجراءات</th></tr></thead>
           <tbody id="tbl-sales-returns"></tbody>
         </table></div>
       </section>
@@ -395,30 +397,201 @@
           <button id="btn-vch-transfer" class="btn btn-vch-transfer">+ تحويل بين الخزن</button>
         </div>
         <div class="table-wrap"><table>
-          <thead><tr><th>الرقم</th><th>التاريخ</th><th>النوع</th><th>الطرف</th><th>المبلغ</th><th>البيان</th></tr></thead>
+          <thead><tr><th>الرقم</th><th>التاريخ</th><th>النوع</th><th>الطرف</th><th>المبلغ</th><th>البيان</th><th>إجراءات</th></tr></thead>
           <tbody id="tbl-vouchers"></tbody>
         </table></div>
       </section>
 
-      <!-- تقارير -->
+      <!-- تقارير: تابات فرعية داخل تبويب واحد (نفس نمط المشتريات/المستودعات) -->
       <section id="tab-reports" class="tab hidden">
-        <div class="report-box">
-          <h3>أرصدة الأصناف (صنف / مخزن / رصيد)</h3>
-          <div class="table-wrap"><table>
-            <thead><tr><th>الصنف</th><th>المخزن</th><th>الرصيد</th></tr></thead>
-            <tbody id="tbl-item-balances"></tbody>
-          </table></div>
+        <div class="toolbar sub-tabs" style="margin-top:0">
+          <button class="btn btn-ghost btn-sm sub-tab active" data-sub="stock">📦 تقارير المخزون</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="stmt">🧾 كشف حساب عميل</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="trial">⚖️ ميزان المراجعة</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="income">📈 قائمة الدخل</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="balance">🏛️ الميزانية العمومية</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="sales">💹 تقارير المبيعات</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="purch">🛒 تقارير المشتريات</button>
         </div>
-        <div class="report-box">
-          <h3>كشف حساب عميل</h3>
-          <div class="toolbar">
-            <select id="stmt-party"></select>
-            <button id="btn-run-stmt" class="btn btn-gold">عرض الكشف</button>
+
+        <!-- تقارير المخزون -->
+        <div id="rep-pane-stock">
+          <div class="report-box">
+            <h3>أرصدة الأصناف (صنف / مخزن / رصيد)</h3>
+            <div class="table-wrap"><table>
+              <thead><tr><th>الصنف</th><th>المخزن</th><th>الرصيد</th></tr></thead>
+              <tbody id="tbl-item-balances"></tbody>
+            </table></div>
           </div>
-          <div class="table-wrap"><table>
-            <thead><tr><th>التاريخ</th><th>البيان</th><th>مدين</th><th>دائن</th><th>الرصيد التراكمي</th></tr></thead>
-            <tbody id="tbl-statement"></tbody>
-          </table></div>
+        </div>
+
+        <!-- كشف حساب عميل -->
+        <div id="rep-pane-stmt" class="hidden">
+          <div class="report-box">
+            <h3>كشف حساب عميل</h3>
+            <div class="toolbar">
+              <select id="stmt-party"></select>
+              <button id="btn-run-stmt" class="btn btn-gold">عرض الكشف</button>
+              <button id="btn-print-stmt" class="btn btn-ghost">🖨️ معاينة / طباعة</button>
+            </div>
+            <div class="table-wrap"><table>
+              <thead><tr><th>التاريخ</th><th>البيان</th><th>مدين</th><th>دائن</th><th>الرصيد التراكمي</th></tr></thead>
+              <tbody id="tbl-statement"></tbody>
+            </table></div>
+          </div>
+        </div>
+
+        <!-- ميزان المراجعة -->
+        <div id="rep-pane-trial" class="hidden">
+          <div class="report-box">
+            <h3>⚖️ ميزان المراجعة</h3>
+            <div class="toolbar">
+              <label class="lbl" style="margin:0">من</label>
+              <input type="date" id="rep-trial-from" style="width:auto;margin-bottom:0">
+              <label class="lbl" style="margin:0">إلى</label>
+              <input type="date" id="rep-trial-to" style="width:auto;margin-bottom:0">
+              <button id="btn-rep-trial" class="btn btn-gold">عرض الميزان</button>
+              <button class="btn btn-ghost" data-rep-print="trial">🖨️ معاينة / طباعة</button>
+            </div>
+            <div class="table-wrap"><table>
+              <thead><tr><th>الكود</th><th>الحساب</th><th>مدين</th><th>دائن</th><th>الرصيد</th></tr></thead>
+              <tbody id="tbl-rep-trial"></tbody>
+            </table></div>
+            <div class="je-totals" id="rep-trial-totals" style="margin-top:12px"></div>
+          </div>
+        </div>
+
+        <!-- قائمة الدخل -->
+        <div id="rep-pane-income" class="hidden">
+          <div class="report-box">
+            <h3>📈 قائمة الدخل</h3>
+            <div class="toolbar">
+              <label class="lbl" style="margin:0">من</label>
+              <input type="date" id="rep-income-from" style="width:auto;margin-bottom:0">
+              <label class="lbl" style="margin:0">إلى</label>
+              <input type="date" id="rep-income-to" style="width:auto;margin-bottom:0">
+              <button id="btn-rep-income" class="btn btn-gold">عرض القائمة</button>
+              <button class="btn btn-ghost" data-rep-print="income">🖨️ معاينة / طباعة</button>
+            </div>
+            <div class="report-box">
+              <h3>الإيرادات</h3>
+              <div class="table-wrap"><table>
+                <thead><tr><th>الكود</th><th>الحساب</th><th>المبلغ</th></tr></thead>
+                <tbody id="tbl-rep-income-rev"></tbody>
+              </table></div>
+            </div>
+            <div class="report-box">
+              <h3>المصروفات</h3>
+              <div class="table-wrap"><table>
+                <thead><tr><th>الكود</th><th>الحساب</th><th>المبلغ</th></tr></thead>
+                <tbody id="tbl-rep-income-exp"></tbody>
+              </table></div>
+            </div>
+            <div class="je-totals" id="rep-income-net" style="margin-top:12px"></div>
+          </div>
+        </div>
+
+        <!-- الميزانية العمومية -->
+        <div id="rep-pane-balance" class="hidden">
+          <div class="report-box">
+            <h3>🏛️ الميزانية العمومية</h3>
+            <div class="toolbar">
+              <label class="lbl" style="margin:0">حتى تاريخ</label>
+              <input type="date" id="rep-bs-date" style="width:auto;margin-bottom:0">
+              <button id="btn-rep-bs" class="btn btn-gold">عرض الميزانية</button>
+              <button class="btn btn-ghost" data-rep-print="balance">🖨️ معاينة / طباعة</button>
+            </div>
+            <div class="report-box">
+              <h3>الأصول</h3>
+              <div class="table-wrap"><table>
+                <thead><tr><th>الكود</th><th>الحساب</th><th>الرصيد</th></tr></thead>
+                <tbody id="tbl-rep-bs-assets"></tbody>
+              </table></div>
+            </div>
+            <div class="report-box">
+              <h3>الالتزامات (الخصوم)</h3>
+              <div class="table-wrap"><table>
+                <thead><tr><th>الكود</th><th>الحساب</th><th>الرصيد</th></tr></thead>
+                <tbody id="tbl-rep-bs-liab"></tbody>
+              </table></div>
+            </div>
+            <div class="report-box">
+              <h3>حقوق الملكية</h3>
+              <div class="table-wrap"><table>
+                <thead><tr><th>الكود</th><th>الحساب</th><th>الرصيد</th></tr></thead>
+                <tbody id="tbl-rep-bs-equity"></tbody>
+              </table></div>
+            </div>
+            <div class="je-totals" id="rep-bs-totals" style="margin-top:12px"></div>
+          </div>
+        </div>
+
+        <!-- تقارير المبيعات -->
+        <div id="rep-pane-sales" class="hidden">
+          <div class="report-box">
+            <h3>💹 تقارير المبيعات</h3>
+            <div class="toolbar">
+              <label class="lbl" style="margin:0">من</label>
+              <input type="date" id="rep-sales-from" style="width:auto;margin-bottom:0">
+              <label class="lbl" style="margin:0">إلى</label>
+              <input type="date" id="rep-sales-to" style="width:auto;margin-bottom:0">
+              <button id="btn-rep-sales" class="btn btn-gold">عرض التقرير</button>
+              <button class="btn btn-ghost" data-rep-print="sales">🖨️ معاينة / طباعة</button>
+            </div>
+            <div class="cards" style="margin-bottom:18px">
+              <div class="card card-gold"><div class="card-num" id="rep-sales-total">0</div><div class="card-lbl">إجمالي المبيعات</div></div>
+              <div class="card"><div class="card-num" id="rep-sales-count">0</div><div class="card-lbl">عدد الفواتير</div></div>
+              <div class="card"><div class="card-num" id="rep-sales-avg">0</div><div class="card-lbl">متوسط الفاتورة</div></div>
+            </div>
+            <div class="report-box">
+              <h3>أكثر الأصناف مبيعاً</h3>
+              <div class="table-wrap"><table>
+                <thead><tr><th>الصنف</th><th>الكمية المباعة</th><th>قيمة المبيعات</th></tr></thead>
+                <tbody id="tbl-rep-sales-items"></tbody>
+              </table></div>
+            </div>
+            <div class="report-box">
+              <h3>المبيعات حسب العميل</h3>
+              <div class="table-wrap"><table>
+                <thead><tr><th>العميل</th><th>عدد الفواتير</th><th>إجمالي المبيعات</th></tr></thead>
+                <tbody id="tbl-rep-sales-cust"></tbody>
+              </table></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- تقارير المشتريات -->
+        <div id="rep-pane-purch" class="hidden">
+          <div class="report-box">
+            <h3>🛒 تقارير المشتريات</h3>
+            <div class="toolbar">
+              <label class="lbl" style="margin:0">من</label>
+              <input type="date" id="rep-purch-from" style="width:auto;margin-bottom:0">
+              <label class="lbl" style="margin:0">إلى</label>
+              <input type="date" id="rep-purch-to" style="width:auto;margin-bottom:0">
+              <button id="btn-rep-purch" class="btn btn-gold">عرض التقرير</button>
+              <button class="btn btn-ghost" data-rep-print="purch">🖨️ معاينة / طباعة</button>
+            </div>
+            <div class="cards" style="margin-bottom:18px">
+              <div class="card card-gold"><div class="card-num" id="rep-purch-total">0</div><div class="card-lbl">إجمالي المشتريات</div></div>
+              <div class="card"><div class="card-num" id="rep-purch-count">0</div><div class="card-lbl">عدد الفواتير</div></div>
+              <div class="card"><div class="card-num" id="rep-purch-avg">0</div><div class="card-lbl">متوسط الفاتورة</div></div>
+            </div>
+            <div class="report-box">
+              <h3>أكثر الأصناف شراءً</h3>
+              <div class="table-wrap"><table>
+                <thead><tr><th>الصنف</th><th>الكمية المشتراة</th><th>قيمة المشتريات</th></tr></thead>
+                <tbody id="tbl-rep-purch-items"></tbody>
+              </table></div>
+            </div>
+            <div class="report-box">
+              <h3>المشتريات حسب المورد</h3>
+              <div class="table-wrap"><table>
+                <thead><tr><th>المورد</th><th>عدد الفواتير</th><th>إجمالي المشتريات</th></tr></thead>
+                <tbody id="tbl-rep-purch-supp"></tbody>
+              </table></div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -447,6 +620,53 @@
               <tr><td style="color:#94a3b8">اسم الشركة</td><td id="set-company-name" style="font-weight:700">—</td></tr>
               <tr><td style="color:#94a3b8">النظام</td><td>H. ERP SYSTEM MANAGER</td></tr>
             </tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- المستخدمون والصلاحيات (دفعة C) -->
+      <section id="tab-users" class="tab hidden">
+        <div class="report-box" id="usr-add-box" style="max-width:520px">
+          <h3>➕ ربط عضو جديد بالشركة</h3>
+          <div class="logo-note">ℹ️ العضو الجديد لازم يسجّل حسابه في البرنامج أولاً بنفس البريد (من شاشة الدخول ← «إنشاء حساب»)، ثم تربطه هنا ببريده.</div>
+          <label class="lbl">بريد المستخدم الإلكتروني</label>
+          <input type="email" id="usr-email" placeholder="user@example.com" dir="ltr" style="text-align:left">
+          <label class="lbl">الدور</label>
+          <select id="usr-role">
+            <option value="manager">مدير</option>
+            <option value="accountant" selected>محاسب</option>
+            <option value="cashier">كاشير</option>
+          </select>
+          <button id="btn-add-member" class="btn btn-gold btn-block">➕ إضافة العضو</button>
+        </div>
+        <div class="report-box">
+          <h3>👥 أعضاء الشركة</h3>
+          <p id="usr-readonly-note" class="hidden" style="color:#7A6A5C;font-size:13px;margin:0 0 12px">👁️ عرض فقط — إضافة الأعضاء وتغيير الأدوار والحذف متاحة لمالك الشركة فقط.</p>
+          <div class="table-wrap"><table>
+            <thead><tr><th>البريد الإلكتروني</th><th>الدور</th><th>تاريخ الانضمام</th><th>إجراءات</th></tr></thead>
+            <tbody id="tbl-members"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- الفروع (دفعة C) -->
+      <section id="tab-branches" class="tab hidden">
+        <!-- أول استخدام: لا توجد فروع -->
+        <div id="br-empty" class="hidden">
+          <div class="report-box" style="max-width:460px;margin:40px auto;text-align:center">
+            <h3>🏢 لا توجد فروع بعد</h3>
+            <p style="color:var(--muted);margin-bottom:14px">أنشئ الفرع الرئيسي لشركتك بضغطة واحدة، ثم أضف فروعاً أخرى بعدها</p>
+            <button id="btn-create-main-branch" class="btn btn-gold btn-block" style="font-size:16px;padding:14px">🏢 إنشاء الفرع الرئيسي</button>
+          </div>
+        </div>
+        <!-- قائمة الفروع -->
+        <div id="br-list-box">
+          <div class="toolbar">
+            <button id="btn-add-branch" class="btn btn-gold">+ فرع جديد</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>الاسم</th><th>العنوان</th><th>الهاتف</th><th>النوع</th><th>إجراءات</th></tr></thead>
+            <tbody id="tbl-branches"></tbody>
           </table></div>
         </div>
       </section>
@@ -498,6 +718,29 @@
       </section>
     </main>
     </div><!-- /.app-body -->
+  </div>
+
+  <!-- ═══════════ شاشة معاينة الطباعة الاحترافية (دفعة B) ═══════════ -->
+  <div id="pv-overlay" class="pv-overlay hidden">
+    <div class="pv-toolbar">
+      <span id="pv-title" class="pv-title">معاينة</span>
+      <button id="pv-print" class="btn btn-gold btn-sm" title="طباعة المستند">🖨️ طباعة</button>
+      <button id="pv-pdf" class="btn btn-ghost btn-sm" title="حفظ PDF عبر نافذة طباعة المتصفح">💾 حفظ PDF</button>
+      <button id="pv-excel" class="btn btn-ghost btn-sm" title="تصدير المستند المعروض إلى Excel">📊 Excel</button>
+      <span class="pv-sep"></span>
+      <button id="pv-zoom-out" class="btn btn-ghost btn-sm" title="تصغير">🔍−</button>
+      <span id="pv-zoom-lbl" class="pv-zoom-lbl">100%</span>
+      <button id="pv-zoom-in" class="btn btn-ghost btn-sm" title="تكبير">🔍+</button>
+      <button id="pv-zoom-reset" class="btn btn-ghost btn-sm" title="الحجم الطبيعي">100%</button>
+      <span class="pv-sep"></span>
+      <input type="text" id="pv-wm" class="pv-wm-input" placeholder="🏷️ علامة مائية (اختياري)">
+      <button id="pv-close" class="btn btn-ghost btn-sm" title="إغلاق المعاينة">✕ إغلاق</button>
+    </div>
+    <div class="pv-scroll" id="pv-scroll">
+      <div class="pv-sheet-wrap">
+        <div id="pv-sheet" class="pv-sheet"></div>
+      </div>
+    </div>
   </div>
 
   <!-- ═══════════ نافذة منبثقة عامة ═══════════ -->

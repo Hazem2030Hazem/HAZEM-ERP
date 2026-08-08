@@ -82,10 +82,15 @@ async function boot() {
     const nb = $('#nav-dev'); if (nb) nb.classList.remove('hidden');
   }
 
-  const { data: ms } = await sb.from('memberships').select('tenant_id, tenants(name, logo_url)').limit(1);
+  // دفعة C: نجلب role أيضاً لتحديد صلاحيات الإدارة في الواجهة (الفرض النهائي عند القاعدة عبر RLS/RPC)
+  // ونقيّد الاستعلام بعضوية المستخدم الحالي تحديداً (eq user_id) — وإلا فـ limit(1) قد يلتقط
+  // عضوية شخص آخر من نفس الشركة (سياسة memberships_select تسمح برؤية كل أعضاء الشركة).
+  const { data: ms } = await sb.from('memberships').select('tenant_id, role, tenants(name, logo_url)')
+    .eq('user_id', user.id).limit(1);
   if (!ms || ms.length === 0) return showScreen('onboarding-screen');
 
   state.tenant = ms[0].tenant_id;
+  state.myRole = ms[0].role || 'member';
   state.tenantName = ms[0].tenants.name;
   state.logoUrl = ms[0].tenants.logo_url || null;
   $('#company-title').textContent = state.tenantName;
@@ -114,6 +119,7 @@ const TAB_TITLES = {
   accounts: 'شجرة الحسابات', journal: 'قيود اليومية', vouchers: 'السندات والخزن',
   purchases: 'المشتريات', returns: 'مرتجعات المبيعات', quotes: 'عروض الأسعار',
   warehouses: 'المستودعات والجرد', pos: 'نقطة البيع — الكاشير', shifts: 'ورديات الكاشير',
+  users: 'المستخدمون والصلاحيات', branches: 'الفروع',
 };
 
 // دالة عامة لتبديل التبويب — يستدعيها السايدبار وشريط القوائم الكلاسيكي
@@ -138,6 +144,8 @@ function switchTab(tabName) {
   if (tabName === 'warehouses') loadWarehouses();
   if (tabName === 'pos') loadPos();
   if (tabName === 'shifts') loadShifts();
+  if (tabName === 'users') loadUsers();
+  if (tabName === 'branches') loadBranches();
 }
 window.switchTab = switchTab;
 
@@ -175,7 +183,10 @@ $$('#menubar .mb-leaf').forEach(leaf => {
   if (leaf.disabled) return; // البنود المعطلة «قريباً 🚧» لا تفعل شيئاً
   leaf.addEventListener('click', () => {
     closeAllMenus();
+    if (leaf.dataset.report) return openReport(leaf.dataset.report); // تبويب التقارير + تاب فرعي
     if (leaf.dataset.tab) return switchTab(leaf.dataset.tab);
+    if (leaf.dataset.action === 'print-preview') return previewCurrentView(); // دفعة B
+    if (leaf.dataset.action === 'export-excel') return exportCurrentViewExcel(); // دفعة B
     if (leaf.dataset.action === 'logout') return $('#btn-logout').click();
     if (leaf.dataset.action === 'opening-entry') return openOpeningEntry();
     if (leaf.dataset.action === 'voucher-receipt') return openVoucher('receipt');
@@ -530,6 +541,7 @@ async function loadInvoices() {
       <td>${esc(v.parties?.name)}</td>
       <td>${fmt(v.total)}</td>
       <td>${v.status === 'posted' ? 'مرحّلة' : esc(v.status)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="previewDoc('sales_invoice','${v.id}')">🖨️ معاينة</button></td>
     </tr>`).join('');
 }
 
@@ -638,6 +650,221 @@ $('#btn-run-stmt').onclick = async () => {
       <td>${fmt(l.debit)}</td><td>${fmt(l.credit)}</td><td>${fmt(run)}</td></tr>`;
   }).join('');
 };
+
+// ─────────── ١١-أ٢) التقارير الكبرى — دفعة A ───────────
+// قرار التنفيذ: حساب client-side من الجداول الموجودة (نفس نمط loadAccounts و
+// بطاقات الخزن في loadVouchers اللذين يجمعان journal_entry_lines في المتصفح).
+// لا SQL جديد ولا views: كل الاستعلامات قراءة فقط ومحمية بسياسات RLS الحالية
+// (is_member عبر state.tenant) — فلا حاجة لأي migration ولا خطر على العزل.
+// القيود المحاسبية تُقرأ فقط ولا تُعدَّل أبداً.
+
+// التابات الفرعية داخل تبويب التقارير (نفس نمط switchPurchSub/switchWhSub)
+const REPORT_SUBS = ['stock', 'stmt', 'trial', 'income', 'balance', 'sales', 'purch'];
+function switchReportSub(sub) {
+  if (!REPORT_SUBS.includes(sub)) sub = 'stock';
+  $$('#tab-reports .sub-tab').forEach(b => b.classList.toggle('active', b.dataset.sub === sub));
+  REPORT_SUBS.forEach(s => $('#rep-pane-' + s).classList.toggle('hidden', s !== sub));
+}
+$$('#tab-reports .sub-tab').forEach(b => b.onclick = () => switchReportSub(b.dataset.sub));
+// بنود القوائم «تقارير الحسابات» و«التقارير»: تفتح التبويب على التاب الفرعي المطلوب
+window.openReport = (sub) => { switchTab('reports'); switchReportSub(sub); };
+
+// تاريخ محلي بصيغة ISO (YYYY-MM-DD) — لتعبئة حقول الفترة افتراضياً
+const _isoDate = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
+  '-' + String(d.getDate()).padStart(2, '0');
+
+// هل يقع تاريخ (ISO/ timestamptz) داخل الفترة [from, to] شاملةً الطرفين؟
+function _inPeriod(iso, from, to) {
+  if (!iso) return false;
+  const t = new Date(iso).getTime();
+  if (from && t < new Date(from + 'T00:00:00').getTime()) return false;
+  if (to && t > new Date(to + 'T23:59:59.999').getTime()) return false;
+  return true;
+}
+
+// الفترة الافتراضية: أول الشهر الحالي → اليوم
+function _defaultPeriod(fromId, toId) {
+  const now = new Date();
+  $('#' + fromId).value = _isoDate(new Date(now.getFullYear(), now.getMonth(), 1));
+  $('#' + toId).value = _isoDate(now);
+}
+_defaultPeriod('rep-trial-from', 'rep-trial-to');
+_defaultPeriod('rep-income-from', 'rep-income-to');
+_defaultPeriod('rep-sales-from', 'rep-sales-to');
+_defaultPeriod('rep-purch-from', 'rep-purch-to');
+$('#rep-bs-date').value = _isoDate(new Date());
+
+// جلب الحسابات + سطور القيود (مع تاريخ القيد) — أساس التقارير المالية الثلاثة
+async function _glData() {
+  const [{ data: accs, error: e1 }, { data: lines, error: e2 }] = await Promise.all([
+    sb.from('accounts').select('id, code, name, kind').order('code'),
+    sb.from('journal_entry_lines').select('account_id, debit, credit, journal_entries(created_at)'),
+  ]);
+  if (e1 || e2) throw new Error((e1 || e2).message);
+  return { accs: accs || [], lines: lines || [] };
+}
+
+// تجميع مدين/دائن لكل حساب ضمن فترة (from/to اختياريان — null يعني بلا حد)
+function _glSums(accs, lines, from, to) {
+  const sums = {};
+  accs.forEach(a => sums[a.id] = { d: 0, c: 0 });
+  lines.forEach(l => {
+    if (!_inPeriod(l.journal_entries?.created_at, from, to)) return;
+    const s = sums[l.account_id] = sums[l.account_id] || { d: 0, c: 0 };
+    s.d += Number(l.debit); s.c += Number(l.credit);
+  });
+  return sums;
+}
+
+// ─── (١) ميزان المراجعة: كل الحسابات مدين/دائن/رصيد + إجماليات متوازنة ───
+async function runTrialBalance() {
+  const from = $('#rep-trial-from').value, to = $('#rep-trial-to').value;
+  let g;
+  try { g = await _glData(); } catch (err) { return toast('خطأ: ' + err.message, false); }
+  const sums = _glSums(g.accs, g.lines, from, to);
+  let td = 0, tc = 0;
+  $('#tbl-rep-trial').innerHTML = g.accs.map(a => {
+    const s = sums[a.id] || { d: 0, c: 0 };
+    td += s.d; tc += s.c;
+    const bal = s.d - s.c;
+    return `<tr>
+      <td>${esc(a.code)}</td><td>${esc(a.name)}</td>
+      <td>${fmt(s.d)}</td><td>${fmt(s.c)}</td>
+      <td style="font-weight:700;color:${bal >= 0 ? 'var(--green)' : 'var(--red)'}">${fmt(bal)}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" style="color:#7A6A5C">لا توجد حسابات بعد</td></tr>';
+  const ok = Math.abs(td - tc) < 0.0001;
+  $('#rep-trial-totals').innerHTML = `
+    <span class="t-d">إجمالي مدين: ${fmt(td)}</span>
+    <span class="t-c">إجمالي دائن: ${fmt(tc)}</span>
+    <span class="je-balance ${ok ? 'ok' : 'bad'}">${ok ? 'الميزان متوازن ✓' : 'غير متوازن ✗ — الفرق ' + fmt(td - tc)}</span>`;
+}
+$('#btn-rep-trial').onclick = runTrialBalance;
+
+// ─── (٢) قائمة الدخل: إيرادات − مصروفات = صافي ربح/خسارة الفترة ───
+async function runIncomeStatement() {
+  const from = $('#rep-income-from').value, to = $('#rep-income-to').value;
+  let g;
+  try { g = await _glData(); } catch (err) { return toast('خطأ: ' + err.message, false); }
+  const sums = _glSums(g.accs, g.lines, from, to);
+  let totalRev = 0, totalExp = 0;
+  const row = (a, amount) => `<tr><td>${esc(a.code)}</td><td>${esc(a.name)}</td>
+    <td style="font-weight:700">${fmt(amount)}</td></tr>`;
+  $('#tbl-rep-income-rev').innerHTML = g.accs.filter(a => a.kind === 'revenue').map(a => {
+    const s = sums[a.id] || { d: 0, c: 0 };
+    const bal = s.c - s.d; // طبيعة الإيراد دائنة
+    totalRev += bal;
+    return row(a, bal);
+  }).join('') || '<tr><td colspan="3" style="color:#7A6A5C">لا توجد حسابات إيرادات</td></tr>';
+  $('#tbl-rep-income-exp').innerHTML = g.accs.filter(a => a.kind === 'expense').map(a => {
+    const s = sums[a.id] || { d: 0, c: 0 };
+    const bal = s.d - s.c; // طبيعة المصروف مدينة
+    totalExp += bal;
+    return row(a, bal);
+  }).join('') || '<tr><td colspan="3" style="color:#7A6A5C">لا توجد حسابات مصروفات</td></tr>';
+  const net = totalRev - totalExp;
+  $('#rep-income-net').innerHTML = `
+    <span class="t-d">إجمالي الإيرادات: ${fmt(totalRev)}</span>
+    <span class="t-c">إجمالي المصروفات: ${fmt(totalExp)}</span>
+    <span class="je-balance ${net >= 0 ? 'ok' : 'bad'}">${net >= 0 ? 'صافي ربح' : 'صافي خسارة'}: ${fmt(Math.abs(net))}</span>`;
+}
+$('#btn-rep-income').onclick = runIncomeStatement;
+
+// ─── (٣) الميزانية العمومية حتى تاريخ: أصول = التزامات + حقوق ملكية + صافي ربح الفترة ───
+async function runBalanceSheet() {
+  const to = $('#rep-bs-date').value;
+  let g;
+  try { g = await _glData(); } catch (err) { return toast('خطأ: ' + err.message, false); }
+  const sums = _glSums(g.accs, g.lines, null, to); // من البداية حتى التاريخ
+  const row = (a, amount) => `<tr><td>${esc(a.code)}</td><td>${esc(a.name)}</td>
+    <td style="font-weight:700">${fmt(amount)}</td></tr>`;
+  let ta = 0, tl = 0, te = 0, rev = 0, exp = 0;
+  $('#tbl-rep-bs-assets').innerHTML = g.accs.filter(a => a.kind === 'asset').map(a => {
+    const s = sums[a.id] || { d: 0, c: 0 };
+    ta += s.d - s.c;
+    return row(a, s.d - s.c);
+  }).join('') || '<tr><td colspan="3" style="color:#7A6A5C">لا توجد حسابات أصول</td></tr>';
+  $('#tbl-rep-bs-liab').innerHTML = g.accs.filter(a => a.kind === 'liability').map(a => {
+    const s = sums[a.id] || { d: 0, c: 0 };
+    tl += s.c - s.d;
+    return row(a, s.c - s.d);
+  }).join('') || '<tr><td colspan="3" style="color:#7A6A5C">لا توجد حسابات التزامات</td></tr>';
+  $('#tbl-rep-bs-equity').innerHTML = g.accs.filter(a => a.kind === 'equity').map(a => {
+    const s = sums[a.id] || { d: 0, c: 0 };
+    te += s.c - s.d;
+    return row(a, s.c - s.d);
+  }).join('') || '<tr><td colspan="3" style="color:#7A6A5C">لا توجد حسابات حقوق ملكية</td></tr>';
+  g.accs.forEach(a => {
+    const s = sums[a.id] || { d: 0, c: 0 };
+    if (a.kind === 'revenue') rev += s.c - s.d;
+    if (a.kind === 'expense') exp += s.d - s.c;
+  });
+  const netProfit = rev - exp; // صافي ربح/خسارة الفترة حتى ذلك التاريخ
+  const otherSide = tl + te + netProfit;
+  const ok = Math.abs(ta - otherSide) < 0.0001;
+  $('#rep-bs-totals').innerHTML = `
+    <span class="t-d">إجمالي الأصول: ${fmt(ta)}</span>
+    <span class="t-c">الالتزامات + حقوق الملكية + صافي الربح (${fmt(netProfit)}): ${fmt(otherSide)}</span>
+    <span class="je-balance ${ok ? 'ok' : 'bad'}">${ok ? 'المعادلة متوازنة ✓' : 'غير متوازنة ✗ — الفرق ' + fmt(ta - otherSide)}</span>`;
+}
+$('#btn-rep-bs').onclick = runBalanceSheet;
+
+// ─── (٤+٥) تقارير المبيعات/المشتريات: إجمالي + عدد + متوسط + أصناف + أطراف ───
+// kind: 'sales' (sales_invoices/lines بسعر price) أو 'purch' (purchase_invoices/lines بتكلفة cost)
+async function runTradeReport(kind) {
+  const isSales = kind === 'sales';
+  const from = $('#rep-' + kind + '-from').value, to = $('#rep-' + kind + '-to').value;
+  const invTable = isSales ? 'sales_invoices' : 'purchase_invoices';
+  const lnTable = isSales ? 'sales_invoice_lines' : 'purchase_invoice_lines';
+  const priceCol = isSales ? 'price' : 'cost';
+
+  const { data: invs, error: e1 } = await sb.from(invTable)
+    .select('id, number, total, created_at, parties(name)');
+  if (e1) return toast('خطأ: ' + e1.message, false);
+  // سطور الأصناف: قد لا تتوفر لكل المستندات — نتدرّج بأمان دون كسر التقرير
+  const lr = await sb.from(lnTable)
+    .select('qty, ' + priceCol + ', items(name), ' + invTable + '(created_at)');
+
+  const invList = (invs || []).filter(v => _inPeriod(v.created_at, from, to));
+  const total = invList.reduce((s, v) => s + Number(v.total), 0);
+  const count = invList.length;
+  $('#rep-' + kind + '-total').textContent = fmt(total);
+  $('#rep-' + kind + '-count').textContent = fmt(count);
+  $('#rep-' + kind + '-avg').textContent = fmt(count ? total / count : 0);
+
+  // أكثر الأصناف (كمية/قيمة) — مرتبة تنازلياً بالقيمة
+  if (lr.error) {
+    $('#tbl-rep-' + kind + '-items').innerHTML =
+      '<tr><td colspan="3" style="color:#7A6A5C">تفصيل الأصناف غير متاح لهذه المستندات</td></tr>';
+  } else {
+    const byItem = {};
+    (lr.data || []).forEach(l => {
+      if (!_inPeriod(l[invTable]?.created_at, from, to)) return;
+      const name = l.items?.name || '—';
+      const s = byItem[name] = byItem[name] || { qty: 0, val: 0 };
+      s.qty += Number(l.qty);
+      s.val += Number(l.qty) * Number(l[priceCol]);
+    });
+    const items = Object.entries(byItem).sort((a, b) => b[1].val - a[1].val);
+    $('#tbl-rep-' + kind + '-items').innerHTML = items.map(([name, s]) =>
+      `<tr><td>${esc(name)}</td><td>${fmt(s.qty)}</td><td>${fmt(s.val)}</td></tr>`
+    ).join('') || '<tr><td colspan="3" style="color:#7A6A5C">لا توجد حركات في هذه الفترة</td></tr>';
+  }
+
+  // التوزيع حسب الطرف (عميل/مورد) — مرتب تنازلياً بالإجمالي
+  const byParty = {};
+  invList.forEach(v => {
+    const name = v.parties?.name || '—';
+    const s = byParty[name] = byParty[name] || { n: 0, t: 0 };
+    s.n++; s.t += Number(v.total);
+  });
+  const parties = Object.entries(byParty).sort((a, b) => b[1].t - a[1].t);
+  $('#tbl-rep-' + kind + (isSales ? '-cust' : '-supp')).innerHTML = parties.map(([name, s]) =>
+    `<tr><td>${esc(name)}</td><td>${fmt(s.n)}</td><td>${fmt(s.t)}</td></tr>`
+  ).join('') || '<tr><td colspan="3" style="color:#7A6A5C">لا توجد فواتير في هذه الفترة</td></tr>';
+}
+$('#btn-rep-sales').onclick = () => runTradeReport('sales');
+$('#btn-rep-purch').onclick = () => runTradeReport('purch');
 
 // ─────────── ١١-ب) الهوية والإعدادات — شعار الشركة لكل مستأجر ───────────
 // 🔒 الشعار الرسمي (النسر) ثابت في كل الواجهات — ملك للبرنامج ولا يتغير أبداً.
@@ -1112,6 +1339,7 @@ async function loadVouchers() {
     '<div class="card"><div class="card-lbl">لا توجد حسابات خزن (11xx) — أضفها من شجرة الحسابات</div></div>';
 
   // جدول السندات — الأحدث أولاً
+  state.vouchers = vouchers || []; // يستخدمه محرك المعاينة (دفعة B)
   $('#tbl-vouchers').innerHTML = (vouchers || []).map(v => `
     <tr>
       <td>${v.number}</td>
@@ -1120,7 +1348,8 @@ async function loadVouchers() {
       <td>${esc(v.parties?.name || '—')}</td>
       <td>${fmt(v.amount)}</td>
       <td>${esc(v.memo || '—')}</td>
-    </tr>`).join('') || '<tr><td colspan="6" style="color:#7A6A5C">لا توجد سندات بعد</td></tr>';
+      <td><button class="btn btn-ghost btn-sm" onclick="previewVoucher('${v.id}')">🖨️ معاينة</button></td>
+    </tr>`).join('') || '<tr><td colspan="7" style="color:#7A6A5C">لا توجد سندات بعد</td></tr>';
 }
 
 // نموذج سند (قبض / صرف / تحويل)
@@ -1239,14 +1468,16 @@ async function loadPurchases() {
       <td>${esc(v.parties?.name)}</td>
       <td>${fmt(v.total)}</td>
       <td>${v.status === 'posted' ? 'مرحّلة' : esc(v.status)}</td>
-    </tr>`).join('') || '<tr><td colspan="5" style="color:#7A6A5C">لا توجد فواتير شراء بعد</td></tr>';
+      <td><button class="btn btn-ghost btn-sm" onclick="previewDoc('purchase_invoice','${v.id}')">🖨️ معاينة</button></td>
+    </tr>`).join('') || '<tr><td colspan="6" style="color:#7A6A5C">لا توجد فواتير شراء بعد</td></tr>';
   $('#tbl-purchase-returns').innerHTML = (rets || []).map(v => `
     <tr>
       <td>${v.number}</td>
       <td>${new Date(v.created_at).toLocaleDateString('ar-EG')}</td>
       <td>${esc(v.parties?.name)}</td>
       <td>${fmt(v.total)}</td>
-    </tr>`).join('') || '<tr><td colspan="4" style="color:#7A6A5C">لا توجد مرتجعات مشتريات بعد</td></tr>';
+      <td><button class="btn btn-ghost btn-sm" onclick="previewDoc('purchase_return','${v.id}')">🖨️ معاينة</button></td>
+    </tr>`).join('') || '<tr><td colspan="5" style="color:#7A6A5C">لا توجد مرتجعات مشتريات بعد</td></tr>';
 }
 
 async function loadSalesReturns() {
@@ -1259,7 +1490,8 @@ async function loadSalesReturns() {
       <td>${esc(v.parties?.name)}</td>
       <td>${fmt(v.total)}</td>
       <td>${esc(v.memo || '—')}</td>
-    </tr>`).join('') || '<tr><td colspan="5" style="color:#7A6A5C">لا توجد مرتجعات مبيعات بعد</td></tr>';
+      <td><button class="btn btn-ghost btn-sm" onclick="previewDoc('sales_return','${v.id}')">🖨️ معاينة</button></td>
+    </tr>`).join('') || '<tr><td colspan="6" style="color:#7A6A5C">لا توجد مرتجعات مبيعات بعد</td></tr>';
 }
 
 const QUOTE_STATUS = { open: 'مفتوح', converted: 'محوَّل لفاتورة', cancelled: 'ملغي' };
@@ -1275,7 +1507,7 @@ async function loadQuotes() {
       <td>${esc(q.parties?.name)}</td>
       <td>${fmt(q.total)}</td>
       <td>${QUOTE_STATUS[q.status] || esc(q.status)}</td>
-      <td>${q.status === 'open' ? `
+      <td><button class="btn btn-ghost btn-sm" onclick="previewDoc('quote','${q.id}')">🖨️ معاينة</button>${q.status === 'open' ? `
         <button class="btn btn-gold btn-sm" onclick="convertQuote('${q.id}')">تحويل لفاتورة</button>
         <button class="btn btn-danger" onclick="cancelQuote('${q.id}')">إلغاء</button>` : ''}</td>
     </tr>`).join('') || '<tr><td colspan="6" style="color:#7A6A5C">لا توجد عروض أسعار بعد</td></tr>';
@@ -1842,6 +2074,542 @@ async function loadShifts() {
       <td>${SHIFT_STATUS[s.status] || esc(s.status)}</td>
     </tr>`).join('') || '<tr><td colspan="8" style="color:#7A6A5C">لا توجد ورديات بعد</td></tr>';
 }
+
+// ─────────── ١١-ص) دفعة B — محرك معاينة الطباعة الاحترافية ───────────
+// قرارات التنفيذ:
+//   • شاشة المعاينة غلاف مستقل (#pv-overlay) بشريط أدوات كلاسيكي — لا تستخدم
+//     النافذة العامة لأن الورقة A4 تحتاج عرضاً شبه كامل.
+//   • الطباعة وحفظ PDF كلاهما عبر window.print مع body.pv-printing وقواعد
+//     @media print تخفي كل شيء عدا ورقة المستند — الأضمن للعربية RTL
+//     (لا مكتبات PDF جديدة حسب القواعد).
+//   • تصدير Excel عبر مكتبة xlsx المحمّلة مسبقاً (aoa_to_sheet).
+//   • كل المحتوى يُبنى من البيانات الحية (state أو الجداول المعروضة) —
+//     لا تغيير على أي استعلام قائم؛ الاستعلامات الجديدة الوحيدة قراءة سطور
+//     المستند عند المعاينة (نفس جداول المصدر).
+//   • buildDocSheetHtml / buildWatermarkHtml / docToAOA دوال نقية قابلة للاختبار.
+
+// حالة المعاينة الحالية
+let _pv = { zoom: 1, doc: null };
+
+// خلية جدول المستند: نص عادي أو { txt, num } — num يُستخدم كرقم حقيقي في Excel
+const _pvCellTxt = (c) => (c && typeof c === 'object') ? String(c.txt ?? '') : String(c ?? '');
+const _pvCellNum = (c) => (c && typeof c === 'object' && c.num != null && !isNaN(c.num)) ? Number(c.num) : null;
+
+// بناء HTML ورقة المستند كاملة: ترويسة (شعار+شركة+عنوان+تاريخ) + بيانات + جداول + إجماليات + تذييل النظام
+// doc = { title, meta: [[lbl,val]...], tables: [{caption, head:[], rows:[[]]}], totals: [], note, fileName }
+function buildDocSheetHtml(doc, opts = {}) {
+  const company = opts.company || '';
+  const logoUrl = opts.logoUrl || null;
+  const dateStr = opts.dateStr || '';
+  let h = '<div class="doc-head">';
+  if (logoUrl) h += `<img class="doc-logo" src="${esc(logoUrl)}" alt="شعار الشركة">`;
+  h += `<div class="doc-head-txt">
+    <div class="doc-company">${esc(company)}</div>
+    <div class="doc-title">${esc(doc.title || 'مستند')}</div>
+    <div class="doc-date">${esc(dateStr)}</div>
+  </div></div>`;
+  if (doc.meta && doc.meta.length) {
+    h += '<div class="doc-meta">' + doc.meta.map(([l, v]) =>
+      `<div class="dm"><b>${esc(l)}:</b><span>${esc(_pvCellTxt(v))}</span></div>`).join('') + '</div>';
+  }
+  (doc.tables || []).forEach(t => {
+    if (t.caption) h += `<div class="doc-caption">${esc(t.caption)}</div>`;
+    h += '<table class="doc-table"><thead><tr>' +
+      (t.head || []).map(c => `<th>${esc(_pvCellTxt(c))}</th>`).join('') +
+      '</tr></thead><tbody>' +
+      (t.rows || []).map(r => '<tr>' +
+        r.map((c, ci) => c && typeof c === 'object' && c.colspan
+          ? `<td colspan="${c.colspan}">${esc(_pvCellTxt(c))}</td>`
+          : `<td>${esc(_pvCellTxt(c))}</td>`).join('') +
+        '</tr>').join('') +
+      '</tbody></table>';
+  });
+  if (doc.totals && doc.totals.length) {
+    h += '<div class="doc-totals">' + doc.totals.map((t, i) =>
+      `<span class="${i === doc.totals.length - 1 ? 'dt-net' : ''}">${esc(t)}</span>`).join('') + '</div>';
+  }
+  if (doc.note) h += `<div class="doc-note">${esc(doc.note)}</div>`;
+  h += '<div class="doc-foot">أُنشئ بواسطة <b>H. ERP SYSTEM MANAGER</b> — نظام المحاسبة والإدارة</div>';
+  return h;
+}
+
+// طبقة العلامة المائية: تُبنى فقط عند وجود نص — تتكرر قطرياً بشفافية خلف المحتوى
+function buildWatermarkHtml(text) {
+  const t = String(text || '').trim();
+  if (!t) return '';
+  let spans = '';
+  for (let y = 0; y < 10; y++) {
+    for (let x = 0; x < 3; x++) {
+      const right = -6 + x * 36 + (y % 2) * 18; // إزاحة متناوبة بين الصفوف
+      spans += `<span style="top:${y * 11 + 1}%;right:${right}%">${esc(t)}</span>`;
+    }
+  }
+  return `<div class="pv-wm-layer">${spans}</div>`;
+}
+
+// تحويل المستند إلى صفوف Excel (AOA) — الأرقام الحقيقية تبقى أرقاماً
+function docToAOA(doc, opts = {}) {
+  const aoa = [];
+  if (opts.company) aoa.push([opts.company]);
+  aoa.push([doc.title || 'مستند']);
+  if (opts.dateStr) aoa.push([opts.dateStr]);
+  aoa.push([]);
+  (doc.meta || []).forEach(([l, v]) => aoa.push([l, _pvCellNum(v) ?? _pvCellTxt(v)]));
+  if (doc.meta && doc.meta.length) aoa.push([]);
+  (doc.tables || []).forEach(t => {
+    if (t.caption) aoa.push([t.caption]);
+    aoa.push((t.head || []).map(_pvCellTxt));
+    (t.rows || []).forEach(r => aoa.push(r.map(c => _pvCellNum(c) ?? _pvCellTxt(c))));
+    aoa.push([]);
+  });
+  (doc.totals || []).forEach(t => aoa.push([t]));
+  if (doc.note) aoa.push([doc.note]);
+  aoa.push([], ['H. ERP SYSTEM MANAGER']);
+  return aoa;
+}
+
+// ─── فتح/إغلاق شاشة المعاينة ───
+function _pvOpts() {
+  return {
+    company: state.tenantName || '',
+    logoUrl: state.logoUrl || null,
+    dateStr: new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }),
+  };
+}
+
+function renderPvSheet() {
+  if (!_pv.doc) return;
+  $('#pv-sheet').innerHTML = buildWatermarkHtml($('#pv-wm').value) + buildDocSheetHtml(_pv.doc, _pvOpts());
+}
+
+function openPrintPreview(doc) {
+  _pv.doc = doc;
+  _pv.zoom = 1;
+  $('#pv-title').textContent = doc.title || 'معاينة';
+  $('#pv-wm').value = '';
+  renderPvSheet();
+  _applyPvZoom();
+  $('#pv-overlay').classList.remove('hidden');
+}
+
+function closePrintPreview() {
+  $('#pv-overlay').classList.add('hidden');
+  _pv.doc = null;
+}
+
+// ─── الزوم: يكبّر ورقة المعاينة فقط ───
+function _applyPvZoom() {
+  _pv.zoom = Math.min(2, Math.max(0.4, _pv.zoom));
+  $('#pv-sheet').style.transform = 'scale(' + _pv.zoom + ')';
+  $('#pv-zoom-lbl').textContent = Math.round(_pv.zoom * 100) + '%';
+}
+
+// ─── الطباعة: نخفي كل شيء عدا الورقة عبر body.pv-printing + @media print ───
+function _pvPrint() {
+  document.body.classList.add('pv-printing');
+  const done = () => {
+    document.body.classList.remove('pv-printing');
+    window.removeEventListener('afterprint', done);
+  };
+  window.addEventListener('afterprint', done);
+  window.print();
+  setTimeout(done, 5000); // احتياط لمتصفح لا يرسل afterprint
+}
+
+// ─── تصدير Excel لمستند/جدول ───
+function exportDocExcel(doc) {
+  if (!doc) return;
+  if (typeof XLSX === 'undefined') return toast('مكتبة Excel لم تُحمَّل — تحقق من الاتصال بالإنترنت', false);
+  const ws = XLSX.utils.aoa_to_sheet(docToAOA(doc, _pvOpts()));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, (doc.title || 'مستند').replace(/[\\/?*[\]:]/g, ' ').slice(0, 31));
+  XLSX.writeFile(wb, (doc.fileName || doc.title || 'document') + '.xlsx');
+  toast('تم تصدير ملف Excel ✅');
+}
+
+// ─── شريط أدوات المعاينة ───
+$('#pv-print').onclick = _pvPrint;
+$('#pv-pdf').onclick = () => {
+  toast('من نافذة الطباعة اختر «حفظ بتنسيق PDF» — الأضمن للعربية RTL');
+  _pvPrint();
+};
+$('#pv-excel').onclick = () => exportDocExcel(_pv.doc);
+$('#pv-zoom-in').onclick = () => { _pv.zoom += 0.1; _applyPvZoom(); };
+$('#pv-zoom-out').onclick = () => { _pv.zoom -= 0.1; _applyPvZoom(); };
+$('#pv-zoom-reset').onclick = () => { _pv.zoom = 1; _applyPvZoom(); };
+$('#pv-wm').oninput = renderPvSheet; // العلامة المائية تُدرج فقط عند وجود نص
+$('#pv-close').onclick = closePrintPreview;
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !$('#pv-overlay').classList.contains('hidden')) closePrintPreview();
+});
+
+// ─── تحويل جدول DOM معروض إلى بنية مستند (يُسقط أعمدة «إجراءات» والأزرار) ───
+function _tableToPvTable(tableEl, caption) {
+  const cellText = (cell) => {
+    if (!cell) return '';
+    const inp = cell.querySelector('input,select');
+    if (inp) return inp.tagName === 'SELECT'
+      ? (inp.selectedOptions[0]?.textContent.trim() || '')
+      : String(inp.value ?? '');
+    return cell.textContent.trim();
+  };
+  const headThs = [...tableEl.querySelectorAll('thead th')];
+  const kept = headThs.map((th, i) => ({ i, t: th.textContent.trim() }))
+    .filter(c => c.t !== '' && c.t !== 'إجراءات');
+  const idx = kept.map(c => c.i);
+  const nCols = Math.max(kept.length, 1);
+  const rows = [...tableEl.querySelectorAll('tbody tr')].map(tr => {
+    const cells = [...tr.children];
+    if (cells.length === 1) // صف رسالة بعمود colspan («لا توجد بيانات»)
+      return [{ txt: cellText(cells[0]), colspan: nCols }];
+    return idx.map(i => cellText(cells[i]));
+  }).filter(r => r.map(_pvCellTxt).join('').trim() !== '');
+  return { caption: caption || '', head: kept.map(c => c.t), rows };
+}
+
+// ─── بناء مستند تقرير من المحتوى المعروض حالياً في تاب التقارير ───
+function _reportDoc(sub) {
+  const pane = $('#rep-pane-' + sub);
+  if (!pane) return null;
+  const title = (pane.querySelector('h3')?.textContent || 'تقرير').trim();
+  // لازم بيانات حقيقية معروضة (صفوف بلا colspan = ليست رسالة «لا توجد بيانات»)
+  const hasRows = [...pane.querySelectorAll('tbody tr')]
+    .some(tr => !tr.querySelector('td[colspan]') && tr.textContent.trim() !== '');
+  if (!hasRows) { toast('اعرض التقرير أولاً بزر «عرض» ثم افتح المعاينة', false); return null; }
+
+  const meta = [];
+  const fromEl = pane.querySelector('input[type="date"][id$="-from"]');
+  const toEl = pane.querySelector('input[type="date"][id$="-to"]');
+  if (fromEl && fromEl.value) meta.push(['من', fromEl.value]);
+  if (toEl && toEl.value) meta.push(['إلى', toEl.value]);
+  if (sub === 'balance' && $('#rep-bs-date').value) meta.push(['حتى تاريخ', $('#rep-bs-date').value]);
+  if (sub === 'stmt') meta.push(['العميل', $('#stmt-party').selectedOptions[0]?.textContent || '—']);
+
+  // الجداول: العنوان الفرعي من أقرب report-box (باستثناء عنوان التقرير نفسه)
+  const tables = [...pane.querySelectorAll('.table-wrap table')].map(t => {
+    let cap = t.closest('.report-box')?.querySelector('h3')?.textContent.trim() || '';
+    if (cap === title) cap = '';
+    return _tableToPvTable(t, cap);
+  }).filter(t => t.rows.length);
+
+  // بطاقات الملخص (تقارير المبيعات/المشتريات) → جدول ملخص
+  const cards = [...pane.querySelectorAll('.cards .card')].map(c => ({
+    num: c.querySelector('.card-num')?.textContent.trim() || '',
+    lbl: c.querySelector('.card-lbl')?.textContent.trim() || '',
+  })).filter(c => c.lbl);
+  if (cards.length) tables.unshift({ caption: 'الملخص', head: cards.map(c => c.lbl), rows: [cards.map(c => c.num)] });
+
+  // أسطر الإجماليات (je-totals)
+  const totals = [...pane.querySelectorAll('.je-totals')]
+    .flatMap(el => [...el.children].map(s => s.textContent.trim())).filter(Boolean);
+
+  return { title, meta, tables, totals, fileName: title };
+}
+
+function previewReport(sub) { const d = _reportDoc(sub); if (d) openPrintPreview(d); }
+function exportReportExcel(sub) { const d = _reportDoc(sub); if (d) exportDocExcel(d); }
+
+// أزرار «معاينة / طباعة» في التقارير الخمسة + كشف الحساب — تحل محل window.print المؤقتة
+$$('[data-rep-print]').forEach(b => b.onclick = () => previewReport(b.dataset.repPrint));
+$('#btn-print-stmt').onclick = () => previewReport('stmt');
+
+// ─── بندا «ملف»: معاينة/تصدير المحتوى الظاهر حالياً ───
+function _activeTabSection() {
+  return $$('.tab').find(t => !t.classList.contains('hidden')) || null;
+}
+
+// مستند الشاشة الظاهرة حالياً (جدولها الرئيسي) — أو تقرير التاب الفرعي النشط
+function _currentViewDoc() {
+  const sec = _activeTabSection();
+  if (!sec) { toast('لا توجد شاشة ظاهرة', false); return null; }
+  const tabName = sec.id.replace('tab-', '');
+  if (tabName === 'reports') {
+    const sub = $('#tab-reports .sub-tab.active')?.dataset.sub || 'stock';
+    return _reportDoc(sub);
+  }
+  // تبويبات بتابات فرعية: نأخذ جدول اللوحة الظاهرة فقط
+  let scope = sec;
+  if (tabName === 'purchases')
+    scope = $('#purch-pane-pr').classList.contains('hidden') ? $('#purch-pane-pi') : $('#purch-pane-pr');
+  if (tabName === 'warehouses')
+    scope = ['wh-pane-list', 'wh-pane-transfer', 'wh-pane-count']
+      .map(id => $('#' + id)).find(p => !p.classList.contains('hidden')) || sec;
+  const tbl = scope.querySelector('.table-wrap table');
+  if (!tbl) { toast('لا يوجد جدول قابل للمعاينة في هذه الشاشة', false); return null; }
+  const t = _tableToPvTable(tbl);
+  if (!t.rows.length) { toast('لا توجد بيانات لعرضها في هذه الشاشة', false); return null; }
+  const title = TAB_TITLES[tabName] || 'مستند';
+  return { title, tables: [t], fileName: title };
+}
+
+function previewCurrentView() { const d = _currentViewDoc(); if (d) openPrintPreview(d); }
+function exportCurrentViewExcel() { const d = _currentViewDoc(); if (d) exportDocExcel(d); }
+
+// ─── معاينة المستندات التشغيلية (فواتير/مرتجعات/عروض أسعار) ───
+// نقرأ الرأس والسطور من نفس جداول المصدر — بلا أي تغيير على الاستعلامات القائمة.
+const PV_DOCS = {
+  sales_invoice:    { table: 'sales_invoices',    lines: 'sales_invoice_lines',
+    fk: ['invoice_id'], price: 'price', priceLbl: 'السعر', title: 'فاتورة مبيعات', partyLbl: 'العميل' },
+  purchase_invoice: { table: 'purchase_invoices', lines: 'purchase_invoice_lines',
+    fk: ['invoice_id', 'purchase_invoice_id'], price: 'cost', priceLbl: 'التكلفة', title: 'فاتورة شراء', partyLbl: 'المورد' },
+  purchase_return:  { table: 'purchase_returns',  lines: 'purchase_return_lines',
+    fk: ['return_id', 'purchase_return_id', 'invoice_id'], price: 'cost', priceLbl: 'التكلفة', title: 'مرتجع مشتريات', partyLbl: 'المورد' },
+  sales_return:     { table: 'sales_returns',     lines: 'sales_return_lines',
+    fk: ['return_id', 'sales_return_id', 'invoice_id'], price: 'price', priceLbl: 'السعر', title: 'مرتجع مبيعات', partyLbl: 'العميل' },
+  quote:            { table: 'quotes',            lines: 'quote_lines',
+    fk: ['quote_id'], price: 'price', priceLbl: 'السعر', title: 'عرض أسعار', partyLbl: 'العميل' },
+};
+
+window.previewDoc = async (kind, id) => {
+  const K = PV_DOCS[kind];
+  if (!K) return;
+  const { data: d, error } = await sb.from(K.table).select('*, parties(name)').eq('id', id).single();
+  if (error || !d) return toast('تعذر تحميل المستند: ' + (error ? error.message : 'غير موجود'), false);
+  // سطور المستند: نجرّب أسماء العمود المرجعي المحتملة ونتدرّج بأمان دون كسر المعاينة
+  let lines = null;
+  for (const fk of K.fk) {
+    const r = await sb.from(K.lines).select('qty, ' + K.price + ', items(name)').eq(fk, id);
+    if (!r.error) { lines = r.data || []; break; }
+  }
+  const meta = [
+    ['الرقم', String(d.number)],
+    ['التاريخ', new Date(d.created_at).toLocaleDateString('ar-EG')],
+    [K.partyLbl, d.parties?.name || '—'],
+  ];
+  if (d.status) meta.push(['الحالة', d.status === 'posted' ? 'مرحّلة' : (QUOTE_STATUS[d.status] || d.status)]);
+  if (d.memo) meta.push(['البيان', d.memo]);
+  const tables = [];
+  if (lines && lines.length) {
+    tables.push({
+      head: ['الصنف', 'الكمية', K.priceLbl, 'الإجمالي'],
+      rows: lines.map(l => [
+        l.items?.name || '—',
+        { txt: fmt(l.qty), num: Number(l.qty) },
+        { txt: fmt(l[K.price]), num: Number(l[K.price]) },
+        { txt: fmt(Number(l.qty) * Number(l[K.price])), num: Number(l.qty) * Number(l[K.price]) },
+      ]),
+    });
+  }
+  openPrintPreview({
+    title: K.title + ' رقم ' + d.number,
+    meta, tables,
+    totals: ['الإجمالي: ' + fmt(d.total)],
+    note: lines === null ? 'تفصيل الأصناف غير متاح لهذا المستند'
+      : (lines.length === 0 ? 'لا توجد سطور مسجلة لهذا المستند' : ''),
+    fileName: K.title + '-' + d.number,
+  });
+};
+
+// ─── معاينة سند (قبض/صرف/تحويل) من السندات المحمّلة في التبويب ───
+window.previewVoucher = (id) => {
+  const v = (state.vouchers || []).find(x => x.id === id);
+  if (!v) return toast('السند غير موجود في القائمة — أعد فتح تبويب السندات', false);
+  // أسماء حسابات الخزن من state.accounts (أعمدة السند من/إلى — بأسمائها المحتملة)
+  const accName = (keys) => {
+    for (const k of keys) {
+      if (!v[k]) continue;
+      const a = (state.accounts || []).find(x => x.id === v[k]);
+      if (a) return a.code + ' — ' + a.name;
+    }
+    return '—';
+  };
+  const type = VOUCHER_TYPES[v.voucher_type] || v.voucher_type;
+  const meta = [
+    ['الرقم', String(v.number)],
+    ['التاريخ', new Date(v.created_at).toLocaleDateString('ar-EG')],
+    ['النوع', type],
+    ['الطرف', v.parties?.name || '—'],
+  ];
+  if (v.voucher_type === 'transfer') {
+    meta.push(['من خزينة', accName(['from_account', 'from_account_id'])]);
+    meta.push(['إلى خزينة', accName(['to_account', 'to_account_id'])]);
+  } else {
+    meta.push(['الخزينة/البنك', accName(['to_account', 'to_account_id'])]);
+  }
+  if (v.memo) meta.push(['البيان', v.memo]);
+  openPrintPreview({
+    title: type + ' رقم ' + v.number,
+    meta,
+    tables: [{ head: ['البيان', 'المبلغ'],
+      rows: [[v.memo || type, { txt: fmt(v.amount), num: Number(v.amount) }]] }],
+    totals: ['المبلغ: ' + fmt(v.amount)],
+    fileName: type + '-' + v.number,
+  });
+};
+
+// ─────────── ١١-ز) المستخدمون والصلاحيات + الفروع (دفعة C) ───────────
+// المنطق النهائي في hazem-users.sql:
+//   • الأدوار: owner | manager | accountant | cashier — والدور القديم «member»
+//     يظل مسموحاً ويُعرض كـ«محاسب» (قرار موثّق: لا تحويل للبيانات القديمة).
+//   • كل عمليات إدارة الأعضاء عبر RPCs من نوع security definer (نفس نمط create_company):
+//     list_members / add_member_by_email / set_member_role / remove_member —
+//     والقاعدة نفسها ترفض غير المالك حتى لو تخطّى أحد الواجهة.
+//   • الفروع CRUD مباشر عبر RLS (سياسة branches_rw بنمط is_member حرفياً)،
+//     وتعيين الرئيسي عبر set_main_branch (ذرّي) — والرئيسي لا يُحذف (واجهة + trigger).
+
+// أسماء الأدوار المعروضة (member القديم = محاسب)
+const ROLE_NAMES = { owner: 'مالك', manager: 'مدير', accountant: 'محاسب', cashier: 'كاشير', member: 'محاسب' };
+const _isOwner = () => state.myRole === 'owner';
+
+// ─── المستخدمون والصلاحيات ───
+async function loadUsers() {
+  const isOwner = _isOwner();
+  $('#usr-add-box').classList.toggle('hidden', !isOwner);
+  $('#usr-readonly-note').classList.toggle('hidden', isOwner);
+
+  const { data: members, error } = await sb.rpc('list_members', { p_tenant: state.tenant });
+  if (error) {
+    $('#tbl-members').innerHTML = '<tr><td colspan="4" style="color:#B42318">تعذّر تحميل الأعضاء — تأكد من تنفيذ ملف hazem-users.sql في SQL Editor</td></tr>';
+    return toast('فشل تحميل الأعضاء: ' + error.message, false);
+  }
+
+  $('#tbl-members').innerHTML = (members || []).map(m => {
+    const isOwnerRow = m.role === 'owner';
+    // خلية الدور: المالك ثابت لا يتغير — والقائمة المنسدلة للمالك فقط
+    const roleCell = isOwnerRow
+      ? '<b style="color:#B42318">👑 مالك</b>'
+      : (isOwner
+        ? `<select onchange="changeMemberRole('${esc(m.user_id)}', this.value)" style="width:auto;min-width:120px;margin:0">
+             ${['manager', 'accountant', 'cashier'].map(r =>
+               `<option value="${r}" ${m.role === r || (m.role === 'member' && r === 'accountant') ? 'selected' : ''}>${ROLE_NAMES[r]}</option>`).join('')}
+           </select>`
+        : esc(ROLE_NAMES[m.role] || m.role));
+    // خلية الإجراءات: المالك لا يُحذف — وزر الحذف للمالك فقط
+    const actCell = isOwnerRow
+      ? '<span style="color:#7A6A5C;font-size:12px">لا يمكن حذفه</span>'
+      : (isOwner
+        ? `<button class="btn btn-danger" onclick="removeMember('${esc(m.user_id)}', '${esc(m.email)}')">حذف</button>`
+        : '—');
+    return `<tr>
+      <td dir="ltr" style="text-align:right">${esc(m.email || m.user_id)}</td>
+      <td>${roleCell}</td>
+      <td>${m.joined_at ? new Date(m.joined_at).toLocaleDateString('ar-EG') : '—'}</td>
+      <td>${actCell}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="4" style="color:#7A6A5C">لا يوجد أعضاء</td></tr>';
+}
+
+// ربط عضو جديد بالبريد (مالك فقط — والواجهة نفسها تخفي النموذج عن غيره)
+$('#btn-add-member').onclick = async () => {
+  if (!_isOwner()) return toast('غير مصرح: إضافة الأعضاء لمالك الشركة فقط', false);
+  const email = $('#usr-email').value.trim();
+  const role = $('#usr-role').value;
+  if (!email) return toast('أدخل بريد المستخدم أولاً', false);
+  const { error } = await sb.rpc('add_member_by_email', { p_tenant: state.tenant, p_email: email, p_role: role });
+  if (error) return toast(error.message, false); // رسائل القاعدة عربية وإرشادية
+  $('#usr-email').value = '';
+  toast('تم ربط العضو «' + email + '» بدور ' + (ROLE_NAMES[role] || role) + ' ✅');
+  loadUsers();
+};
+
+// تغيير دور عضو (مالك فقط — يتحقق الخادم أيضاً)
+window.changeMemberRole = async (uid, role) => {
+  const { error } = await sb.rpc('set_member_role', { p_tenant: state.tenant, p_user: uid, p_role: role });
+  if (error) { toast('فشل تغيير الدور: ' + error.message, false); return loadUsers(); } // إعادة التحميل لعكس القائمة
+  toast('تم تغيير الدور إلى «' + (ROLE_NAMES[role] || role) + '»');
+  loadUsers();
+};
+
+// حذف عضو (غير المالك) مع تأكيد
+window.removeMember = async (uid, email) => {
+  if (!confirm(`حذف العضو «${email}» من الشركة؟\nسيفقد الوصول لبياناتها فوراً.`)) return;
+  const { error } = await sb.rpc('remove_member', { p_tenant: state.tenant, p_user: uid });
+  if (error) return toast('فشل الحذف: ' + error.message, false);
+  toast('تم حذف العضو من الشركة');
+  loadUsers();
+};
+
+// ─── الفروع ───
+async function loadBranches() {
+  const { data: branches, error } = await sb.from('branches')
+    .select('*').order('is_main', { ascending: false }).order('created_at', { ascending: true });
+  if (error) {
+    $('#br-empty').classList.add('hidden');
+    $('#br-list-box').classList.remove('hidden');
+    $('#tbl-branches').innerHTML = '<tr><td colspan="5" style="color:#B42318">تعذّر تحميل الفروع — تأكد من تنفيذ ملف hazem-users.sql في SQL Editor</td></tr>';
+    return toast('فشل تحميل الفروع: ' + error.message, false);
+  }
+  state.branches = branches || [];
+
+  // أول استخدام ولا توجد فروع: زر «إنشاء الفرع الرئيسي» بضغطة واحدة
+  const empty = state.branches.length === 0;
+  $('#br-empty').classList.toggle('hidden', !empty);
+  $('#br-list-box').classList.toggle('hidden', empty);
+  if (empty) return;
+
+  $('#tbl-branches').innerHTML = state.branches.map(b => `<tr>
+    <td>${esc(b.name)}</td>
+    <td>${esc(b.address) || '—'}</td>
+    <td dir="ltr" style="text-align:right">${esc(b.phone) || '—'}</td>
+    <td>${b.is_main ? '⭐ رئيسي' : 'فرعي'}</td>
+    <td>
+      <button class="btn btn-ghost btn-sm" onclick="editBranch('${b.id}')">تعديل</button>
+      ${b.is_main
+        ? '<span style="color:#7A6A5C;font-size:12px">الفرع الرئيسي لا يُحذف</span>'
+        : `<button class="btn btn-ghost btn-sm" onclick="setMainBranch('${b.id}')">⭐ تعيين رئيسي</button>
+           <button class="btn btn-danger" onclick="delBranch('${b.id}')">حذف</button>`}
+    </td>
+  </tr>`).join('');
+}
+
+// إنشاء الفرع الرئيسي بضغطة واحدة (أول استخدام)
+$('#btn-create-main-branch').onclick = async () => {
+  const { error } = await sb.from('branches')
+    .insert({ tenant_id: state.tenant, name: 'الفرع الرئيسي', is_main: true });
+  if (error) return toast('فشل الإنشاء: ' + error.message, false);
+  toast('تم إنشاء الفرع الرئيسي ✅');
+  loadBranches();
+};
+
+// نموذج إضافة/تعديل فرع
+$('#btn-add-branch').onclick = () => branchForm(null);
+window.editBranch = (id) => branchForm((state.branches || []).find(b => b.id === id));
+
+function branchForm(branch) {
+  openModal(`
+    <h3>${branch ? 'تعديل فرع' : 'فرع جديد'}</h3>
+    <label class="lbl">اسم الفرع</label>
+    <input id="f-brname" placeholder="مثال: فرع الرياض" value="${esc(branch?.name)}">
+    <label class="lbl">العنوان</label>
+    <input id="f-braddr" placeholder="اختياري" value="${esc(branch?.address)}">
+    <label class="lbl">الهاتف</label>
+    <input id="f-brphone" placeholder="اختياري" dir="ltr" value="${esc(branch?.phone)}">
+    <div class="modal-actions">
+      <button class="btn btn-gold" id="f-brsave">حفظ</button>
+      <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+    </div>`);
+  $('#f-brname').focus();
+  $('#f-brsave').onclick = async () => {
+    const rec = { name: $('#f-brname').value.trim(),
+      address: $('#f-braddr').value.trim() || null, phone: $('#f-brphone').value.trim() || null };
+    if (!rec.name) return toast('اسم الفرع مطلوب', false);
+    let r;
+    if (branch) r = await sb.from('branches').update(rec).eq('id', branch.id);
+    else r = await sb.from('branches').insert({ ...rec, tenant_id: state.tenant });
+    if (r.error) return toast('خطأ: ' + r.error.message, false);
+    toast('تم الحفظ بنجاح'); closeModal(); loadBranches();
+  };
+}
+
+// تعيين فرع كرئيسي (ذرّي عبر RPC — الفرع الرئيسي يبقى واحداً دائماً)
+window.setMainBranch = async (id) => {
+  const b = (state.branches || []).find(x => x.id === id);
+  if (!confirm(`تعيين «${b ? b.name : ''}» كفرع رئيسي؟`)) return;
+  const { error } = await sb.rpc('set_main_branch', { p_branch: id });
+  if (error) return toast('فشل التعيين: ' + error.message, false);
+  toast('تم تعيين الفرع الرئيسي ⭐');
+  loadBranches();
+};
+
+// حذف فرع (الرئيسي لا يُحذف — واجهة + trigger في القاعدة)
+window.delBranch = async (id) => {
+  const b = (state.branches || []).find(x => x.id === id);
+  if (b && b.is_main) return toast('لا يمكن حذف الفرع الرئيسي — عيّن فرعاً آخر رئيسياً أولاً', false);
+  if (!confirm(`حذف الفرع «${b ? b.name : ''}»؟`)) return;
+  const { error } = await sb.from('branches').delete().eq('id', id);
+  if (error) return toast('لا يمكن الحذف: ' + error.message, false);
+  toast('تم حذف الفرع'); loadBranches();
+};
 
 // ─────────── ١٢) نقطة البداية ───────────
 (async () => {
