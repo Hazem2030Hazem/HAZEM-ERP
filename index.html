@@ -146,6 +146,9 @@
           <div class="sb-body">
             <button class="mb-leaf" data-tab="pos" data-i18n="mi_cashier">شاشة الكاشير</button>
             <button class="mb-leaf" data-tab="shifts" data-i18n="mi_shifts">ورديات الكاشير</button>
+            <button class="mb-leaf" data-tab="posrep" data-i18n="mi_posrep">تقرير المدفوعات</button>
+            <button class="mb-leaf" data-tab="poshourly" data-i18n="mi_poshourly">المبيعات بالساعة</button>
+            <button class="mb-leaf" data-action="pos-settings" data-i18n="mi_pos_settings">إعدادات POS (الطابعة)</button>
           </div>
         </div>
         <div class="sb-group">
@@ -614,6 +617,10 @@
           <div class="toolbar pos-topbar">
             <span class="pos-shift-badge">وردية رقم <b id="pos-shift-no">—</b></span>
             <button id="btn-pos-checkout" class="btn btn-gold" style="font-size:16px;padding:12px 26px">💵 تحصيل (F9)</button>
+            <button id="btn-pos-newitem" class="btn btn-ghost" data-i18n="pos_new_item">➕ صنف جديد</button>
+            <button id="btn-pos-park" class="btn btn-ghost" data-i18n="pos_park">⏸️ تعليق</button>
+            <button id="btn-pos-parked" class="btn btn-ghost" data-i18n="pos_parked">📋 المعلَّقة</button>
+            <button id="btn-pos-return" class="btn btn-ghost" data-i18n="pos_return">↩️ مرتجع</button>
             <button id="btn-close-shift" class="btn btn-ghost">🔒 قفل الوردية</button>
           </div>
           <div class="pos-layout">
@@ -636,6 +643,51 @@
         <div class="table-wrap"><table>
           <thead><tr><th>الرقم</th><th>الكاشير</th><th>الفتح</th><th>القفل</th><th>افتتاحي</th><th>ختامي</th><th>مبيعات الوردية</th><th>الحالة</th></tr></thead>
           <tbody id="tbl-shifts"></tbody>
+        </table></div>
+      </section>
+
+      <!-- ترقية POS: تقرير المدفوعات -->
+      <section id="tab-posrep" class="tab hidden">
+        <div class="toolbar" style="flex-wrap:wrap;gap:8px">
+          <label data-i18n="posrep_from">من</label><input type="date" id="posrep-from" dir="ltr" style="width:auto">
+          <label data-i18n="posrep_to">إلى</label><input type="date" id="posrep-to" dir="ltr" style="width:auto">
+          <select id="posrep-method" style="width:auto">
+            <option value="" data-i18n="posrep_all">الكل</option>
+            <option value="cash" data-i18n="pm_cash">نقدي</option>
+            <option value="card" data-i18n="pm_card">شبكة</option>
+            <option value="transfer" data-i18n="pm_transfer">تحويل</option>
+            <option value="credit" data-i18n="pm_credit">آجل</option>
+          </select>
+          <select id="posrep-shift" style="width:auto"><option value="" data-i18n="posrep_all">الكل</option></select>
+          <button id="btn-posrep-run" class="btn btn-gold" data-i18n="posrep_run">عرض</button>
+          <button id="btn-posrep-print" class="btn btn-ghost" data-i18n="posrep_print">🖨️ طباعة</button>
+          <button id="btn-posrep-excel" class="btn btn-ghost" data-i18n="posrep_excel">📊 Excel</button>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr>
+            <th data-i18n="posrep_date">التاريخ</th><th data-i18n="posrep_inv">رقم الفاتورة</th>
+            <th data-i18n="posrep_method">طريقة الدفع</th><th data-i18n="pos_pay_amount">المبلغ</th>
+            <th data-i18n="pos_pay_ref">المرجع</th><th data-i18n="posrep_shift">الوردية</th>
+          </tr></thead>
+          <tbody id="tbl-posrep"></tbody>
+          <tfoot id="tfoot-posrep"></tfoot>
+        </table></div>
+      </section>
+
+      <!-- ترقية POS: المبيعات بالساعة -->
+      <section id="tab-poshourly" class="tab hidden">
+        <div class="toolbar" style="gap:8px">
+          <label data-i18n="posh_date">اليوم</label>
+          <input type="date" id="posh-date" dir="ltr" style="width:auto">
+          <button id="btn-posh-run" class="btn btn-gold" data-i18n="posh_run">عرض</button>
+          <span id="posh-peak" style="font-weight:700;color:var(--gold,#c9a227)"></span>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr>
+            <th data-i18n="posh_hour">الساعة</th><th data-i18n="posh_count">عدد الفواتير</th>
+            <th data-i18n="posh_total">إجمالي المبيعات</th><th style="width:40%"></th>
+          </tr></thead>
+          <tbody id="tbl-poshourly"></tbody>
         </table></div>
       </section>
 
@@ -1091,6 +1143,23 @@
           <label class="lbl" id="lbl-tax-addr">العنوان الوطني</label>
           <input id="tax-national-address" placeholder="المدينة، الحي، الشارع، الرمز البريدي">
           <button id="btn-save-tax" class="btn btn-gold btn-block" style="margin-top:12px">💾 حفظ الإعدادات الضريبية</button>
+        </div>
+
+        <!-- 🖨️ ترقية POS: إعدادات الطابعة الحرارية (تُخزَّن في tenants.pos_settings) -->
+        <div class="report-box" id="pos-settings-box" style="max-width:560px">
+          <h3 data-i18n="poss_title">🖨️ إعدادات طابعة POS</h3>
+          <label class="lbl" data-i18n="poss_paper">مقاس الورق</label>
+          <select id="poss-paper">
+            <option value="80">80mm</option>
+            <option value="58">58mm</option>
+          </select>
+          <label class="lbl" data-i18n="poss_shop">اسم المتجر على الإيصال</label>
+          <input id="poss-shop" placeholder="اسم المتجر">
+          <label class="lbl" data-i18n="poss_footer">رسالة أسفل الإيصال</label>
+          <input id="poss-footer" data-i18n-ph="pos_thanks" placeholder="شكراً لتسوقكم معنا">
+          <label class="lbl" data-i18n="poss_copies">عدد النسخ</label>
+          <input id="poss-copies" type="number" min="1" max="4" value="1" dir="ltr" style="text-align:center">
+          <button id="btn-save-poss" class="btn btn-gold btn-block" style="margin-top:12px" data-i18n="poss_save">حفظ الإعدادات</button>
         </div>
 
         <!-- 🔒 المرحلة 16: قفل الفترات المحاسبية -->
@@ -1648,6 +1717,7 @@
   <script src="qr.js"></script>
   <script src="zatca2.js"></script>
   <script src="app.js"></script>
+  <script src="pos-plus.js"></script>
   <script src="hr.js"></script>
   <script src="assets.js"></script>
   <script src="procurement.js"></script>

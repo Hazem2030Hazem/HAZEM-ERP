@@ -9,7 +9,7 @@
    ═══════════════════════════════════════════════════════════════ */
 'use strict';
 
-const CACHE_NAME = 'hazem-erp-v19';
+const CACHE_NAME = 'hazem-erp-v20';
 const STATIC_FILES = [
   'index.html',
   'styles.css',
@@ -19,6 +19,7 @@ const STATIC_FILES = [
   'qr.js',
   'zatca2.js',
   'app.js',
+  'pos-plus.js',
   'hr.js',
   'assets.js',
   'procurement.js',

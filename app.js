@@ -125,6 +125,7 @@ const TAB_TITLES = {
   accounts: 'شجرة الحسابات', journal: 'قيود اليومية', vouchers: 'السندات والخزن',
   purchases: 'المشتريات', returns: 'مرتجعات المبيعات', quotes: 'عروض الأسعار',
   warehouses: 'المستودعات والجرد', pos: 'نقطة البيع — الكاشير', shifts: 'ورديات الكاشير',
+  posrep: 'تقرير مدفوعات نقاط البيع', poshourly: 'المبيعات بالساعة', // ترقية POS+
   users: 'المستخدمون والصلاحيات', branches: 'الفروع',
   employees: 'الموظفون', hr: 'الموارد البشرية والرواتب',
   assets: 'الأصول الثابتة', // المرحلة 13
@@ -180,6 +181,9 @@ function switchTab(tabName) {
   // المرحلة 19: التصنيع (BOM) + CRM (manufacturing.js / crm.js — حارس التعريف)
   if (tabName === 'manufacturing' && typeof loadManufacturingTab === 'function') loadManufacturingTab();
   if (tabName === 'crm' && typeof loadCrmTab === 'function') loadCrmTab();
+  // ترقية POS+ (pos-plus.js — تُعرَّف بعد app.js؛ الحارس يحمي أول إقلاع)
+  if (tabName === 'posrep' && typeof loadPosPaymentsReport === 'function') loadPosPaymentsReport();
+  if (tabName === 'poshourly' && typeof loadPosHourly === 'function') loadPosHourly();
 }
 window.switchTab = switchTab;
 
@@ -271,6 +275,8 @@ $$('.mb-leaf').forEach(leaf => {
     if (leaf.dataset.action === 'logout') return $('#btn-logout').click();
     if (leaf.dataset.action === 'opening-entry') return openOpeningEntry();
     if (leaf.dataset.action === 'tax-settings') return openTaxSettings();
+    // ترقية POS+: إعدادات الطابعة (pos-plus.js — حارس التعريف)
+    if (leaf.dataset.action === 'pos-settings') return window.openPosSettings && window.openPosSettings();
     if (leaf.dataset.action === 'voucher-receipt') return openVoucher('receipt');
     if (leaf.dataset.action === 'voucher-payment') return openVoucher('payment');
     if (leaf.dataset.action === 'voucher-transfer') return openVoucher('transfer');
@@ -689,7 +695,8 @@ async function loadInvoices() {
       <td>${esc(v.parties?.name)}</td>
       <td>${fmt(v.total)}</td>
       <td>${v.status === 'posted' ? 'مرحّلة' : esc(v.status)}</td>
-      <td><button class="btn btn-ghost btn-sm" onclick="previewDoc('sales_invoice','${v.id}')">🖨️ معاينة</button></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="previewDoc('sales_invoice','${v.id}')">🖨️ معاينة</button>
+          <button class="btn btn-ghost btn-sm" onclick="if(window.posReprint)posReprint('${v.id}')" title="إعادة طباعة إيصال حراري">🧾</button></td>
     </tr>`).join('');
 }
 
@@ -2492,6 +2499,12 @@ window.posLineDel = (itemId) => {
 
 function cartTotal() { return _cart.reduce((s, l) => s + l.qty * l.price, 0); }
 
+// ترقية POS+: وصول محروس للسلة والشبكة من pos-plus.js (تعليق/استرجاع + صنف جديد)
+window.posCartGet = () => _cart;
+window.posCartSet = (c) => { _cart = Array.isArray(c) ? c : []; renderCart(); };
+window.posCartTotal = cartTotal;
+window.renderPosGrid = renderPosGrid;
+
 function renderCart() {
   $('#pos-cart-lines').innerHTML = _cart.map(l => `
     <div class="cart-line">
@@ -2510,6 +2523,8 @@ $('#btn-cart-clear').onclick = () => { _cart = []; renderCart(); };
 
 // ─── التحصيل (F9): المدفوع نقداً + الباقي لحظياً ───
 function openCheckout() {
+  // ترقية POS+: شاشة الدفع المنقّس تحل محل التحصيل النقدي البسيط (حارس تعريف)
+  if (typeof window.posPlusCheckout === 'function') return window.posPlusCheckout();
   if (!state.shift) return toast('لا توجد وردية مفتوحة — افتح وردية أولاً', false);
   if (!_cart.length) return toast('السلة فارغة — أضف صنفاً على الأقل', false);
   const total = cartTotal();
@@ -2577,6 +2592,8 @@ document.addEventListener('keydown', (e) => {
 
 // ─── قفل الوردية: ملخص + رصيد ختامي ───
 $('#btn-close-shift').onclick = async () => {
+  // ترقية POS+: إقفال وردية Z-report كامل (جرد نقدية + توزيع طرق الدفع + طباعة)
+  if (typeof window.posPlusCloseShift === 'function') return window.posPlusCloseShift();
   if (!state.shift) return toast('لا توجد وردية مفتوحة', false);
   // ملخص الوردية من فواتيرها
   const { data: invs } = await sb.from('sales_invoices').select('total')
