@@ -44,207 +44,193 @@
   </div>
 
   <!-- ═══════════ التطبيق الرئيسي ═══════════ -->
+  <!-- ═══════════ التطبيق الرئيسي — تخطيط Manager: سايدبار داكن + تبويبات علوية ═══════════ -->
   <div id="app-screen" class="app hidden">
-    <!-- ═══ شريط القوائم الكلاسيكي (سطح المكتب) ═══ -->
-    <nav class="menubar" id="menubar">
-      <img src="logo.png" class="menubar-logo" alt="H. ERP">
-      <div class="mb-item">
-        <button class="mb-btn" data-i18n="menu_file">ملف</button>
-        <div class="mb-drop">
-          <button class="mb-leaf" data-tab="dashboard" data-i18n="mi_open_dash">فتح لوحة المؤشرات</button>
-          <button class="mb-leaf" data-action="print-preview" data-i18n="mi_print_preview">طباعة / معاينة</button>
-          <button class="mb-leaf" data-action="export-excel" data-i18n="mi_export_excel">تصدير Excel</button>
-          <div class="mb-sep"></div>
-          <button class="mb-leaf" data-action="logout" data-i18n="mi_logout">تسجيل الخروج</button>
-        </div>
+    <!-- ═══ الشريط الجانبي الداكن: كل عناصر القوائم في مجموعات قابلة للطي ═══ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <img src="logo.png" id="sidebar-logo" class="sidebar-logo" alt="H. ERP">
+        <span class="brand-txt">H. ERP <span>SYSTEM MANAGER</span></span>
       </div>
-      <div class="mb-item">
-        <button class="mb-btn" data-i18n="menu_file2">النظام</button>
-        <div class="mb-drop">
-          <button class="mb-leaf" data-action="sysinfo" data-i18n="mi_sysinfo">معلومات النظام</button>
-          <button class="mb-leaf" disabled data-i18n="mi_backup">النسخ الاحتياطي</button>
-          <div class="mb-sep"></div>
-          <button class="mb-leaf hidden" id="mb-dev-dl" data-tab="dev" data-i18n="mi_dev_dl">تحميل نسخة من البرنامج</button>
+      <nav class="sidebar-nav" id="menubar">
+        <div class="sb-group open">
+          <button class="mb-btn sb-head" data-i18n="menu_home">الرئيسية</button>
+          <div class="sb-body">
+            <button class="mb-leaf" data-tab="dashboard" data-i18n="mi_open_dash">فتح لوحة المؤشرات</button>
+          </div>
         </div>
-      </div>
-      <div class="mb-item">
-        <button class="mb-btn" data-i18n="menu_edit">الإعدادات</button>
-        <div class="mb-drop">
-          <button class="mb-leaf" data-tab="settings" data-i18n="mi_settings">الإعدادات العامة</button>
-          <button class="mb-leaf" data-action="tax-settings" data-i18n="mi_tax_settings">الإعدادات الضريبية (زاتكا)</button>
-          <button class="mb-leaf" data-tab="users" data-i18n="mi_users">المستخدمون والصلاحيات</button>
-          <button class="mb-leaf" data-tab="branches" data-i18n="mi_branches">الفروع</button>
-          <button class="mb-leaf" data-tab="settings" data-i18n="mi_periods">الفترات المالية</button>
+        <div class="sb-group">
+          <button class="mb-btn sb-head" data-i18n="menu_file">ملف</button>
+          <div class="sb-body">
+            <button class="mb-leaf" data-action="print-preview" data-i18n="mi_print_preview">طباعة / معاينة</button>
+            <button class="mb-leaf" data-action="export-excel" data-i18n="mi_export_excel">تصدير Excel</button>
+            <div class="mb-sep"></div>
+            <button class="mb-leaf" data-action="logout" data-i18n="mi_logout">تسجيل الخروج</button>
+          </div>
         </div>
-      </div>
-      <div class="mb-item">
-        <button class="mb-btn" data-i18n="menu_gl">الأستاذ العام</button>
-        <div class="mb-drop">
-          <button class="mb-leaf" data-tab="accounts" data-i18n="mi_acc_tree">شجرة الحسابات</button>
-          <button class="mb-leaf" data-tab="journal" data-i18n="mi_journal">قيود اليومية</button>
-          <button class="mb-leaf" data-action="opening-entry" data-i18n="mi_opening">قيد افتتاحي</button>
+        <div class="sb-group">
+          <button class="mb-btn sb-head" data-i18n="menu_file2">النظام</button>
+          <div class="sb-body">
+            <button class="mb-leaf" data-action="sysinfo" data-i18n="mi_sysinfo">معلومات النظام</button>
+            <button class="mb-leaf" disabled data-i18n="mi_backup">النسخ الاحتياطي</button>
+            <div class="mb-sep"></div>
+            <button class="mb-leaf hidden" id="mb-dev-dl" data-tab="dev" data-i18n="mi_dev_dl">تحميل نسخة من البرنامج</button>
+          </div>
         </div>
-      </div>
-      <div class="mb-item">
-        <button class="mb-btn" data-i18n="menu_treasury">معاملات مالية</button>
-        <div class="mb-drop">
-          <button class="mb-leaf" data-action="voucher-receipt" data-i18n="mi_vreceipt">سند قبض</button>
-          <button class="mb-leaf" data-action="voucher-payment" data-i18n="mi_vpayment">سند صرف</button>
-          <button class="mb-leaf" data-action="voucher-transfer" data-i18n="mi_vtransfer">تحويل بين الخزن</button>
+        <div class="sb-group">
+          <button class="mb-btn sb-head" data-i18n="menu_edit">الإعدادات</button>
+          <div class="sb-body">
+            <button class="mb-leaf" data-tab="settings" data-i18n="mi_settings">الإعدادات العامة</button>
+            <button class="mb-leaf" data-action="tax-settings" data-i18n="mi_tax_settings">الإعدادات الضريبية (زاتكا)</button>
+            <button class="mb-leaf" data-tab="users" data-i18n="mi_users">المستخدمون والصلاحيات</button>
+            <button class="mb-leaf" data-tab="branches" data-i18n="mi_branches">الفروع</button>
+            <button class="mb-leaf" data-tab="settings" data-i18n="mi_periods">الفترات المالية</button>
+          </div>
         </div>
-      </div>
-      <div class="mb-item">
-        <button class="mb-btn" data-i18n="menu_inventory">المخازن</button>
-        <div class="mb-drop">
-          <button class="mb-leaf" data-tab="items" data-i18n="mi_items">الأصناف</button>
-          <button class="mb-leaf" data-action="warehouses" data-i18n="mi_warehouses">المستودعات</button>
-          <button class="mb-leaf" data-action="stock-transfer" data-i18n="mi_stock_transfer">تحويل بين المستودعات</button>
-          <button class="mb-leaf" data-action="stock-count" data-i18n="mi_stock_count">الجرد</button>
-          <button class="mb-leaf" data-tab="barcode" data-i18n="mi_barcode">ملصقات الباركود</button>
-          <button class="mb-leaf" data-tab="manufacturing" data-i18n="mi_manufacturing">التصنيع / قوائم المكونات</button>
+        <div class="sb-group">
+          <button class="mb-btn sb-head" data-i18n="menu_gl">الأستاذ العام</button>
+          <div class="sb-body">
+            <button class="mb-leaf" data-tab="accounts" data-i18n="mi_acc_tree">شجرة الحسابات</button>
+            <button class="mb-leaf" data-tab="journal" data-i18n="mi_journal">قيود اليومية</button>
+            <button class="mb-leaf" data-action="opening-entry" data-i18n="mi_opening">قيد افتتاحي</button>
+          </div>
         </div>
-      </div>
-      <div class="mb-item">
-        <button class="mb-btn" data-i18n="menu_purch">المشتريات</button>
-        <div class="mb-drop">
-          <button class="mb-leaf" data-action="purchase-invoice" data-i18n="mi_pinv">فاتورة شراء</button>
-          <button class="mb-leaf" data-action="purchase-order" data-i18n="mi_porder">أمر شراء</button>
-          <button class="mb-leaf" data-action="purchase-return" data-i18n="mi_pret">مرتجع مشتريات</button>
-          <button class="mb-leaf" data-action="credit-note" data-i18n="mi_cnote">إشعار دائن/مدين</button>
-          <button class="mb-leaf" data-tab="parties" data-i18n="mi_suppliers">الموردون</button>
+        <div class="sb-group">
+          <button class="mb-btn sb-head" data-i18n="menu_treasury">معاملات مالية</button>
+          <div class="sb-body">
+            <button class="mb-leaf" data-tab="vouchers" data-i18n="nav_vouchers">💰 السندات والخزن</button>
+            <button class="mb-leaf" data-action="voucher-receipt" data-i18n="mi_vreceipt">سند قبض</button>
+            <button class="mb-leaf" data-action="voucher-payment" data-i18n="mi_vpayment">سند صرف</button>
+            <button class="mb-leaf" data-action="voucher-transfer" data-i18n="mi_vtransfer">تحويل بين الخزن</button>
+          </div>
         </div>
-      </div>
-      <div class="mb-item">
-        <button class="mb-btn" data-i18n="menu_sales">المبيعات</button>
-        <div class="mb-drop">
-          <button class="mb-leaf" data-tab="invoices" data-i18n="mi_sinv">فاتورة مبيعات جديدة</button>
-          <button class="mb-leaf" data-action="sales-return" data-i18n="mi_sret">مرتجع مبيعات</button>
-          <button class="mb-leaf" data-action="quote" data-i18n="mi_quote">عرض أسعار</button>
-          <button class="mb-leaf" data-tab="einvoices" data-i18n="mi_einvoices">الفوترة الإلكترونية (زاتكا ٢)</button>
-          <button class="mb-leaf" data-tab="integrations" data-i18n="mi_integrations">التكاملات (سلة/زد) + API</button>
-          <button class="mb-leaf" data-tab="parties" data-i18n="mi_customers">العملاء</button>
-          <button class="mb-leaf" data-tab="crm" data-i18n="mi_crm">CRM — العملاء المحتملون</button>
+        <div class="sb-group">
+          <button class="mb-btn sb-head" data-i18n="menu_inventory">المخازن</button>
+          <div class="sb-body">
+            <button class="mb-leaf" data-tab="items" data-i18n="mi_items">الأصناف</button>
+            <button class="mb-leaf" data-tab="warehouses" data-i18n="nav_warehouses">🏬 المستودعات والجرد</button>
+            <button class="mb-leaf" data-action="warehouses" data-i18n="mi_warehouses">المستودعات</button>
+            <button class="mb-leaf" data-action="stock-transfer" data-i18n="mi_stock_transfer">تحويل بين المستودعات</button>
+            <button class="mb-leaf" data-action="stock-count" data-i18n="mi_stock_count">الجرد</button>
+            <button class="mb-leaf" data-tab="barcode" data-i18n="mi_barcode">ملصقات الباركود</button>
+            <button class="mb-leaf" data-tab="manufacturing" data-i18n="mi_manufacturing">التصنيع / قوائم المكونات</button>
+          </div>
         </div>
-      </div>
-      <div class="mb-item">
-        <button class="mb-btn" data-i18n="menu_pos">نقاط البيع</button>
-        <div class="mb-drop">
-          <button class="mb-leaf" data-tab="pos" data-i18n="mi_cashier">شاشة الكاشير</button>
-          <button class="mb-leaf" data-tab="shifts" data-i18n="mi_shifts">ورديات الكاشير</button>
+        <div class="sb-group">
+          <button class="mb-btn sb-head" data-i18n="menu_purch">المشتريات</button>
+          <div class="sb-body">
+            <button class="mb-leaf" data-tab="purchases" data-i18n="nav_purchases">🛒 المشتريات</button>
+            <button class="mb-leaf" data-action="purchase-invoice" data-i18n="mi_pinv">فاتورة شراء</button>
+            <button class="mb-leaf" data-action="purchase-order" data-i18n="mi_porder">أمر شراء</button>
+            <button class="mb-leaf" data-action="purchase-return" data-i18n="mi_pret">مرتجع مشتريات</button>
+            <button class="mb-leaf" data-action="credit-note" data-i18n="mi_cnote">إشعار دائن/مدين</button>
+            <button class="mb-leaf" data-tab="parties" data-i18n="mi_suppliers">الموردون</button>
+          </div>
         </div>
-      </div>
-      <div class="mb-item">
-        <button class="mb-btn" data-i18n="menu_hr">الموارد البشرية</button>
-        <div class="mb-drop">
-          <button class="mb-leaf" data-tab="employees" data-i18n="mi_hr_employees">الموظفون</button>
-          <button class="mb-leaf" data-tab="hr" data-i18n="mi_hr_payroll">الرواتب والمسيرات</button>
+        <div class="sb-group">
+          <button class="mb-btn sb-head" data-i18n="menu_sales">المبيعات</button>
+          <div class="sb-body">
+            <button class="mb-leaf" data-tab="invoices" data-i18n="mi_sinv">فاتورة مبيعات جديدة</button>
+            <button class="mb-leaf" data-tab="returns" data-i18n="nav_returns">↩️ المرتجعات</button>
+            <button class="mb-leaf" data-action="sales-return" data-i18n="mi_sret">مرتجع مبيعات</button>
+            <button class="mb-leaf" data-tab="quotes" data-i18n="nav_quotes">📋 عروض الأسعار</button>
+            <button class="mb-leaf" data-action="quote" data-i18n="mi_quote">عرض أسعار</button>
+            <button class="mb-leaf" data-tab="einvoices" data-i18n="mi_einvoices">الفوترة الإلكترونية (زاتكا ٢)</button>
+            <button class="mb-leaf" data-tab="integrations" data-i18n="mi_integrations">التكاملات (سلة/زد) + API</button>
+            <button class="mb-leaf" data-tab="parties" data-i18n="mi_customers">العملاء</button>
+            <button class="mb-leaf" data-tab="crm" data-i18n="mi_crm">CRM — العملاء المحتملون</button>
+          </div>
         </div>
-      </div>
-      <div class="mb-item">
-        <button class="mb-btn" data-i18n="menu_assets">الأصول الثابتة</button>
-        <div class="mb-drop">
-          <button class="mb-leaf" data-tab="assets" data-i18n="mi_assets_register">سجل الأصول</button>
-          <button class="mb-leaf" data-tab="assets" data-i18n="mi_assets_dep">ترحيل الإهلاك</button>
+        <div class="sb-group">
+          <button class="mb-btn sb-head" data-i18n="menu_pos">نقاط البيع</button>
+          <div class="sb-body">
+            <button class="mb-leaf" data-tab="pos" data-i18n="mi_cashier">شاشة الكاشير</button>
+            <button class="mb-leaf" data-tab="shifts" data-i18n="mi_shifts">ورديات الكاشير</button>
+          </div>
         </div>
-      </div>
-      <div class="mb-item">
-        <button class="mb-btn" data-i18n="menu_expenses">المصروفات</button>
-        <div class="mb-drop">
-          <button class="mb-leaf" data-tab="expenses" data-i18n="mi_exp_list">سندات المصروفات</button>
-          <button class="mb-leaf" data-tab="expenses" data-sub="ccs" data-i18n="mi_exp_cc">مراكز التكلفة</button>
-          <button class="mb-leaf" data-tab="expenses" data-sub="rec" data-i18n="mi_exp_rec">الفواتير المتكررة</button>
-          <button class="mb-leaf" data-tab="expenses" data-sub="rem" data-i18n="mi_exp_rem">تذكيرات التحصيل</button>
+        <div class="sb-group">
+          <button class="mb-btn sb-head" data-i18n="menu_hr">الموارد البشرية</button>
+          <div class="sb-body">
+            <button class="mb-leaf" data-tab="employees" data-i18n="mi_hr_employees">الموظفون</button>
+            <button class="mb-leaf" data-tab="hr" data-i18n="mi_hr_payroll">الرواتب والمسيرات</button>
+          </div>
         </div>
-      </div>
-      <div class="mb-item">
-        <button class="mb-btn" data-i18n="menu_glrep">تقارير الحسابات</button>
-        <div class="mb-drop">
-          <button class="mb-leaf" data-report="trial" data-i18n="mi_trial">ميزان المراجعة</button>
-          <button class="mb-leaf" data-report="income" data-i18n="mi_income">قائمة الدخل</button>
-          <button class="mb-leaf" data-report="balance" data-i18n="mi_balance">الميزانية العمومية</button>
-          <button class="mb-leaf" data-report="stmt" data-i18n="mi_stmt">كشف حساب عميل</button>
+        <div class="sb-group">
+          <button class="mb-btn sb-head" data-i18n="menu_assets">الأصول الثابتة</button>
+          <div class="sb-body">
+            <button class="mb-leaf" data-tab="assets" data-i18n="mi_assets_register">سجل الأصول</button>
+            <button class="mb-leaf" data-tab="assets" data-i18n="mi_assets_dep">ترحيل الإهلاك</button>
+          </div>
         </div>
-      </div>
-      <div class="mb-item">
-        <button class="mb-btn" data-i18n="menu_reports">التقارير</button>
-        <div class="mb-drop">
-          <button class="mb-leaf" data-report="stock" data-i18n="mi_stock_rep">تقارير المخزون</button>
-          <button class="mb-leaf" data-report="sales" data-i18n="mi_sales_rep">تقارير المبيعات</button>
-          <button class="mb-leaf" data-report="purch" data-i18n="mi_purch_rep">تقارير المشتريات</button>
-          <button class="mb-leaf" data-report="ps" data-i18n="rep_ps_tab">مشتريات حسب المورد</button>
-          <button class="mb-leaf" data-report="poopen" data-i18n="rep_poopen_tab">أوامر شراء مفتوحة</button>
-          <button class="mb-leaf" data-report="vat" data-i18n="mi_vat_return">إقرار ضريبة القيمة المضافة</button>
-          <button class="mb-leaf" data-report="vatledger" data-i18n="mi_vat_ledger">دفتر أستاذ الضريبة</button>
-          <button class="mb-leaf" data-report="aging" data-i18n="mi_aging">أعمار الذمم</button>
-          <button class="mb-leaf" data-report="cashflow" data-i18n="mi_cashflow">التدفقات النقدية</button>
-          <button class="mb-leaf" data-report="margin" data-i18n="mi_margin">تحليل هامش الربح</button>
+        <div class="sb-group">
+          <button class="mb-btn sb-head" data-i18n="menu_expenses">المصروفات</button>
+          <div class="sb-body">
+            <button class="mb-leaf" data-tab="expenses" data-i18n="mi_exp_list">سندات المصروفات</button>
+            <button class="mb-leaf" data-tab="expenses" data-sub="ccs" data-i18n="mi_exp_cc">مراكز التكلفة</button>
+            <button class="mb-leaf" data-tab="expenses" data-sub="rec" data-i18n="mi_exp_rec">الفواتير المتكررة</button>
+            <button class="mb-leaf" data-tab="expenses" data-sub="rem" data-i18n="mi_exp_rem">تذكيرات التحصيل</button>
+          </div>
         </div>
-      </div>
-      <div class="mb-item">
-        <button class="mb-btn" data-i18n="menu_help">مساعدة</button>
-        <div class="mb-drop">
-          <button class="mb-leaf" disabled data-i18n="mi_guide">دليل الاستخدام</button>
-          <button class="mb-leaf" data-action="about" data-i18n="mi_about">عن البرنامج</button>
+        <div class="sb-group">
+          <button class="mb-btn sb-head" data-i18n="menu_glrep">تقارير الحسابات</button>
+          <div class="sb-body">
+            <button class="mb-leaf" data-report="trial" data-i18n="mi_trial">ميزان المراجعة</button>
+            <button class="mb-leaf" data-report="income" data-i18n="mi_income">قائمة الدخل</button>
+            <button class="mb-leaf" data-report="balance" data-i18n="mi_balance">الميزانية العمومية</button>
+            <button class="mb-leaf" data-report="stmt" data-i18n="mi_stmt">كشف حساب عميل</button>
+          </div>
         </div>
-      </div>
-      <button class="mb-btn mb-lang" id="btn-lang" data-i18n="lang_btn" title="Language / اللغة">🌐 English</button>
-    </nav>
-
-    <div class="app-body">
-    <!-- السايدبار (للموبايل فقط) -->
-    <aside class="sidebar">
-      <div class="sidebar-brand"><img src="logo.png" id="sidebar-logo" class="sidebar-logo" alt=""> H. ERP <span>SYSTEM MANAGER</span></div>
-      <nav>
-        <button class="nav-btn active" data-tab="dashboard" data-i18n="nav_dashboard">📊 لوحة المؤشرات</button>
-        <button class="nav-btn" data-tab="items" data-i18n="nav_items">📦 الأصناف</button>
-        <button class="nav-btn" data-tab="parties" data-i18n="nav_parties">👥 العملاء والموردون</button>
-        <button class="nav-btn" data-tab="accounts" data-i18n="nav_accounts">📒 شجرة الحسابات</button>
-        <button class="nav-btn" data-tab="journal" data-i18n="nav_journal">📖 قيود اليومية</button>
-        <button class="nav-btn" data-tab="vouchers" data-i18n="nav_vouchers">💰 السندات والخزن</button>
-        <button class="nav-btn" data-tab="invoices" data-i18n="nav_invoices">🧾 فواتير المبيعات</button>
-        <button class="nav-btn" data-tab="purchases" data-i18n="nav_purchases">🛒 المشتريات</button>
-        <button class="nav-btn" data-tab="returns" data-i18n="nav_returns">↩️ المرتجعات</button>
-        <button class="nav-btn" data-tab="quotes" data-i18n="nav_quotes">📋 عروض الأسعار</button>
-        <button class="nav-btn" data-tab="einvoices" data-i18n="nav_einvoices">🔐 الفوترة الإلكترونية</button>
-        <button class="nav-btn" data-tab="integrations" data-i18n="nav_integrations">🔗 التكاملات</button>
-        <button class="nav-btn" data-tab="manufacturing" data-i18n="nav_manufacturing">🏭 التصنيع</button>
-        <button class="nav-btn" data-tab="crm" data-i18n="nav_crm">🎯 CRM</button>
-        <button class="nav-btn" data-tab="warehouses" data-i18n="nav_warehouses">🏬 المستودعات والجرد</button>
-        <button class="nav-btn" data-tab="pos" data-i18n="nav_pos">🖥️ شاشة الكاشير</button>
-        <button class="nav-btn" data-tab="shifts" data-i18n="nav_shifts">🕐 ورديات الكاشير</button>
-        <button class="nav-btn" data-tab="reports" data-i18n="nav_reports">📈 تقارير</button>
-        <button class="nav-btn" data-tab="settings" data-i18n="nav_settings">⚙️ الإعدادات</button>
-        <button class="nav-btn" data-tab="users" data-i18n="nav_users">👤 المستخدمون والصلاحيات</button>
-        <button class="nav-btn" data-tab="branches" data-i18n="nav_branches">🏢 الفروع</button>
-        <button class="nav-btn" data-tab="employees" data-i18n="nav_employees">🧑‍💼 الموظفون</button>
-        <button class="nav-btn" data-tab="hr" data-i18n="nav_hr">💵 الرواتب</button>
-        <button class="nav-btn" data-tab="assets" data-i18n="nav_assets">🏭 الأصول الثابتة</button>
-        <button class="nav-btn" data-tab="expenses" data-i18n="nav_expenses">🧾 المصروفات</button>
-        <button id="nav-dev" class="nav-btn hidden" data-tab="dev" data-i18n="nav_dev">🛠️ لوحة المطوّر</button>
+        <div class="sb-group">
+          <button class="mb-btn sb-head" data-i18n="menu_reports">التقارير</button>
+          <div class="sb-body">
+            <button class="mb-leaf" data-tab="reports" data-i18n="nav_reports">📈 تقارير</button>
+            <button class="mb-leaf" data-report="stock" data-i18n="mi_stock_rep">تقارير المخزون</button>
+            <button class="mb-leaf" data-report="sales" data-i18n="mi_sales_rep">تقارير المبيعات</button>
+            <button class="mb-leaf" data-report="purch" data-i18n="mi_purch_rep">تقارير المشتريات</button>
+            <button class="mb-leaf" data-report="ps" data-i18n="rep_ps_tab">مشتريات حسب المورد</button>
+            <button class="mb-leaf" data-report="poopen" data-i18n="rep_poopen_tab">أوامر شراء مفتوحة</button>
+            <button class="mb-leaf" data-report="vat" data-i18n="mi_vat_return">إقرار ضريبة القيمة المضافة</button>
+            <button class="mb-leaf" data-report="vatledger" data-i18n="mi_vat_ledger">دفتر أستاذ الضريبة</button>
+            <button class="mb-leaf" data-report="aging" data-i18n="mi_aging">أعمار الذمم</button>
+            <button class="mb-leaf" data-report="cashflow" data-i18n="mi_cashflow">التدفقات النقدية</button>
+            <button class="mb-leaf" data-report="margin" data-i18n="mi_margin">تحليل هامش الربح</button>
+          </div>
+        </div>
+        <div class="sb-group">
+          <button class="mb-btn sb-head" data-i18n="menu_help">مساعدة</button>
+          <div class="sb-body">
+            <button class="mb-leaf" disabled data-i18n="mi_guide">دليل الاستخدام</button>
+            <button class="mb-leaf" data-action="about" data-i18n="mi_about">عن البرنامج</button>
+          </div>
+        </div>
+        <button class="mb-leaf hidden" id="nav-dev" data-tab="dev" data-i18n="nav_dev">🛠️ لوحة المطوّر</button>
       </nav>
+      <button class="mb-btn sb-lang" id="btn-lang" data-i18n="lang_btn" title="Language / اللغة">🌐 English</button>
     </aside>
 
-    <!-- المحتوى -->
+    <!-- ═══ المحتوى: شريط علوي + شريط تبويبات الشاشات المفتوحة ═══ -->
     <main class="main">
-      <!-- شريط عنوان النافذة الكلاسيكي (XP) -->
-      <div class="win-titlebar">
-        <h2 id="company-title">—</h2>
-        <span id="window-title">لوحة المؤشرات</span>
-        <div class="win-btns">
-          <button class="win-btn" tabindex="-1" title="تصغير">_</button>
-          <button class="win-btn" tabindex="-1" title="تكبير">▢</button>
-          <button class="win-btn win-close" id="win-close" title="إغلاق">✕</button>
-        </div>
-      </div>
       <header class="topbar">
-        <button id="btn-menu" class="btn btn-ghost btn-menu">☰</button>
+        <button id="btn-menu" class="btn btn-ghost btn-menu" title="القائمة">☰</button>
         <img id="tenant-logo" class="tenant-logo hidden" alt="شعار الشركة">
+        <h2 id="company-title">—</h2>
         <button id="btn-logout" class="btn btn-ghost">تسجيل خروج</button>
       </header>
+      <div id="tabbar" class="tabbar"></div>
 
       <!-- لوحة المؤشرات -->
       <section id="tab-dashboard" class="tab">
-        <div class="cards">
+        <!-- بطاقات KPI كبيرة بأسلوب Manager (رقم بارز + عنوان) -->
+        <div class="cards kpi-cards">
+          <div class="card kpi"><div class="card-num" id="c-today-sales">0.00</div><div class="card-lbl" data-i18n="dash_today_sales">مبيعات اليوم</div></div>
+          <div class="card kpi"><div class="card-num" id="c-today-receipts">0.00</div><div class="card-lbl" data-i18n="dash_today_receipts">المقبوضات اليوم</div></div>
+          <div class="card kpi"><div class="card-num" id="c-today-payments">0.00</div><div class="card-lbl" data-i18n="dash_today_payments">المدفوعات اليوم</div></div>
+          <div class="card kpi card-gold"><div class="card-num" id="c-treasury">0.00</div><div class="card-lbl" data-i18n="dash_treasury">رصيد الخزائن</div></div>
+          <div class="card kpi"><div class="card-num" id="c-overdue">0.00</div><div class="card-lbl" data-i18n="dash_overdue">المتأخرات (ذمم العملاء)</div></div>
+          <div class="card kpi"><div class="card-num" id="c-net-profit">0.00</div><div class="card-lbl" data-i18n="dash_net_profit">صافي ربح الشهر</div></div>
+        </div>
+        <!-- العدّادات الأصلية (أصناف/عملاء/موردون/فواتير/مبيعات الشهر) — أُعيد تنظيمها فقط -->
+        <div class="cards" style="margin-top:16px">
           <div class="card"><div class="card-num" id="c-items">0</div><div class="card-lbl" data-i18n="dash_items">الأصناف</div></div>
           <div class="card"><div class="card-num" id="c-customers">0</div><div class="card-lbl" data-i18n="dash_customers">العملاء</div></div>
           <div class="card"><div class="card-num" id="c-suppliers">0</div><div class="card-lbl" data-i18n="dash_suppliers">الموردون</div></div>
@@ -1603,8 +1589,7 @@
         </div>
       </section>
     </main>
-    </div><!-- /.app-body -->
-  </div>
+  </div><!-- /#app-screen -->
 
   <!-- ═══════════ شاشة معاينة الطباعة الاحترافية (دفعة B) ═══════════ -->
   <div id="pv-overlay" class="pv-overlay hidden">

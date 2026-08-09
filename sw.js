@@ -9,7 +9,7 @@
    ═══════════════════════════════════════════════════════════════ */
 'use strict';
 
-const CACHE_NAME = 'hazem-erp-v18';
+const CACHE_NAME = 'hazem-erp-v19';
 const STATIC_FILES = [
   'index.html',
   'styles.css',

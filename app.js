@@ -140,12 +140,15 @@ const TAB_TITLES = {
 function switchTab(tabName) {
   if (!TAB_TITLES[tabName] || !$('#tab-' + tabName)) return;
   $$('.nav-btn').forEach(x => x.classList.toggle('active', x.dataset.tab === tabName));
+  // تظليل بند السايدبار المطابق للتبويب الحالي (تصميم Manager)
+  $$('.mb-leaf[data-tab]').forEach(x => x.classList.toggle('active', x.dataset.tab === tabName));
   $$('.tab').forEach(t => t.classList.add('hidden'));
   $('#tab-' + tabName).classList.remove('hidden');
-  $('.sidebar').classList.remove('open');
+  const _sb = $('.sidebar'); if (_sb) _sb.classList.remove('open');
   const wt = $('#window-title');
   if (wt) wt.textContent = (typeof t === 'function' ? t('tab_' + tabName) : TAB_TITLES[tabName]) || TAB_TITLES[tabName];
   window.__currentTab = tabName;
+  _tabbarOpen(tabName); // شريط تبويبات الشاشات المفتوحة (أسلوب Manager.io)
   if (tabName === 'dashboard') refreshDashboard();
   if (tabName === 'reports') loadReports();
   if (tabName === 'settings') { loadSettings(); loadTaxSettings(); if (typeof window.loadPeriodLockBox === 'function') window.loadPeriodLockBox(); }
@@ -194,36 +197,65 @@ if (typeof applyI18nStatic === 'function') {
 }
 
 $$('.nav-btn').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
-$('#btn-menu').onclick = () => $('.sidebar').classList.toggle('open');
+// زر ☰: على الموبايل يفتح/يغلق السايدبار كـ drawer، وعلى سطح المكتب يطويه لأيقونات
+$('#btn-menu').onclick = () => {
+  const sb = $('.sidebar');
+  if (window.innerWidth <= 768) { if (sb) sb.classList.toggle('open'); }
+  else $('#app-screen').classList.toggle('collapsed');
+};
 
-// ─────────── ٥-أ) شريط القوائم الكلاسيكي (Win98/XP) ───────────
-function closeAllMenus() {
-  $$('#menubar .mb-item.open').forEach(m => m.classList.remove('open'));
-}
-
-// فتح/قفل القوائم المنسدلة
-$$('#menubar .mb-btn').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const item = btn.closest('.mb-item');
-    const wasOpen = item.classList.contains('open');
-    closeAllMenus();
-    if (!wasOpen) item.classList.add('open');
-  });
-  // عند وجود قائمة مفتوحة، المرور على بند آخر ينقل الفتح إليه
-  btn.addEventListener('mouseenter', () => {
-    if ($('#menubar .mb-item.open') && !btn.closest('.mb-item').classList.contains('open')) {
-      closeAllMenus();
-      btn.closest('.mb-item').classList.add('open');
-    }
+// ─────────── ٥-أ) الشريط الجانبي الداكن (تصميم Manager.io) ───────────
+// المجموعات تُطوى/تُفتح بالنقر على عنوانها
+$$('.sb-head').forEach(head => {
+  head.addEventListener('click', () => {
+    const g = head.closest('.sb-group');
+    if (g) g.classList.toggle('open');
   });
 });
-// الضغط خارج القوائم يقفلها، وEscape كذلك
-document.addEventListener('click', (e) => { if (!e.target.closest('#menubar')) closeAllMenus(); });
+
+// إغلاق الـ drawer على الموبايل (يُستدعى أيضاً عند اختيار أي بند)
+function closeAllMenus() {
+  const sb = $('.sidebar');
+  if (sb) sb.classList.remove('open');
+}
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAllMenus(); });
 
+// ─────────── ٥-ب) شريط تبويبات الشاشات المفتوحة (أسلوب Manager.io) ───────────
+const __openTabs = [];
+function _tabTitle(name) {
+  return (typeof t === 'function' ? t('tab_' + name) : '') || TAB_TITLES[name] || name;
+}
+function _tabbarRender() {
+  const bar = $('#tabbar');
+  if (!bar) return;
+  bar.innerHTML = __openTabs.map(name => `
+    <span class="tb-chip${name === window.__currentTab ? ' active' : ''}" data-tab="${name}">
+      <span class="tb-chip-lbl">${esc(_tabTitle(name))}</span>
+      <button class="tb-chip-x" data-close="${name}" title="${typeof t === 'function' ? t('btn_close') : '×'}">×</button>
+    </span>`).join('');
+}
+function _tabbarOpen(name) {
+  if (!__openTabs.includes(name)) __openTabs.push(name);
+  _tabbarRender();
+}
+function _tabbarClose(name) {
+  const i = __openTabs.indexOf(name);
+  if (i === -1) return;
+  __openTabs.splice(i, 1);
+  // إغلاق التبويب النشط يعيد للوحة المؤشرات
+  if (name === window.__currentTab) { _tabbarRender(); switchTab('dashboard'); return; }
+  _tabbarRender();
+}
+const _tabbar = $('#tabbar');
+if (_tabbar) _tabbar.addEventListener('click', (e) => {
+  const x = e.target.closest('.tb-chip-x');
+  if (x) { e.stopPropagation(); _tabbarClose(x.dataset.close); return; }
+  const chip = e.target.closest('.tb-chip');
+  if (chip) switchTab(chip.dataset.tab);
+});
+
 // عناصر القوائم: تبويب أو إجراء
-$$('#menubar .mb-leaf').forEach(leaf => {
+$$('.mb-leaf').forEach(leaf => {
   if (leaf.disabled) return; // البنود المعطلة «قريباً 🚧» لا تفعل شيئاً
   leaf.addEventListener('click', () => {
     closeAllMenus();
@@ -382,6 +414,50 @@ async function refreshDashboard() {
   const { data } = await sb.from('sales_invoices')
     .select('total').gte('created_at', first.toISOString());
   $('#c-sales').textContent = fmt((data || []).reduce((s, r) => s + Number(r.total), 0));
+
+  // ── بطاقات KPI بأسلوب Manager (نفس مصادر البيانات الحالية) ──
+  const _set = (id, v) => { const el = $(id); if (el) el.textContent = fmt(v); };
+  try {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const [{ data: todayInv }, { data: todayVch }] = await Promise.all([
+      sb.from('sales_invoices').select('total').gte('created_at', today.toISOString()),
+      sb.from('vouchers').select('voucher_type, amount').gte('created_at', today.toISOString()),
+    ]);
+    _set('#c-today-sales', (todayInv || []).reduce((s, r) => s + Number(r.total), 0));
+    _set('#c-today-receipts', (todayVch || []).filter(v => v.voucher_type === 'receipt').reduce((s, v) => s + Number(v.amount), 0));
+    _set('#c-today-payments', (todayVch || []).filter(v => v.voucher_type === 'payment').reduce((s, v) => s + Number(v.amount), 0));
+  } catch (_) { /* KPIs اليوم تبقى 0.00 عند أي خطأ */ }
+
+  try {
+    // رصيد الخزائن: حسابات 11xx من سطور القيود (نفس منطق تبويب السندات والخزن)
+    if (!state.accounts || !state.accounts.length) await loadAccounts();
+    const treasIds = new Set(treasuryAccounts().map(a => a.id));
+    const { data: lines } = await sb.from('journal_entry_lines').select('account_id, debit, credit');
+    _set('#c-treasury', (lines || []).filter(l => treasIds.has(l.account_id))
+      .reduce((s, l) => s + Number(l.debit) - Number(l.credit), 0));
+  } catch (_) { /* يبقى 0.00 عند أي خطأ */ }
+
+  try {
+    // المتأخرات: أرصدة العملاء المدينة من v_party_balances (نفس عرض العملاء والموردون)
+    if (!state.parties.length) await loadParties();
+    const custIds = new Set(state.parties.filter(p => p.kind === 'customer').map(p => p.id));
+    const { data: pbals } = await sb.from('v_party_balances').select('party_id, balance');
+    _set('#c-overdue', (pbals || []).filter(b => custIds.has(b.party_id) && Number(b.balance) > 0)
+      .reduce((s, b) => s + Number(b.balance), 0));
+  } catch (_) { /* يبقى 0.00 عند أي خطأ */ }
+
+  try {
+    // صافي ربح الشهر: نفس محرك قائمة الدخل (إيرادات − مصروفات منذ بداية الشهر)
+    const g = await _glData();
+    const sums = _glSums(g.accs, g.lines, first.toISOString().slice(0, 10), undefined);
+    let rev = 0, exp = 0;
+    g.accs.forEach(a => {
+      const s = sums[a.id] || { d: 0, c: 0 };
+      if (a.kind === 'revenue') rev += s.c - s.d;
+      if (a.kind === 'expense') exp += s.d - s.c;
+    });
+    _set('#c-net-profit', rev - exp);
+  } catch (_) { /* يبقى 0.00 عند أي خطأ */ }
 }
 
 // ─────────── ٧) الأصناف ───────────

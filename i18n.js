@@ -13,6 +13,7 @@
   const LANG = {
     ar: {
       // ── القوائم الرئيسية ──
+      menu_home: 'الرئيسية',
       menu_file: 'ملف', menu_file2: 'النظام', menu_edit: 'الإعدادات', menu_gl: 'الأستاذ العام',
       menu_treasury: 'معاملات مالية', menu_inventory: 'المخازن',
       menu_purch: 'المشتريات', menu_sales: 'المبيعات', menu_pos: 'نقاط البيع',
@@ -494,6 +495,10 @@
       // ── استكمال الترجمة: لوحة التحكم والجداول الأساسية ──
       dash_items: 'الأصناف', dash_customers: 'العملاء', dash_suppliers: 'الموردون',
       dash_invoices: 'الفواتير', dash_month_sales: 'مبيعات الشهر',
+      // بطاقات KPI بأسلوب Manager
+      dash_today_sales: 'مبيعات اليوم', dash_today_receipts: 'المقبوضات اليوم',
+      dash_today_payments: 'المدفوعات اليوم', dash_treasury: 'رصيد الخزائن',
+      dash_overdue: 'المتأخرات (ذمم العملاء)', dash_net_profit: 'صافي ربح الشهر',
       col_code: 'الكود', col_name: 'الاسم', col_unit: 'الوحدة',
       col_sale_price: 'سعر البيع', col_balance_main: 'الرصيد (المخزن الرئيسي)',
       btn_add_item: '+ إضافة صنف', btn_import_afaq: '📥 استيراد من آفاق',
@@ -503,6 +508,7 @@
       msg_delete_fail: 'لا يمكن الحذف',
     },
     en: {
+      menu_home: 'Home',
       menu_file: 'File', menu_file2: 'System', menu_edit: 'Settings', menu_gl: 'General Ledger',
       menu_treasury: 'Treasury & Banks', menu_inventory: 'Inventory',
       menu_purch: 'Purchases', menu_sales: 'Sales', menu_pos: 'POS',
@@ -963,6 +969,10 @@
       // ── i18n completion: dashboard & core tables ──
       dash_items: 'Items', dash_customers: 'Customers', dash_suppliers: 'Suppliers',
       dash_invoices: 'Invoices', dash_month_sales: "This month's sales",
+      // Manager-style KPI cards
+      dash_today_sales: "Today's sales", dash_today_receipts: "Today's receipts",
+      dash_today_payments: "Today's payments", dash_treasury: 'Treasury balance',
+      dash_overdue: 'Overdue (receivables)', dash_net_profit: "Month's net profit",
       col_code: 'Code', col_name: 'Name', col_unit: 'Unit',
       col_sale_price: 'Sale price', col_balance_main: 'Balance (main warehouse)',
       btn_add_item: '+ Add item', btn_import_afaq: '📥 Import from Afaq',
