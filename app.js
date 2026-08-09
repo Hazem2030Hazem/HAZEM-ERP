@@ -51,6 +51,9 @@ $('#modal-overlay').addEventListener('click', e => { if (e.target.id === 'modal-
 function showScreen(id) {
   ['auth-screen', 'onboarding-screen', 'app-screen'].forEach(x =>
     $('#' + x).classList.toggle('hidden', x !== id));
+  // المرحلة 19: زر المساعد الذكي يظهر فقط داخل شاشة التطبيق (بعد الدخول)
+  const fab = document.getElementById('assistant-fab');
+  if (fab) fab.classList.toggle('hidden', id !== 'app-screen');
 }
 
 // ─────────── ٣) المصادقة ───────────
@@ -95,6 +98,9 @@ async function boot() {
   state.logoUrl = ms[0].tenants.logo_url || null;
   $('#company-title').textContent = state.tenantName;
   applyBrandLogo();
+  loadTaxSettings(); // بيانات زاتكا (تدرّج آمن — لا تكسر الإقلاع)
+  if (typeof window.loadPeriodLock === 'function') window.loadPeriodLock(); // المرحلة 16: قفل الفترة (تدرّج آمن)
+  if (typeof window.loadP2SettingsBoot === 'function') window.loadP2SettingsBoot(); // المرحلة 17: زاتكا P2 (تدرّج آمن)
   showScreen('app-screen');
   await refreshDashboard();
   await Promise.all([loadItems(), loadParties(), loadInvoices()]);
@@ -120,6 +126,14 @@ const TAB_TITLES = {
   purchases: 'المشتريات', returns: 'مرتجعات المبيعات', quotes: 'عروض الأسعار',
   warehouses: 'المستودعات والجرد', pos: 'نقطة البيع — الكاشير', shifts: 'ورديات الكاشير',
   users: 'المستخدمون والصلاحيات', branches: 'الفروع',
+  employees: 'الموظفون', hr: 'الموارد البشرية والرواتب',
+  assets: 'الأصول الثابتة', // المرحلة 13
+  barcode: 'ملصقات الباركود', // المرحلة 14
+  expenses: 'المصروفات ومراكز التكلفة', // المرحلة 15
+  einvoices: 'الفوترة الإلكترونية — زاتكا ٢', // المرحلة 17
+  integrations: 'التكاملات — سلة/زد + API', // المرحلة 18
+  manufacturing: 'التصنيع — قوائم المكونات وأوامر التصنيع', // المرحلة 19
+  crm: 'CRM — العملاء المحتملون والمتابعات', // المرحلة 19
 };
 
 // دالة عامة لتبديل التبويب — يستدعيها السايدبار وشريط القوائم الكلاسيكي
@@ -130,10 +144,11 @@ function switchTab(tabName) {
   $('#tab-' + tabName).classList.remove('hidden');
   $('.sidebar').classList.remove('open');
   const wt = $('#window-title');
-  if (wt) wt.textContent = TAB_TITLES[tabName];
+  if (wt) wt.textContent = (typeof t === 'function' ? t('tab_' + tabName) : TAB_TITLES[tabName]) || TAB_TITLES[tabName];
+  window.__currentTab = tabName;
   if (tabName === 'dashboard') refreshDashboard();
   if (tabName === 'reports') loadReports();
-  if (tabName === 'settings') loadSettings();
+  if (tabName === 'settings') { loadSettings(); loadTaxSettings(); if (typeof window.loadPeriodLockBox === 'function') window.loadPeriodLockBox(); }
   if (tabName === 'dev') loadDevPanel();
   if (tabName === 'accounts') loadAccounts();
   if (tabName === 'journal') loadJournal();
@@ -146,8 +161,37 @@ function switchTab(tabName) {
   if (tabName === 'shifts') loadShifts();
   if (tabName === 'users') loadUsers();
   if (tabName === 'branches') loadBranches();
+  // المرحلة 12 (hr.js — تُعرَّف بعد app.js؛ الحارس يحمي أول إقلاع)
+  if (tabName === 'employees' && typeof loadEmployees === 'function') loadEmployees();
+  if (tabName === 'hr' && typeof loadHr === 'function') loadHr();
+  // المرحلة 13 (assets.js — تُعرَّف بعد app.js؛ الحارس يحمي أول إقلاع)
+  if (tabName === 'assets' && typeof loadAssets === 'function') loadAssets();
+  // المرحلة 14 (procurement.js — تُعرَّف بعد app.js؛ الحارس يحمي أول إقلاع)
+  if (tabName === 'barcode' && typeof loadBarcodeTab === 'function') loadBarcodeTab();
+  // المرحلة 15: المصروفات + مراكز التكلفة + الفواتير المتكررة + تذكيرات التحصيل
+  if (tabName === 'expenses' && typeof loadExpensesTab === 'function') loadExpensesTab();
+  // المرحلة 17: الفوترة الإلكترونية — زاتكا الجيل الثاني (zatca2.js — حارس التعريف)
+  if (tabName === 'einvoices' && typeof loadEinvoicesTab === 'function') loadEinvoicesTab();
+  // المرحلة 18: التكاملات (سلة/زد) + API مفتوح (integrations.js — حارس التعريف)
+  if (tabName === 'integrations' && typeof loadIntegrationsTab === 'function') loadIntegrationsTab();
+  // المرحلة 19: التصنيع (BOM) + CRM (manufacturing.js / crm.js — حارس التعريف)
+  if (tabName === 'manufacturing' && typeof loadManufacturingTab === 'function') loadManufacturingTab();
+  if (tabName === 'crm' && typeof loadCrmTab === 'function') loadCrmTab();
 }
 window.switchTab = switchTab;
+
+// ─────────── ٤-ز) تعدد اللغات (i18n foundation) — دفعة زاتكا/VAT ───────────
+// إعادة رسم التبويب الحالي بعد تبديل اللغة (تحديث عنوان النافذة الكلاسيكية)
+window.__rerenderCurrentTab = () => { if (window.__currentTab) switchTab(window.__currentTab); };
+// زر اللغة في شريط القوائم: يبدّل عربي ⇄ English ويحدّث الاتجاه rtl/ltr
+const _btnLang = $('#btn-lang');
+if (_btnLang) _btnLang.onclick = () => setLang(currentLang() === 'ar' ? 'en' : 'ar');
+// تطبيق اللغة المحفوظة فور تحميل الصفحة (الافتراضي عربي RTL)
+if (typeof applyI18nStatic === 'function') {
+  document.documentElement.lang = currentLang();
+  document.documentElement.dir = currentLang() === 'ar' ? 'rtl' : 'ltr';
+  applyI18nStatic();
+}
 
 $$('.nav-btn').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
 $('#btn-menu').onclick = () => $('.sidebar').classList.toggle('open');
@@ -184,15 +228,24 @@ $$('#menubar .mb-leaf').forEach(leaf => {
   leaf.addEventListener('click', () => {
     closeAllMenus();
     if (leaf.dataset.report) return openReport(leaf.dataset.report); // تبويب التقارير + تاب فرعي
-    if (leaf.dataset.tab) return switchTab(leaf.dataset.tab);
+    if (leaf.dataset.tab) {
+      switchTab(leaf.dataset.tab);
+      // المرحلة 15: بنود المصروفات تحمل data-sub لفتح التاب الفرعي المطلوب
+      if (leaf.dataset.tab === 'expenses' && leaf.dataset.sub && window.switchExSub) switchExSub(leaf.dataset.sub);
+      return;
+    }
     if (leaf.dataset.action === 'print-preview') return previewCurrentView(); // دفعة B
     if (leaf.dataset.action === 'export-excel') return exportCurrentViewExcel(); // دفعة B
     if (leaf.dataset.action === 'logout') return $('#btn-logout').click();
     if (leaf.dataset.action === 'opening-entry') return openOpeningEntry();
+    if (leaf.dataset.action === 'tax-settings') return openTaxSettings();
     if (leaf.dataset.action === 'voucher-receipt') return openVoucher('receipt');
     if (leaf.dataset.action === 'voucher-payment') return openVoucher('payment');
     if (leaf.dataset.action === 'voucher-transfer') return openVoucher('transfer');
     if (leaf.dataset.action === 'purchase-invoice') return openPurchaseInvoice();
+    // المرحلة 14: أمر شراء + إشعار دائن/مدين (procurement.js — حارس التعريف)
+    if (leaf.dataset.action === 'purchase-order') return window.openPurchaseOrder && window.openPurchaseOrder();
+    if (leaf.dataset.action === 'credit-note') return window.openCreditNote && window.openCreditNote();
     if (leaf.dataset.action === 'purchase-return') return openPurchaseReturn();
     if (leaf.dataset.action === 'sales-return') return openSalesReturn();
     if (leaf.dataset.action === 'quote') return openQuote();
@@ -361,17 +414,36 @@ function itemForm(item) {
     <input id="f-name" placeholder="اسم الصنف" value="${esc(item?.name)}">
     <input id="f-unit" placeholder="الوحدة" value="${esc(item?.unit || 'حبة')}">
     <input id="f-price" type="number" step="0.0001" placeholder="سعر البيع" value="${item?.sale_price ?? 0}">
+    <div style="display:flex;gap:6px;align-items:center">
+      <input id="f-barcode" dir="ltr" placeholder="الباركود (اختياري)" value="${esc(item?.barcode || '')}" style="flex:1;margin-bottom:0">
+      <button class="btn btn-ghost btn-sm" id="f-bcgen" title="توليد باركود داخلي (EAN-13 يبدأ بـ 200)">توليد</button>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-gold" id="f-save">حفظ</button>
       <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
     </div>`);
+  // توليد باركود داخلي (المرحلة 14 — procurement.js)
+  $('#f-bcgen').onclick = () => {
+    if (typeof makeInternalBarcode !== 'function') return;
+    $('#f-barcode').value = makeInternalBarcode(Date.now() % 1e9);
+  };
   $('#f-save').onclick = async () => {
     const rec = { sku: $('#f-sku').value.trim(), name: $('#f-name').value.trim(),
-      unit: $('#f-unit').value.trim(), sale_price: Number($('#f-price').value) || 0 };
+      unit: $('#f-unit').value.trim(), sale_price: Number($('#f-price').value) || 0,
+      barcode: $('#f-barcode').value.trim() || null };
     if (!rec.name) return toast('اسم الصنف مطلوب', false);
+    // تدرّج آمن: لو عمود barcode لم يُهجَّر بعد نحفظ بدونه
+    if (rec.barcode === null) delete rec.barcode;
     let r;
     if (item) r = await sb.from('items').update(rec).eq('id', item.id);
     else r = await sb.from('items').insert({ ...rec, tenant_id: state.tenant });
+    // تدرّج آمن: عمود barcode غير مهجَّر بعد → إعادة المحاولة بدونه
+    if (r.error && rec.barcode && /barcode/i.test(r.error.message)) {
+      delete rec.barcode;
+      if (item) r = await sb.from('items').update(rec).eq('id', item.id);
+      else r = await sb.from('items').insert({ ...rec, tenant_id: state.tenant });
+      if (!r.error) toast('تنبيه: حُفظ الصنف بدون باركود — نفّذ hazem-procurement.sql', false);
+    }
     if (r.error) return toast('خطأ: ' + r.error.message, false);
     toast('تم الحفظ بنجاح'); closeModal(); loadItems();
   };
@@ -482,11 +554,11 @@ async function loadParties() {
   $('#tbl-parties').innerHTML = state.parties.map(p => `
     <tr>
       <td>${esc(p.name)}</td><td>${esc(p.phone)}</td>
-      <td>${p.kind === 'customer' ? 'عميل' : 'مورد'}</td>
+      <td>${p.kind === 'customer' ? t('kind_customer') : t('kind_supplier')}</td>
       <td>${fmt(balMap[p.id] || 0)}</td>
       <td>
-        <button class="btn btn-ghost btn-sm" onclick="editParty('${p.id}')">تعديل</button>
-        <button class="btn btn-danger" onclick="delParty('${p.id}')">حذف</button>
+        <button class="btn btn-ghost btn-sm" onclick="editParty('${p.id}')">${t('btn_edit')}</button>
+        <button class="btn btn-danger" onclick="delParty('${p.id}')">${t('btn_delete')}</button>
       </td>
     </tr>`).join('');
   // تحديث قائمة العملاء في كشف الحساب
@@ -514,20 +586,20 @@ function partyForm(p) {
   $('#f-psave').onclick = async () => {
     const rec = { name: $('#f-pname').value.trim(), phone: $('#f-pphone').value.trim(),
       kind: $('#f-pkind').value };
-    if (!rec.name) return toast('الاسم مطلوب', false);
+    if (!rec.name) return toast(t('msg_name_req'), false);
     let r;
     if (p) r = await sb.from('parties').update(rec).eq('id', p.id);
     else r = await sb.from('parties').insert({ ...rec, tenant_id: state.tenant });
-    if (r.error) return toast('خطأ: ' + r.error.message, false);
-    toast('تم الحفظ بنجاح'); closeModal(); loadParties();
+    if (r.error) return toast(t('msg_error') + ': ' + r.error.message, false);
+    toast(t('msg_saved')); closeModal(); loadParties();
   };
 }
 
 window.delParty = async (id) => {
-  if (!confirm('حذف هذا الطرف؟')) return;
+  if (!confirm(t('msg_delete_confirm_party'))) return;
   const { error } = await sb.from('parties').delete().eq('id', id);
-  if (error) return toast('لا يمكن الحذف: ' + error.message, false);
-  toast('تم الحذف'); loadParties();
+  if (error) return toast(t('msg_delete_fail') + ': ' + error.message, false);
+  toast(t('msg_deleted')); loadParties();
 };
 
 // ─────────── ١٠) فواتير المبيعات ───────────
@@ -557,18 +629,38 @@ function invoiceForm() {
     `<option value="${i.id}" data-price="${i.sale_price}">${esc(i.name)}</option>`).join('');
 
   openModal(`
-    <h3>فاتورة مبيعات جديدة</h3>
+    <h3>${t('frm_new_sales_invoice')}</h3>
+    <label class="lbl">${t('frm_customer')}</label>
     <select id="inv-customer">
       ${state.parties.filter(p => p.kind === 'customer')
         .map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}
     </select>
+    <label class="lbl">${t('inv_type')}</label>
+    <select id="inv-type">
+      <option value="simplified">${t('inv_type_simplified')}</option>
+      <option value="standard">${t('inv_type_standard')}</option>
+    </select>
+    <div id="inv-buyer-vat-box" class="hidden">
+      <label class="lbl">${t('buyer_vat_number')}</label>
+      <input id="inv-buyer-vat" dir="ltr" style="text-align:left" maxlength="15" placeholder="3xxxxxxxxxxxx3">
+    </div>
+    <p style="color:#7A6A5C;font-size:12px;margin:6px 0">💡 الأسعار المدخلة شاملة ضريبة القيمة المضافة — تُستخرج الضريبة تلقائياً حسب تصنيف كل بند.</p>
+    <input id="inv-barcode" dir="ltr" placeholder="${t('bc_scan_ph')}" style="margin:4px 0">
     <div id="inv-lines"></div>
-    <button class="btn btn-ghost btn-sm" id="inv-add-line">+ إضافة سطر</button>
-    <div class="inv-total">الإجمالي: <span id="inv-total">0</span></div>
+    <button class="btn btn-ghost btn-sm" id="inv-add-line">${t('btn_add_line')}</button>
+    <div class="je-totals" style="margin-top:10px">
+      <span class="t-d">${t('tot_subtotal')}: <span id="inv-subtotal">0</span></span>
+      <span class="t-c">${t('tot_vat')}: <span id="inv-tax">0</span></span>
+      <span class="je-balance ok">${t('tot_gross')}: <span id="inv-total">0</span></span>
+    </div>
     <div class="modal-actions">
-      <button class="btn btn-gold" id="inv-save">حفظ وترحيل</button>
-      <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+      <button class="btn btn-gold" id="inv-save">${t('btn_save_post')}</button>
+      <button class="btn btn-ghost" onclick="closeModal()">${t('btn_cancel')}</button>
     </div>`);
+  $('#modal-body').classList.add('modal-lg');
+  // إظهار حقل الرقم الضريبي للمشتري في الفاتورة الضريبية B2B فقط
+  $('#inv-type').onchange = () =>
+    $('#inv-buyer-vat-box').classList.toggle('hidden', $('#inv-type').value !== 'standard');
 
   // سطر ديناميكي
   const addLine = () => {
@@ -577,7 +669,13 @@ function invoiceForm() {
     d.innerHTML = `
       <select class="ln-item">${itemOpts()}</select>
       <input class="ln-qty" type="number" min="0" step="any" value="1" placeholder="الكمية">
-      <input class="ln-price" type="number" min="0" step="any" placeholder="السعر">
+      <input class="ln-price" type="number" min="0" step="any" placeholder="السعر (شامل الضريبة)">
+      <select class="ln-tax-cat" title="${t('tax_cat')}">
+        <option value="standard">${t('tax_cat_standard')}</option>
+        <option value="zero">${t('tax_cat_zero')}</option>
+        <option value="exempt">${t('tax_cat_exempt')}</option>
+        <option value="out_of_scope">${t('tax_cat_out')}</option>
+      </select>
       <button class="del-line" title="حذف السطر">✕</button>`;
     const sel = d.querySelector('.ln-item');
     const priceIn = d.querySelector('.ln-price');
@@ -586,41 +684,334 @@ function invoiceForm() {
     sel.onchange = () => { syncPrice(); calcTotal(); };
     syncPrice();
     d.querySelectorAll('input').forEach(i => i.oninput = calcTotal);
+    d.querySelector('.ln-tax-cat').onchange = calcTotal;
     d.querySelector('.del-line').onclick = () => { d.remove(); calcTotal(); };
     $('#inv-lines').appendChild(d);
     calcTotal();
   };
 
-  // حساب الإجمالي لحظياً
+  // حساب الإجماليات لحظياً (صافي + ضريبة + إجمالي شامل) حسب تصنيف كل بند
   function calcTotal() {
-    let t = 0;
-    $$('#inv-lines .inv-line').forEach(l => {
-      t += (Number(l.querySelector('.ln-qty').value) || 0) *
-           (Number(l.querySelector('.ln-price').value) || 0);
-    });
-    $('#inv-total').textContent = fmt(t);
+    const s = summarizeLines($$('#inv-lines .inv-line').map(l => ({
+      qty: l.querySelector('.ln-qty').value,
+      price: l.querySelector('.ln-price').value,
+      tax_category: l.querySelector('.ln-tax-cat').value,
+    })));
+    $('#inv-subtotal').textContent = fmt(s.subtotal);
+    $('#inv-tax').textContent = fmt(s.tax_amount);
+    $('#inv-total').textContent = fmt(s.total);
   }
 
   $('#inv-add-line').onclick = addLine;
   addLine();
+  // المرحلة 14: إدخال بالباركود — Enter يضيف سطراً بالصنف مباشرة
+  $('#inv-barcode').onkeydown = (e) => {
+    if (e.key !== 'Enter') return;
+    const q = e.target.value.trim();
+    if (!q) return;
+    const it = state.items.find(i => i.barcode === q || i.sku === q);
+    if (!it) return toast(t('bc_not_found'), false);
+    addLine();
+    const rows = $$('#inv-lines .inv-line');
+    const sel = rows[rows.length - 1].querySelector('.ln-item');
+    sel.value = it.id;
+    sel.dispatchEvent(new Event('change'));
+    e.target.value = '';
+    e.target.focus();
+  };
 
-  // الحفظ عبر RPC فقط (كتابة تشغيلية حساسة)
+  // الحفظ عبر RPC فقط (كتابة تشغيلية حساسة) — ثم الحقول الضريبية بتدرّج آمن
   $('#inv-save').onclick = async () => {
+    const invType = $('#inv-type').value;
+    const buyerVat = $('#inv-buyer-vat').value.trim();
+    // الفاتورة الضريبية B2B تتطلب الرقم الضريبي للمشتري
+    if (invType === 'standard' && !isValidVatNumber(buyerVat))
+      return toast(t('buyer_vat_required') + ' — ' + t('tax_invalid_vat'), false);
     const lines = $$('#inv-lines .inv-line').map(l => ({
       item_id: l.querySelector('.ln-item').value,
       qty: Number(l.querySelector('.ln-qty').value),
       price: Number(l.querySelector('.ln-price').value),
+      tax_category: l.querySelector('.ln-tax-cat').value,
     }));
     if (!lines.length || lines.some(l => !l.qty || l.qty <= 0))
-      return toast('تحقق من سطور الفاتورة (كمية > 0)', false);
+      return toast(t('msg_check_lines'), false);
+    const sum = summarizeLines(lines);
     const { data, error } = await sb.rpc('post_sales_invoice', {
-      p_customer: $('#inv-customer').value, p_lines: lines });
+      p_customer: $('#inv-customer').value,
+      p_lines: lines.map(({ item_id, qty, price }) => ({ item_id, qty, price })) });
     if (error) return toast('فشل الترحيل: ' + error.message, false);
     closeModal();
     toast(`تم ترحيل فاتورة المبيعات رقم ${data} بنجاح`);
+    // الحقول الضريبية + قيد الضريبة — لا تكسر الترحيل لو لم تُنفَّذ هجرات SQL بعد
+    await applyInvoiceTaxMeta('sales', data, {
+      invoice_type: invType, buyer_vat_number: buyerVat || null, sum, lines });
     loadInvoices();
   };
 }
+
+// ─────────── ١٠-ز) زاتكا الجيل الأول + ضريبة القيمة المضافة (دفعة ZATCA/VAT) ───────────
+// قرارات التصميم (موثقة):
+//   • بيانات المنشأة الضريبية تُحفظ كأعمدة على tenants (hazem-zatca-vat.sql) —
+//     لا جدول جديد، فلا RLS إضافية. القراءة/الكتابة بتدرّج آمن لو لم تُنفَّذ الهجرة.
+//   • أسعار البنود شاملة الضريبة (انظر vat.js) — إجمالي الفاتورة من RPC القائم
+//     لا يتغير، والضريبة تُستخرج وتُرحَّل بقيد تسوية مستقل (immutable).
+//   • حساب الضريبة 2200 يُنشأ من SQL أو من الواجهة عند أول حفظ للإعدادات.
+
+state.tax = state.tax || { tax_name: '', vat_number: '', cr_number: '', national_address: '' };
+
+// بحث مرن عن حساب بالكود أو الاسم (لتدرّج آمن مع اختلاف البذور)
+function _findAccount(pred) { return (state.accounts || []).find(pred) || null; }
+const _vatAccount = () => _findAccount(a => String(a.code) === '2200');
+const _salesAccount = () => _findAccount(a => String(a.code).startsWith('4') && a.kind === 'revenue')
+  || _findAccount(a => a.kind === 'revenue');
+const _purchAccount = () => _findAccount(a => String(a.code).startsWith('5'))
+  || _findAccount(a => a.kind === 'expense');
+
+// إنشاء حساب 2200 إن لم يوجد (تدرّج آمن — الفشل لا يكسر شيئاً)
+async function ensureVatAccount() {
+  if (!state.accounts || !state.accounts.length) await loadAccounts();
+  if (_vatAccount()) return _vatAccount();
+  const { error } = await sb.from('accounts').insert({
+    tenant_id: state.tenant, code: '2200',
+    name: 'ضريبة القيمة المضافة المستحقة', kind: 'liability' });
+  if (!error) await loadAccounts();
+  return _vatAccount();
+}
+
+// تحميل الإعدادات الضريبية من tenants (بتدرّج آمن لو الأعمدة غير موجودة بعد)
+async function loadTaxSettings() {
+  const { data, error } = await sb.from('tenants')
+    .select('tax_name, vat_number, cr_number, national_address').eq('id', state.tenant).single();
+  if (!error && data) state.tax = { ...state.tax, ...data };
+  const x = state.tax;
+  if ($('#tax-name')) {
+    $('#tax-name').value = x.tax_name || '';
+    $('#tax-vat-number').value = x.vat_number || '';
+    $('#tax-cr-number').value = x.cr_number || '';
+    $('#tax-national-address').value = x.national_address || '';
+  }
+}
+
+// فتح الإعدادات الضريبية من القائمة: تبويب الإعدادات + تمرير للصندوق
+window.openTaxSettings = () => {
+  switchTab('settings');
+  setTimeout(() => $('#tax-settings-box')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+};
+
+// حفظ الإعدادات الضريبية + ضمان وجود حساب الضريبة
+$('#btn-save-tax').onclick = async () => {
+  const rec = {
+    tax_name: $('#tax-name').value.trim(),
+    vat_number: $('#tax-vat-number').value.trim(),
+    cr_number: $('#tax-cr-number').value.trim(),
+    national_address: $('#tax-national-address').value.trim(),
+  };
+  if (rec.vat_number && !isValidVatNumber(rec.vat_number))
+    return toast(t('tax_invalid_vat'), false);
+  const { error } = await sb.from('tenants').update(rec).eq('id', state.tenant);
+  if (error) return toast(t('tax_save_failed') + ': ' + error.message, false);
+  state.tax = { ...state.tax, ...rec };
+  await ensureVatAccount();
+  toast(t('tax_saved'));
+};
+
+// ─── ما بعد ترحيل الفاتورة: الحقول الضريبية + تصنيف البنود + قيد الضريبة ───
+// كل خطوة مستقلة ومغلفة بمحاولة — فشل أيٍّ منها (هجرة لم تُنفَّذ) لا يكسر الترحيل.
+async function applyInvoiceTaxMeta(kind, number, { invoice_type, buyer_vat_number, sum, lines }) {
+  const isSales = kind === 'sales';
+  const invTable = isSales ? 'sales_invoices' : 'purchase_invoices';
+  const lnTable = isSales ? 'sales_invoice_lines' : 'purchase_invoice_lines';
+  const priceCol = isSales ? 'price' : 'cost';
+  try {
+    const { data: inv } = await sb.from(invTable).select('id').eq('number', number)
+      .order('created_at', { ascending: false }).limit(1).single();
+    if (!inv) return;
+    // (أ) ترويسة الفاتورة: النوع + الإجماليات الضريبية
+    const hdr = { subtotal: sum.subtotal, tax_amount: sum.tax_amount, total_with_tax: sum.total };
+    if (isSales) { hdr.invoice_type = invoice_type; hdr.buyer_vat_number = buyer_vat_number; }
+    await sb.from(invTable).update(hdr).eq('id', inv.id); // يُتجاهل الخطأ بصمت (تدرّج آمن)
+    // (ب) تصنيف البنود: مطابقة بالصنف+الكمية+السعر (multiset) ثم تحديث tax_category
+    try {
+      const { data: dbLines } = await sb.from(lnTable)
+        .select('id, item_id, qty, ' + priceCol).eq('invoice_id', inv.id);
+      const pool = (lines || []).map(l => ({ ...l }));
+      for (const dl of (dbLines || [])) {
+        const i = pool.findIndex(l => l.item_id === dl.item_id &&
+          Number(l.qty) === Number(dl.qty) && Number(l[priceCol] ?? l.price) === Number(dl[priceCol]));
+        const cat = i >= 0 ? pool.splice(i, 1)[0].tax_category : 'standard';
+        await sb.from(lnTable).update({ tax_category: cat }).eq('id', dl.id);
+      }
+    } catch (e) { /* العمود غير موجود بعد — لا شيء */ }
+    // (ج) قيد تسوية الضريبة المستقل (لا يُعدَّل أي قيد قائم)
+    if (sum.tax_amount > 0) {
+      const vatAcc = await ensureVatAccount();
+      const counter = isSales ? _salesAccount() : _purchAccount();
+      if (vatAcc && counter) {
+        const memo = (isSales ? 'ضريبة مخرجات فاتورة مبيعات رقم ' : 'ضريبة مدخلات فاتورة شراء رقم ') + number;
+        const jLines = isSales
+          ? [{ account_id: counter.id, party_id: null, debit: sum.tax_amount, credit: 0 },
+             { account_id: vatAcc.id, party_id: null, debit: 0, credit: sum.tax_amount }]
+          : [{ account_id: vatAcc.id, party_id: null, debit: sum.tax_amount, credit: 0 },
+             { account_id: counter.id, party_id: null, debit: 0, credit: sum.tax_amount }];
+        const { error } = await sb.rpc('post_manual_entry', { p_tenant: state.tenant, p_memo: memo, p_lines: jLines });
+        if (error) toast('تنبيه: الفاتورة رُحّلت لكن قيد الضريبة فشل: ' + error.message, false);
+      } else if (!vatAcc) {
+        toast('تنبيه: حساب الضريبة 2200 غير موجود — رُحّلت الفاتورة بدون قيد ضريبة', false);
+      }
+    }
+  } catch (e) { /* تدرّج آمن — لا نكسر الترحيل الناجح أبداً */ }
+}
+
+// ─── إقرار ضريبة القيمة المضافة لفترة ───
+// جلب فواتير بأعمدة ضريبية، مع رجوع آمن للأعمدة الأساسية إن لم تُهجَّر بعد
+async function _fetchInvoicesTax(table) {
+  const full = await sb.from(table)
+    .select('id, number, total, subtotal, tax_amount, created_at').order('created_at');
+  if (!full.error) return full.data || [];
+  const basic = await sb.from(table).select('id, number, total, created_at').order('created_at');
+  return basic.data || [];
+}
+
+// تجميع فواتير فترة إلى خلايا الإقرار حسب التصنيف (من البنود إن توفر تصنيفها)
+async function _vatSide(invTable, lnTable, priceCol, from, to) {
+  const invs = (await _fetchInvoicesTax(invTable)).filter(v => _inPeriod(v.created_at, from, to));
+  const hasTaxCols = invs.length ? invs[0].subtotal !== undefined : true;
+  const cells = { standard: { net: 0, tax: 0 }, zero: { net: 0, tax: 0 },
+                  exempt: { net: 0, tax: 0 }, out_of_scope: { net: 0, tax: 0 } };
+  // محاولة التجميع من البنود (أدق — يميز التصنيفات داخل الفاتورة الواحدة)
+  let byLine = null;
+  try {
+    const r = await sb.from(lnTable).select('invoice_id, qty, ' + priceCol + ', tax_category');
+    if (!r.error) byLine = r.data || [];
+  } catch (e) { byLine = null; }
+  const ids = new Set(invs.map(v => v.id));
+  if (byLine && hasTaxCols && byLine.some(l => l.tax_category)) {
+    const grp = {};
+    byLine.filter(l => ids.has(l.invoice_id)).forEach(l => {
+      const s = grp[l.invoice_id] = grp[l.invoice_id] || [];
+      s.push(l);
+    });
+    Object.values(grp).forEach(lines => {
+      const s = summarizeLines(lines, priceCol);
+      ['standard', 'zero', 'exempt', 'out_of_scope'].forEach(c => {
+        cells[c].net = r2(cells[c].net + s[c].net);
+        cells[c].tax = r2(cells[c].tax + s[c].tax);
+      });
+    });
+  } else {
+    // رجوع: الفاتورة ككل (خاضعة شاملة ما لم توجد أعمدة ضريبية)
+    invs.forEach(v => {
+      const t2 = invoiceVat(v);
+      const c = cells[t2.cat] ? t2.cat : 'standard';
+      cells[c].net = r2(cells[c].net + t2.net);
+      cells[c].tax = r2(cells[c].tax + t2.tax);
+    });
+  }
+  return cells;
+}
+
+let _vatReturnData = null; // آخر إقرار معروض (للطباعة/التصدير)
+
+async function runVatReturn() {
+  const from = $('#rep-vat-from').value, to = $('#rep-vat-to').value;
+  const sales = await _vatSide('sales_invoices', 'sales_invoice_lines', 'price', from, to);
+  const purch = await _vatSide('purchase_invoices', 'purchase_invoice_lines', 'cost', from, to);
+  // المرحلة 15: ضريبة مدخلات سندات المصروفات تدخل خلايا مشتريات الإقرار (تدرّج آمن)
+  try {
+    const { data: exps } = await sb.from('expenses').select('amount, tax_amount, expense_date');
+    (exps || []).filter(e => _inPeriod(e.expense_date, from, to)).forEach(e => {
+      const tax = Number(e.tax_amount) || 0;
+      if (tax > 0) {
+        purch.standard.net = r2(purch.standard.net + (Number(e.amount) || 0) - tax);
+        purch.standard.tax = r2(purch.standard.tax + tax);
+      }
+    });
+  } catch (e) { /* جدول المصروفات غير موجود بعد — نفّذ hazem-expenses.sql */ }
+  // خلايا المشتريات في الإقرار: خاضعة (قابلة للخصم) + معفاة؛ الصفري يُعرض مع الخاضع بصافيه
+  const outTax = sales.standard.tax;
+  const inTax = purch.standard.tax;
+  const netDue = r2(outTax - inTax);
+  _vatReturnData = { from, to, sales, purch, outTax, inTax, netDue };
+
+  const row = (lbl, c) => `<tr><td>${esc(lbl)}</td><td>${fmt(c.net)}</td><td>${fmt(c.tax)}</td></tr>`;
+  $('#tbl-vat-sales').innerHTML =
+    row(t('vat_std_sales'), sales.standard) +
+    row(t('vat_zero_sales'), sales.zero) +
+    row(t('vat_exempt_sales'), sales.exempt) +
+    row(t('vat_out_sales'), sales.out_of_scope);
+  $('#tbl-vat-purch').innerHTML =
+    row(t('vat_std_purch'), purch.standard) +
+    row(t('vat_exempt_purch'), purch.exempt);
+  $('#vat-out-tax').textContent = fmt(outTax);
+  $('#vat-in-tax').textContent = fmt(inTax);
+  $('#vat-net-due').textContent = fmt(netDue);
+  const cls = netDue >= 0 ? 't-c' : 't-d';
+  $('#vat-return-totals').innerHTML =
+    `<span class="t-d">${t('vat_sales_sec')}: ${fmt(outTax)}</span>
+     <span class="${cls}">${t('vat_net_due')}: ${fmt(netDue)}</span>
+     <span class="je-balance ok">${netDue >= 0 ? 'مستحقة للهيئة' : 'رصيد دائن يُرحَّل'}</span>`;
+}
+$('#btn-rep-vat').onclick = runVatReturn;
+
+// مستند الإقرار للمعاينة/الطباعة/Excel (يستخدم محرك المعاينة القائم)
+function _vatReturnDoc() {
+  const d = _vatReturnData;
+  if (!d) { toast('اعرض الإقرار أولاً بزر «عرض الإقرار»', false); return null; }
+  const row = (lbl, c) => [lbl, { txt: fmt(c.net), num: c.net }, { txt: fmt(c.tax), num: c.tax }];
+  return {
+    title: t('vat_return_title'),
+    meta: [[t('vat_period_from'), d.from || '—'], [t('vat_period_to'), d.to || '—'],
+           [t('tax_vat_number'), state.tax.vat_number || '—'],
+           [t('tax_cr_number'), state.tax.cr_number || '—']],
+    tables: [
+      { caption: t('vat_sales_sec'), head: ['', t('col_net'), t('col_vat')], rows: [
+        row(t('vat_std_sales'), d.sales.standard), row(t('vat_zero_sales'), d.sales.zero),
+        row(t('vat_exempt_sales'), d.sales.exempt), row(t('vat_out_sales'), d.sales.out_of_scope)] },
+      { caption: t('vat_purch_sec'), head: ['', t('col_net'), t('col_vat')], rows: [
+        row(t('vat_std_purch'), d.purch.standard), row(t('vat_exempt_purch'), d.purch.exempt)] },
+    ],
+    totals: [t('vat_sales_sec') + ': ' + fmt(d.outTax),
+             t('vat_purch_sec') + ': ' + fmt(d.inTax),
+             t('vat_net_due') + ': ' + fmt(d.netDue)],
+    note: t('vat_return_note'),
+    fileName: 'vat-return-' + (d.from || '') + '_' + (d.to || ''),
+  };
+}
+$('#btn-vat-print').onclick = () => { const d = _vatReturnDoc(); if (d) openPrintPreview(d); };
+$('#btn-vat-excel').onclick = () => { const d = _vatReturnDoc(); if (d) exportDocExcel(d); };
+
+// ─── دفتر أستاذ الضريبة (حساب 2200) مربوطاً بالقيود اليومية ───
+async function runVatLedger() {
+  const from = $('#rep-vatledger-from').value, to = $('#rep-vatledger-to').value;
+  if (!state.accounts || !state.accounts.length) await loadAccounts();
+  const vatAcc = _vatAccount();
+  if (!vatAcc) {
+    $('#tbl-vat-ledger').innerHTML = `<tr><td colspan="5" style="color:#B42318">${esc(t('vat_no_account'))}</td></tr>`;
+    $('#vat-ledger-totals').innerHTML = '';
+    return;
+  }
+  const { data, error } = await sb.from('journal_entry_lines')
+    .select('debit, credit, journal_entries(created_at, memo)')
+    .eq('account_id', vatAcc.id);
+  if (error) return toast('خطأ: ' + error.message, false);
+  const rows = (data || [])
+    .filter(l => _inPeriod(l.journal_entries?.created_at, from, to))
+    .sort((x, y) => new Date(x.journal_entries.created_at) - new Date(y.journal_entries.created_at));
+  let run = 0, td = 0, tc = 0;
+  $('#tbl-vat-ledger').innerHTML = rows.map(l => {
+    run += Number(l.credit) - Number(l.debit); // التزام: الدائن موجب
+    td += Number(l.debit); tc += Number(l.credit);
+    return `<tr>
+      <td>${new Date(l.journal_entries.created_at).toLocaleDateString('ar-EG')}</td>
+      <td>${esc(l.journal_entries.memo || '')}</td>
+      <td>${fmt(l.debit)}</td><td>${fmt(l.credit)}</td><td>${fmt(run)}</td></tr>`;
+  }).join('') || `<tr><td colspan="5" style="color:#7A6A5C">${esc(t('vat_no_data'))}</td></tr>`;
+  $('#vat-ledger-totals').innerHTML = `
+    <span class="t-d">${t('col_debit')}: ${fmt(td)}</span>
+    <span class="t-c">${t('col_credit')}: ${fmt(tc)}</span>
+    <span class="je-balance ok">${t('col_balance')}: ${fmt(run)}</span>`;
+}
+$('#btn-rep-vatledger').onclick = runVatLedger;
 
 // ─────────── ١١) تقارير ───────────
 async function loadReports() {
@@ -659,7 +1050,9 @@ $('#btn-run-stmt').onclick = async () => {
 // القيود المحاسبية تُقرأ فقط ولا تُعدَّل أبداً.
 
 // التابات الفرعية داخل تبويب التقارير (نفس نمط switchPurchSub/switchWhSub)
-const REPORT_SUBS = ['stock', 'stmt', 'trial', 'income', 'balance', 'sales', 'purch'];
+const REPORT_SUBS = ['stock', 'stmt', 'trial', 'income', 'balance', 'sales', 'purch', 'vat', 'vatledger',
+  'ps', 'poopen', // المرحلة 14: مشتريات حسب المورد + أوامر شراء مفتوحة
+  'aging', 'cashflow', 'margin']; // المرحلة 16: أعمار الذمم + التدفقات النقدية + هامش الربح
 function switchReportSub(sub) {
   if (!REPORT_SUBS.includes(sub)) sub = 'stock';
   $$('#tab-reports .sub-tab').forEach(b => b.classList.toggle('active', b.dataset.sub === sub));
@@ -692,6 +1085,8 @@ _defaultPeriod('rep-trial-from', 'rep-trial-to');
 _defaultPeriod('rep-income-from', 'rep-income-to');
 _defaultPeriod('rep-sales-from', 'rep-sales-to');
 _defaultPeriod('rep-purch-from', 'rep-purch-to');
+_defaultPeriod('rep-vat-from', 'rep-vat-to');
+_defaultPeriod('rep-vatledger-from', 'rep-vatledger-to');
 $('#rep-bs-date').value = _isoDate(new Date());
 
 // جلب الحسابات + سطور القيود (مع تاريخ القيد) — أساس التقارير المالية الثلاثة
@@ -1225,6 +1620,7 @@ async function entryForm(opening = false) {
     <div class="row">
       <div><label class="lbl">التاريخ</label><input type="date" id="je-date" value="${today}"></div>
       <div><label class="lbl">البيان</label><input id="je-memo" placeholder="بيان القيد" value="${opening ? 'قيد افتتاحي' : ''}"></div>
+      <div><label class="lbl">مركز التكلفة (اختياري)</label><select id="je-cc"><option value="">— بدون —</option></select></div>
     </div>
     <div id="je-lines"></div>
     <button class="btn btn-ghost btn-sm" id="je-add-line">+ إضافة سطر</button>
@@ -1240,7 +1636,18 @@ async function entryForm(opening = false) {
   // توسيع النافذة لسطور القيد
   $('#modal-body').classList.add('modal-lg');
 
-  const addLine = () => {
+  // المرحلة 15: تعبئة مراكز التكلفة (تحميل كسول — تدرّج آمن لو الجدول غير موجود بعد)
+  (async () => {
+    try {
+      if (!state.costCenters) {
+        const { data } = await sb.from('cost_centers').select('id, code, name').order('code');
+        state.costCenters = data || [];
+      }
+      const sel = $('#je-cc');
+      if (sel) sel.innerHTML = '<option value="">— بدون —</option>' +
+        (state.costCenters || []).map(c => `<option value="${c.id}">${esc(c.code)} — ${esc(c.name)}</option>`).join('');
+    } catch (e) { /* نفّذ hazem-expenses.sql أولاً */ }
+  })();  const addLine = () => {
     const d = document.createElement('div');
     d.className = 'je-line';
     d.innerHTML = `
@@ -1278,12 +1685,25 @@ async function entryForm(opening = false) {
   addLine(); addLine();
 
   $('#je-save').onclick = async () => {
+    const ccId = $('#je-cc') ? ($('#je-cc').value || null) : null;
     const lines = $$('#je-lines .je-line').map(l => ({
       account_id: l.querySelector('.je-acc').value,
       party_id: l.querySelector('.je-party').value || null,
       debit: Number(l.querySelector('.je-debit').value) || 0,
       credit: Number(l.querySelector('.je-credit').value) || 0,
+      ...(ccId ? { cost_center_id: ccId } : {}),
     }));
+    // المرحلة 16: رفض الترحيل في فترة مقفلة (القيد يُحفظ بتاريخه الحالي — نفحص تاريخ النموذج)
+    if (typeof window.checkPeriodLock === 'function' &&
+        window.checkPeriodLock(($('#je-date') && $('#je-date').value) || new Date().toISOString().slice(0, 10))) return;
+    // المرحلة 15: ترحيل مع محاولة تمرير مركز التكلفة والرجوع الآمن بدونه
+    if (ccId && typeof window.__postEntryWithCc === 'function') {
+      const posted = await window.__postEntryWithCc($('#je-memo').value.trim(), lines);
+      if (!posted) return;
+      closeModal();
+      toast(`تم ترحيل القيد رقم ${posted?.number ?? ''} بنجاح`);
+      return loadJournal();
+    }
     const { data, error } = await sb.rpc('post_manual_entry', {
       p_tenant: state.tenant, p_memo: $('#je-memo').value.trim(), p_lines: lines });
     if (error) return toast('فشل الترحيل: ' + error.message, false);
@@ -1540,6 +1960,7 @@ window.cancelQuote = async (id) => {
 async function docForm(kind) {
   const K = DOC_KINDS[kind];
   if (!K) return;
+  const isPurchInv = kind === 'purchase_invoice'; // الضريبة على فواتير الشراء فقط في هذه الدفعة
   if (!state.parties.length) await loadParties();
   if (!state.items.length) await loadItems();
   const parties = state.parties.filter(p => p.kind === K.party);
@@ -1555,9 +1976,15 @@ async function docForm(kind) {
     <select id="doc-party">
       ${parties.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}
     </select>
+    ${isPurchInv ? `<p style="color:#7A6A5C;font-size:12px;margin:6px 0">💡 التكاليف المدخلة شاملة الضريبة — تُستخرج ضريبة المدخلات تلقائياً حسب تصنيف كل بند.</p>` : ''}
+    <input id="doc-barcode" dir="ltr" placeholder="${t('bc_scan_ph')}" style="margin:4px 0">
     <div id="doc-lines"></div>
     <button class="btn btn-ghost btn-sm" id="doc-add-line">+ إضافة سطر</button>
     <div class="inv-total">الإجمالي: <span id="doc-total">0</span></div>
+    ${isPurchInv ? `<div class="je-totals" style="margin-top:8px">
+      <span class="t-d">${t('tot_subtotal')}: <span id="doc-subtotal">0</span></span>
+      <span class="t-c">${t('tot_vat')}: <span id="doc-tax">0</span></span>
+    </div>` : ''}
     <div class="modal-actions">
       <button class="btn btn-gold" id="doc-save">حفظ وترحيل</button>
       <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
@@ -1571,7 +1998,13 @@ async function docForm(kind) {
     d.innerHTML = `
       <select class="ln-item">${itemOpts()}</select>
       <input class="ln-qty" type="number" min="0" step="any" value="1" placeholder="الكمية">
-      <input class="ln-price" type="number" min="0" step="any" placeholder="${K.priceLbl}">
+      <input class="ln-price" type="number" min="0" step="any" placeholder="${K.priceLbl}${isPurchInv ? ' (شامل الضريبة)' : ''}">
+      ${isPurchInv ? `<select class="ln-tax-cat" title="${t('tax_cat')}">
+        <option value="standard">${t('tax_cat_standard')}</option>
+        <option value="zero">${t('tax_cat_zero')}</option>
+        <option value="exempt">${t('tax_cat_exempt')}</option>
+        <option value="out_of_scope">${t('tax_cat_out')}</option>
+      </select>` : ''}
       <span class="ln-sum" style="font-weight:700;color:#7B4B26">0</span>
       <button class="del-line" title="حذف السطر">✕</button>`;
     const sel = d.querySelector('.ln-item');
@@ -1580,6 +2013,7 @@ async function docForm(kind) {
     sel.onchange = () => { priceIn.value = sel.selectedOptions[0]?.dataset.price ?? 0; calcTotal(); };
     syncPrice();
     d.querySelectorAll('input').forEach(i => i.oninput = calcTotal);
+    if (isPurchInv) d.querySelector('.ln-tax-cat').onchange = calcTotal;
     d.querySelector('.del-line').onclick = () => { d.remove(); calcTotal(); };
     $('#doc-lines').appendChild(d);
     calcTotal();
@@ -1595,10 +2029,32 @@ async function docForm(kind) {
       t += sum;
     });
     $('#doc-total').textContent = fmt(t);
+    if (isPurchInv) {
+      const s = summarizeLines($$('#doc-lines .doc-line').map(l => ({
+        qty: l.querySelector('.ln-qty').value, price: l.querySelector('.ln-price').value,
+        tax_category: l.querySelector('.ln-tax-cat').value })));
+      $('#doc-subtotal').textContent = fmt(s.subtotal);
+      $('#doc-tax').textContent = fmt(s.tax_amount);
+    }
   }
 
   $('#doc-add-line').onclick = addLine;
   addLine();
+  // المرحلة 14: إدخال بالباركود — Enter يضيف سطراً بالصنف مباشرة
+  $('#doc-barcode').onkeydown = (e) => {
+    if (e.key !== 'Enter') return;
+    const q = e.target.value.trim();
+    if (!q) return;
+    const it = state.items.find(i => i.barcode === q || i.sku === q);
+    if (!it) return toast(t('bc_not_found'), false);
+    addLine();
+    const rows = $$('#doc-lines .doc-line');
+    const sel = rows[rows.length - 1].querySelector('.ln-item');
+    sel.value = it.id;
+    sel.dispatchEvent(new Event('change'));
+    e.target.value = '';
+    e.target.focus();
+  };
 
   // الحفظ عبر RPC فقط (كتابة تشغيلية حساسة — القيد والمخزون داخل الدالة ذرياً)
   $('#doc-save').onclick = async () => {
@@ -1606,6 +2062,7 @@ async function docForm(kind) {
       item_id: l.querySelector('.ln-item').value,
       qty: Number(l.querySelector('.ln-qty').value),
       [K.priceField]: Number(l.querySelector('.ln-price').value),
+      ...(isPurchInv ? { tax_category: l.querySelector('.ln-tax-cat').value } : {}),
     }));
     if (!lines.length) return toast('أضف سطراً واحداً على الأقل', false);
     if (lines.some(l => !l.qty || l.qty <= 0))
@@ -1619,6 +2076,11 @@ async function docForm(kind) {
     if (error) return toast('فشل الحفظ: ' + error.message, false);
     closeModal();
     toast(K.done(data));
+    // فاتورة الشراء: الحقول الضريبية + قيد ضريبة المدخلات (تدرّج آمن)
+    if (isPurchInv && data && data.number != null) {
+      const sum = summarizeLines(lines, 'cost');
+      await applyInvoiceTaxMeta('purch', data.number, { sum, lines });
+    }
     // تحديث الجداول والمخزون بعد كل عملية ناجحة
     loadItems();
     if (kind === 'purchase_invoice' || kind === 'purchase_return') loadPurchases();
@@ -1642,8 +2104,13 @@ window.openQuote           = () => { switchTab('quotes'); docForm('quote'); };
 // التابات الفرعية داخل تبويب المشتريات
 function switchPurchSub(sub) {
   $$('#tab-purchases .sub-tab').forEach(b => b.classList.toggle('active', b.dataset.sub === sub));
-  $('#purch-pane-pi').classList.toggle('hidden', sub !== 'pi');
-  $('#purch-pane-pr').classList.toggle('hidden', sub !== 'pr');
+  ['pi', 'pr', 'po', 'cdn'].forEach(s => {
+    const p = $('#purch-pane-' + s);
+    if (p) p.classList.toggle('hidden', s !== sub);
+  });
+  // المرحلة 14: أوامر الشراء + الإشعارات (procurement.js — حارس التعريف)
+  if (sub === 'po' && typeof loadPurchaseOrders === 'function') loadPurchaseOrders();
+  if (sub === 'cdn' && typeof loadCreditNotes === 'function') loadCreditNotes();
 }
 $$('#tab-purchases .sub-tab').forEach(b => b.onclick = () => switchPurchSub(b.dataset.sub));
 
@@ -1900,7 +2367,9 @@ $('#shift-opening-cash').onkeydown = (e) => { if (e.key === 'Enter') $('#btn-ope
 // شبكة الأصناف القابلة للضغط
 function renderPosGrid() {
   const q = ($('#pos-search').value || '').trim();
-  const items = state.items.filter(i => !q || i.name.includes(q) || (i.sku || '').includes(q));
+  // المرحلة 14: البحث يشمل الباركود أيضاً
+  const items = state.items.filter(i => !q || i.name.includes(q) || (i.sku || '').includes(q)
+    || (i.barcode || '').includes(q));
   $('#pos-grid').innerHTML = items.map(i => `
     <button class="pos-item" data-id="${i.id}">
       <span class="pos-item-name">${esc(i.name)}</span>
@@ -1909,6 +2378,18 @@ function renderPosGrid() {
   $$('#pos-grid .pos-item').forEach(b => b.onclick = () => addToCart(b.dataset.id));
 }
 $('#pos-search').oninput = renderPosGrid;
+// المرحلة 14: مسح/كتابة باركود مطابق تماماً + Enter يضيف الصنف للسلة مباشرة
+$('#pos-search').onkeydown = (e) => {
+  if (e.key !== 'Enter') return;
+  const q = e.target.value.trim();
+  if (!q) return;
+  const it = state.items.find(i => i.barcode === q || i.sku === q);
+  if (!it) return;
+  addToCart(it.id);
+  e.target.value = '';
+  renderPosGrid();
+  e.target.focus();
+};
 
 // السلة
 function addToCart(itemId) {
@@ -2112,6 +2593,11 @@ function buildDocSheetHtml(doc, opts = {}) {
     h += '<div class="doc-meta">' + doc.meta.map(([l, v]) =>
       `<div class="dm"><b>${esc(l)}:</b><span>${esc(_pvCellTxt(v))}</span></div>`).join('') + '</div>';
   }
+  // المرحلة 15: فقرات نصية (خطابات التحصيل) — قبل الجداول
+  if (doc.paragraphs && doc.paragraphs.length) {
+    h += '<div class="doc-note" style="text-align:start;line-height:2">' +
+      doc.paragraphs.map(p => `<p style="margin:0 0 6px">${esc(p)}</p>`).join('') + '</div>';
+  }
   (doc.tables || []).forEach(t => {
     if (t.caption) h += `<div class="doc-caption">${esc(t.caption)}</div>`;
     h += '<table class="doc-table"><thead><tr>' +
@@ -2128,7 +2614,13 @@ function buildDocSheetHtml(doc, opts = {}) {
     h += '<div class="doc-totals">' + doc.totals.map((t, i) =>
       `<span class="${i === doc.totals.length - 1 ? 'dt-net' : ''}">${esc(t)}</span>`).join('') + '</div>';
   }
+  // المرحلة 15: فقرات ختامية (نص الخطاب الإنجليزي والتوقيع)
+  if (doc.paragraphsAfter && doc.paragraphsAfter.length) {
+    h += '<div class="doc-note" style="text-align:start;line-height:2">' +
+      doc.paragraphsAfter.map(p => `<p style="margin:0 0 6px">${esc(p)}</p>`).join('') + '</div>';
+  }
   if (doc.note) h += `<div class="doc-note">${esc(doc.note)}</div>`;
+  if (doc.qrUrl) h += `<div class="doc-qr"><img src="${doc.qrUrl}" alt="QR"><div class="doc-qr-lbl">ZATCA QR</div></div>`;
   h += '<div class="doc-foot">أُنشئ بواسطة <b>H. ERP SYSTEM MANAGER</b> — نظام المحاسبة والإدارة</div>';
   return h;
 }
@@ -2365,12 +2857,20 @@ window.previewDoc = async (kind, id) => {
   if (!K) return;
   const { data: d, error } = await sb.from(K.table).select('*, parties(name)').eq('id', id).single();
   if (error || !d) return toast('تعذر تحميل المستند: ' + (error ? error.message : 'غير موجود'), false);
+  const isTaxInv = kind === 'sales_invoice' || kind === 'purchase_invoice';
   // سطور المستند: نجرّب أسماء العمود المرجعي المحتملة ونتدرّج بأمان دون كسر المعاينة
+  // (للفواتير الضريبية نحاول جلب tax_category أولاً ثم نرجع بدونه)
   let lines = null;
   for (const fk of K.fk) {
+    if (isTaxInv) {
+      const rt = await sb.from(K.lines).select('qty, ' + K.price + ', tax_category, items(name)').eq(fk, id);
+      if (!rt.error) { lines = rt.data || []; break; }
+    }
     const r = await sb.from(K.lines).select('qty, ' + K.price + ', items(name)').eq(fk, id);
     if (!r.error) { lines = r.data || []; break; }
   }
+  // ─── قالب الفاتورة الضريبية المتوافق مع زاتكا (الجيل الأول) ───
+  if (isTaxInv) return _previewTaxInvoice(kind, K, d, lines);
   const meta = [
     ['الرقم', String(d.number)],
     ['التاريخ', new Date(d.created_at).toLocaleDateString('ar-EG')],
@@ -2399,6 +2899,85 @@ window.previewDoc = async (kind, id) => {
     fileName: K.title + '-' + d.number,
   });
 };
+
+// ─── قالب طباعة فاتورة ضريبية متوافق مع متطلبات زاتكا (الجيل الأول) ───
+// يعرض: نوع الفاتورة بالعربي والإنجليزي، بيانات البائع الضريبية، بيانات المشتري،
+// بنود بالضريبة لكل بند، إجمالي قبل/بعد الضريبة، ورمز QR بترميز TLV.
+function _previewTaxInvoice(kind, K, d, lines) {
+  const isSales = kind === 'sales_invoice';
+  const invType = isSales ? (d.invoice_type || 'simplified') : null;
+  const typeTitle = !isSales ? K.title
+    : (invType === 'standard' ? t('tax_invoice_title') : t('simplified_invoice_title'));
+  const gross = Number(d.total) || 0;
+  // الإجماليات الضريبية: الأعمدة المخزنة أولاً، وإلا نحسبها من البنود (فواتير قديمة = خاضعة شاملة)
+  let subtotal = d.subtotal != null ? Number(d.subtotal) : null;
+  let taxAmt = d.tax_amount != null ? Number(d.tax_amount) : null;
+  if ((subtotal == null || taxAmt == null) && lines && lines.length) {
+    const s = summarizeLines(lines, K.price);
+    subtotal = s.subtotal; taxAmt = s.tax_amount;
+  }
+  if (subtotal == null) { taxAmt = lineTax(gross, 'standard'); subtotal = r2(gross - taxAmt); }
+
+  const meta = [
+    [t('inv_number'), String(d.number)],
+    [t('inv_date'), new Date(d.created_at).toLocaleString('ar-EG')],
+    [t('inv_seller'), state.tax.tax_name || state.tenantName || '—'],
+    [t('inv_vat_no') + ' (' + t('inv_seller') + ')', state.tax.vat_number || '—'],
+  ];
+  if (state.tax.cr_number) meta.push([t('tax_cr_number'), state.tax.cr_number]);
+  meta.push([K.partyLbl + ' (' + t('inv_buyer') + ')', d.parties?.name || '—']);
+  if (isSales && invType === 'standard') meta.push([t('buyer_vat_number'), d.buyer_vat_number || '—']);
+
+  const tables = [];
+  if (lines && lines.length) {
+    tables.push({
+      head: [t('col_desc'), t('col_qty'), t('col_price'), t('col_tax'), t('col_total')],
+      rows: lines.map(l => {
+        const lineGross = Number(l.qty) * Number(l[K.price]);
+        const lt = lineTax(lineGross, l.tax_category || 'standard');
+        return [
+          (l.items?.name || '—') + (l.tax_category && l.tax_category !== 'standard'
+            ? ' (' + t('tax_cat_' + (l.tax_category === 'out_of_scope' ? 'out' : l.tax_category)) + ')' : ''),
+          { txt: fmt(l.qty), num: Number(l.qty) },
+          { txt: fmt(l[K.price]), num: Number(l[K.price]) },
+          { txt: fmt(lt), num: lt },
+          { txt: fmt(lineGross), num: lineGross },
+        ];
+      }),
+    });
+  }
+
+  // رمز QR: TLV(البائع، الرقم الضريبي، التوقيت ISO8601، الإجمالي شامل، الضريبة) → Base64 → QR
+  let qrUrl = null, qrNote = '';
+  if (state.tax.vat_number) {
+    try {
+      const tlv = zatcaTLV({
+        seller: state.tax.tax_name || state.tenantName || '',
+        vat: state.tax.vat_number,
+        timestamp: new Date(d.created_at).toISOString(),
+        total: gross.toFixed(2), tax: Number(taxAmt).toFixed(2),
+      });
+      // المرحلة 17: ترقية اختيارية لـ QR الجيل الثاني (Tags 6-8) — فقط عند تفعيل P2
+      // ووجود فاتورة إلكترونية مولّدة لهذه الفاتورة في كاش zatca2.js.
+      // الافتراضي يبقى TLV الجيل الأول (Tags 1-5) دون أي تغيير.
+      const tlvP2 = (typeof zatcaP2UpgradeTLV === 'function') ? zatcaP2UpgradeTLV(d.id, tlv) : tlv;
+      qrUrl = qrDataUrl(tlvP2, 5);
+    } catch (e) { qrNote = 'تعذر توليد QR: ' + e.message; }
+  } else {
+    qrNote = 'أدخل الرقم الضريبي في الإعدادات الضريبية ليظهر رمز QR المتوافق مع زاتكا.';
+  }
+
+  openPrintPreview({
+    title: typeTitle + ' — ' + t('inv_number') + ' ' + d.number,
+    meta, tables,
+    totals: [t('tot_subtotal') + ': ' + fmt(subtotal),
+             t('tot_vat') + ': ' + fmt(taxAmt),
+             t('tot_gross') + ': ' + fmt(gross)],
+    note: qrNote || (lines === null ? 'تفصيل الأصناف غير متاح لهذا المستند' : ''),
+    qrUrl,
+    fileName: 'invoice-' + d.number,
+  });
+}
 
 // ─── معاينة سند (قبض/صرف/تحويل) من السندات المحمّلة في التبويب ───
 window.previewVoucher = (id) => {

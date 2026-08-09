@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>H. ERP SYSTEM MANAGER — نظام المحاسبة والإدارة</title>
   <link rel="icon" href="logo.png" type="image/png">
+  <!-- المرحلة 16: PWA -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#B42318">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="stylesheet" href="styles.css">
   <!-- مكتبات خارجية من jsdelivr فقط -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -45,106 +49,145 @@
     <nav class="menubar" id="menubar">
       <img src="logo.png" class="menubar-logo" alt="H. ERP">
       <div class="mb-item">
-        <button class="mb-btn">ملف</button>
+        <button class="mb-btn" data-i18n="menu_file">ملف</button>
         <div class="mb-drop">
-          <button class="mb-leaf" data-tab="dashboard">فتح لوحة المؤشرات</button>
-          <button class="mb-leaf" data-action="print-preview">طباعة / معاينة</button>
-          <button class="mb-leaf" data-action="export-excel">تصدير Excel</button>
+          <button class="mb-leaf" data-tab="dashboard" data-i18n="mi_open_dash">فتح لوحة المؤشرات</button>
+          <button class="mb-leaf" data-action="print-preview" data-i18n="mi_print_preview">طباعة / معاينة</button>
+          <button class="mb-leaf" data-action="export-excel" data-i18n="mi_export_excel">تصدير Excel</button>
           <div class="mb-sep"></div>
-          <button class="mb-leaf" data-action="logout">تسجيل الخروج</button>
+          <button class="mb-leaf" data-action="logout" data-i18n="mi_logout">تسجيل الخروج</button>
         </div>
       </div>
       <div class="mb-item">
-        <button class="mb-btn">النظام</button>
+        <button class="mb-btn" data-i18n="menu_file2">النظام</button>
         <div class="mb-drop">
-          <button class="mb-leaf" data-action="sysinfo">معلومات النظام</button>
-          <button class="mb-leaf" disabled>النسخ الاحتياطي</button>
+          <button class="mb-leaf" data-action="sysinfo" data-i18n="mi_sysinfo">معلومات النظام</button>
+          <button class="mb-leaf" disabled data-i18n="mi_backup">النسخ الاحتياطي</button>
           <div class="mb-sep"></div>
-          <button class="mb-leaf hidden" id="mb-dev-dl" data-tab="dev">تحميل نسخة من البرنامج</button>
+          <button class="mb-leaf hidden" id="mb-dev-dl" data-tab="dev" data-i18n="mi_dev_dl">تحميل نسخة من البرنامج</button>
         </div>
       </div>
       <div class="mb-item">
-        <button class="mb-btn">الإعدادات</button>
+        <button class="mb-btn" data-i18n="menu_edit">الإعدادات</button>
         <div class="mb-drop">
-          <button class="mb-leaf" data-tab="settings">الإعدادات العامة</button>
-          <button class="mb-leaf" data-tab="users">المستخدمون والصلاحيات</button>
-          <button class="mb-leaf" data-tab="branches">الفروع</button>
-          <button class="mb-leaf" disabled>الفترات المالية</button>
+          <button class="mb-leaf" data-tab="settings" data-i18n="mi_settings">الإعدادات العامة</button>
+          <button class="mb-leaf" data-action="tax-settings" data-i18n="mi_tax_settings">الإعدادات الضريبية (زاتكا)</button>
+          <button class="mb-leaf" data-tab="users" data-i18n="mi_users">المستخدمون والصلاحيات</button>
+          <button class="mb-leaf" data-tab="branches" data-i18n="mi_branches">الفروع</button>
+          <button class="mb-leaf" data-tab="settings" data-i18n="mi_periods">الفترات المالية</button>
         </div>
       </div>
       <div class="mb-item">
-        <button class="mb-btn">الأستاذ العام</button>
+        <button class="mb-btn" data-i18n="menu_gl">الأستاذ العام</button>
         <div class="mb-drop">
-          <button class="mb-leaf" data-tab="accounts">شجرة الحسابات</button>
-          <button class="mb-leaf" data-tab="journal">قيود اليومية</button>
-          <button class="mb-leaf" data-action="opening-entry">قيد افتتاحي</button>
+          <button class="mb-leaf" data-tab="accounts" data-i18n="mi_acc_tree">شجرة الحسابات</button>
+          <button class="mb-leaf" data-tab="journal" data-i18n="mi_journal">قيود اليومية</button>
+          <button class="mb-leaf" data-action="opening-entry" data-i18n="mi_opening">قيد افتتاحي</button>
         </div>
       </div>
       <div class="mb-item">
-        <button class="mb-btn">معاملات مالية</button>
+        <button class="mb-btn" data-i18n="menu_treasury">معاملات مالية</button>
         <div class="mb-drop">
-          <button class="mb-leaf" data-action="voucher-receipt">سند قبض</button>
-          <button class="mb-leaf" data-action="voucher-payment">سند صرف</button>
-          <button class="mb-leaf" data-action="voucher-transfer">تحويل بين الخزن</button>
+          <button class="mb-leaf" data-action="voucher-receipt" data-i18n="mi_vreceipt">سند قبض</button>
+          <button class="mb-leaf" data-action="voucher-payment" data-i18n="mi_vpayment">سند صرف</button>
+          <button class="mb-leaf" data-action="voucher-transfer" data-i18n="mi_vtransfer">تحويل بين الخزن</button>
         </div>
       </div>
       <div class="mb-item">
-        <button class="mb-btn">المخازن</button>
+        <button class="mb-btn" data-i18n="menu_inventory">المخازن</button>
         <div class="mb-drop">
-          <button class="mb-leaf" data-tab="items">الأصناف</button>
-          <button class="mb-leaf" data-action="warehouses">المستودعات</button>
-          <button class="mb-leaf" data-action="stock-transfer">تحويل بين المستودعات</button>
-          <button class="mb-leaf" data-action="stock-count">الجرد</button>
+          <button class="mb-leaf" data-tab="items" data-i18n="mi_items">الأصناف</button>
+          <button class="mb-leaf" data-action="warehouses" data-i18n="mi_warehouses">المستودعات</button>
+          <button class="mb-leaf" data-action="stock-transfer" data-i18n="mi_stock_transfer">تحويل بين المستودعات</button>
+          <button class="mb-leaf" data-action="stock-count" data-i18n="mi_stock_count">الجرد</button>
+          <button class="mb-leaf" data-tab="barcode" data-i18n="mi_barcode">ملصقات الباركود</button>
+          <button class="mb-leaf" data-tab="manufacturing" data-i18n="mi_manufacturing">التصنيع / قوائم المكونات</button>
         </div>
       </div>
       <div class="mb-item">
-        <button class="mb-btn">المشتريات</button>
+        <button class="mb-btn" data-i18n="menu_purch">المشتريات</button>
         <div class="mb-drop">
-          <button class="mb-leaf" data-action="purchase-invoice">فاتورة شراء</button>
-          <button class="mb-leaf" data-action="purchase-return">مرتجع مشتريات</button>
-          <button class="mb-leaf" data-tab="parties">الموردون</button>
+          <button class="mb-leaf" data-action="purchase-invoice" data-i18n="mi_pinv">فاتورة شراء</button>
+          <button class="mb-leaf" data-action="purchase-order" data-i18n="mi_porder">أمر شراء</button>
+          <button class="mb-leaf" data-action="purchase-return" data-i18n="mi_pret">مرتجع مشتريات</button>
+          <button class="mb-leaf" data-action="credit-note" data-i18n="mi_cnote">إشعار دائن/مدين</button>
+          <button class="mb-leaf" data-tab="parties" data-i18n="mi_suppliers">الموردون</button>
         </div>
       </div>
       <div class="mb-item">
-        <button class="mb-btn">المبيعات</button>
+        <button class="mb-btn" data-i18n="menu_sales">المبيعات</button>
         <div class="mb-drop">
-          <button class="mb-leaf" data-tab="invoices">فاتورة مبيعات جديدة</button>
-          <button class="mb-leaf" data-action="sales-return">مرتجع مبيعات</button>
-          <button class="mb-leaf" data-action="quote">عرض أسعار</button>
-          <button class="mb-leaf" data-tab="parties">العملاء</button>
+          <button class="mb-leaf" data-tab="invoices" data-i18n="mi_sinv">فاتورة مبيعات جديدة</button>
+          <button class="mb-leaf" data-action="sales-return" data-i18n="mi_sret">مرتجع مبيعات</button>
+          <button class="mb-leaf" data-action="quote" data-i18n="mi_quote">عرض أسعار</button>
+          <button class="mb-leaf" data-tab="einvoices" data-i18n="mi_einvoices">الفوترة الإلكترونية (زاتكا ٢)</button>
+          <button class="mb-leaf" data-tab="integrations" data-i18n="mi_integrations">التكاملات (سلة/زد) + API</button>
+          <button class="mb-leaf" data-tab="parties" data-i18n="mi_customers">العملاء</button>
+          <button class="mb-leaf" data-tab="crm" data-i18n="mi_crm">CRM — العملاء المحتملون</button>
         </div>
       </div>
       <div class="mb-item">
-        <button class="mb-btn">نقاط البيع</button>
+        <button class="mb-btn" data-i18n="menu_pos">نقاط البيع</button>
         <div class="mb-drop">
-          <button class="mb-leaf" data-tab="pos">شاشة الكاشير</button>
-          <button class="mb-leaf" data-tab="shifts">ورديات الكاشير</button>
+          <button class="mb-leaf" data-tab="pos" data-i18n="mi_cashier">شاشة الكاشير</button>
+          <button class="mb-leaf" data-tab="shifts" data-i18n="mi_shifts">ورديات الكاشير</button>
         </div>
       </div>
       <div class="mb-item">
-        <button class="mb-btn">تقارير الحسابات</button>
+        <button class="mb-btn" data-i18n="menu_hr">الموارد البشرية</button>
         <div class="mb-drop">
-          <button class="mb-leaf" data-report="trial">ميزان المراجعة</button>
-          <button class="mb-leaf" data-report="income">قائمة الدخل</button>
-          <button class="mb-leaf" data-report="balance">الميزانية العمومية</button>
-          <button class="mb-leaf" data-report="stmt">كشف حساب عميل</button>
+          <button class="mb-leaf" data-tab="employees" data-i18n="mi_hr_employees">الموظفون</button>
+          <button class="mb-leaf" data-tab="hr" data-i18n="mi_hr_payroll">الرواتب والمسيرات</button>
         </div>
       </div>
       <div class="mb-item">
-        <button class="mb-btn">التقارير</button>
+        <button class="mb-btn" data-i18n="menu_assets">الأصول الثابتة</button>
         <div class="mb-drop">
-          <button class="mb-leaf" data-report="stock">تقارير المخزون</button>
-          <button class="mb-leaf" data-report="sales">تقارير المبيعات</button>
-          <button class="mb-leaf" data-report="purch">تقارير المشتريات</button>
+          <button class="mb-leaf" data-tab="assets" data-i18n="mi_assets_register">سجل الأصول</button>
+          <button class="mb-leaf" data-tab="assets" data-i18n="mi_assets_dep">ترحيل الإهلاك</button>
         </div>
       </div>
       <div class="mb-item">
-        <button class="mb-btn">مساعدة</button>
+        <button class="mb-btn" data-i18n="menu_expenses">المصروفات</button>
         <div class="mb-drop">
-          <button class="mb-leaf" disabled>دليل الاستخدام</button>
-          <button class="mb-leaf" data-action="about">عن البرنامج</button>
+          <button class="mb-leaf" data-tab="expenses" data-i18n="mi_exp_list">سندات المصروفات</button>
+          <button class="mb-leaf" data-tab="expenses" data-sub="ccs" data-i18n="mi_exp_cc">مراكز التكلفة</button>
+          <button class="mb-leaf" data-tab="expenses" data-sub="rec" data-i18n="mi_exp_rec">الفواتير المتكررة</button>
+          <button class="mb-leaf" data-tab="expenses" data-sub="rem" data-i18n="mi_exp_rem">تذكيرات التحصيل</button>
         </div>
       </div>
+      <div class="mb-item">
+        <button class="mb-btn" data-i18n="menu_glrep">تقارير الحسابات</button>
+        <div class="mb-drop">
+          <button class="mb-leaf" data-report="trial" data-i18n="mi_trial">ميزان المراجعة</button>
+          <button class="mb-leaf" data-report="income" data-i18n="mi_income">قائمة الدخل</button>
+          <button class="mb-leaf" data-report="balance" data-i18n="mi_balance">الميزانية العمومية</button>
+          <button class="mb-leaf" data-report="stmt" data-i18n="mi_stmt">كشف حساب عميل</button>
+        </div>
+      </div>
+      <div class="mb-item">
+        <button class="mb-btn" data-i18n="menu_reports">التقارير</button>
+        <div class="mb-drop">
+          <button class="mb-leaf" data-report="stock" data-i18n="mi_stock_rep">تقارير المخزون</button>
+          <button class="mb-leaf" data-report="sales" data-i18n="mi_sales_rep">تقارير المبيعات</button>
+          <button class="mb-leaf" data-report="purch" data-i18n="mi_purch_rep">تقارير المشتريات</button>
+          <button class="mb-leaf" data-report="ps" data-i18n="rep_ps_tab">مشتريات حسب المورد</button>
+          <button class="mb-leaf" data-report="poopen" data-i18n="rep_poopen_tab">أوامر شراء مفتوحة</button>
+          <button class="mb-leaf" data-report="vat" data-i18n="mi_vat_return">إقرار ضريبة القيمة المضافة</button>
+          <button class="mb-leaf" data-report="vatledger" data-i18n="mi_vat_ledger">دفتر أستاذ الضريبة</button>
+          <button class="mb-leaf" data-report="aging" data-i18n="mi_aging">أعمار الذمم</button>
+          <button class="mb-leaf" data-report="cashflow" data-i18n="mi_cashflow">التدفقات النقدية</button>
+          <button class="mb-leaf" data-report="margin" data-i18n="mi_margin">تحليل هامش الربح</button>
+        </div>
+      </div>
+      <div class="mb-item">
+        <button class="mb-btn" data-i18n="menu_help">مساعدة</button>
+        <div class="mb-drop">
+          <button class="mb-leaf" disabled data-i18n="mi_guide">دليل الاستخدام</button>
+          <button class="mb-leaf" data-action="about" data-i18n="mi_about">عن البرنامج</button>
+        </div>
+      </div>
+      <button class="mb-btn mb-lang" id="btn-lang" data-i18n="lang_btn" title="Language / اللغة">🌐 English</button>
     </nav>
 
     <div class="app-body">
@@ -152,24 +195,32 @@
     <aside class="sidebar">
       <div class="sidebar-brand"><img src="logo.png" id="sidebar-logo" class="sidebar-logo" alt=""> H. ERP <span>SYSTEM MANAGER</span></div>
       <nav>
-        <button class="nav-btn active" data-tab="dashboard">📊 لوحة المؤشرات</button>
-        <button class="nav-btn" data-tab="items">📦 الأصناف</button>
-        <button class="nav-btn" data-tab="parties">👥 العملاء والموردون</button>
-        <button class="nav-btn" data-tab="accounts">📒 شجرة الحسابات</button>
-        <button class="nav-btn" data-tab="journal">📖 قيود اليومية</button>
-        <button class="nav-btn" data-tab="vouchers">💰 السندات والخزن</button>
-        <button class="nav-btn" data-tab="invoices">🧾 فواتير المبيعات</button>
-        <button class="nav-btn" data-tab="purchases">🛒 المشتريات</button>
-        <button class="nav-btn" data-tab="returns">↩️ المرتجعات</button>
-        <button class="nav-btn" data-tab="quotes">📋 عروض الأسعار</button>
-        <button class="nav-btn" data-tab="warehouses">🏬 المستودعات والجرد</button>
-        <button class="nav-btn" data-tab="pos">🖥️ شاشة الكاشير</button>
-        <button class="nav-btn" data-tab="shifts">🕐 ورديات الكاشير</button>
-        <button class="nav-btn" data-tab="reports">📈 تقارير</button>
-        <button class="nav-btn" data-tab="settings">⚙️ الإعدادات</button>
-        <button class="nav-btn" data-tab="users">👤 المستخدمون والصلاحيات</button>
-        <button class="nav-btn" data-tab="branches">🏢 الفروع</button>
-        <button id="nav-dev" class="nav-btn hidden" data-tab="dev">🛠️ لوحة المطوّر</button>
+        <button class="nav-btn active" data-tab="dashboard" data-i18n="nav_dashboard">📊 لوحة المؤشرات</button>
+        <button class="nav-btn" data-tab="items" data-i18n="nav_items">📦 الأصناف</button>
+        <button class="nav-btn" data-tab="parties" data-i18n="nav_parties">👥 العملاء والموردون</button>
+        <button class="nav-btn" data-tab="accounts" data-i18n="nav_accounts">📒 شجرة الحسابات</button>
+        <button class="nav-btn" data-tab="journal" data-i18n="nav_journal">📖 قيود اليومية</button>
+        <button class="nav-btn" data-tab="vouchers" data-i18n="nav_vouchers">💰 السندات والخزن</button>
+        <button class="nav-btn" data-tab="invoices" data-i18n="nav_invoices">🧾 فواتير المبيعات</button>
+        <button class="nav-btn" data-tab="purchases" data-i18n="nav_purchases">🛒 المشتريات</button>
+        <button class="nav-btn" data-tab="returns" data-i18n="nav_returns">↩️ المرتجعات</button>
+        <button class="nav-btn" data-tab="quotes" data-i18n="nav_quotes">📋 عروض الأسعار</button>
+        <button class="nav-btn" data-tab="einvoices" data-i18n="nav_einvoices">🔐 الفوترة الإلكترونية</button>
+        <button class="nav-btn" data-tab="integrations" data-i18n="nav_integrations">🔗 التكاملات</button>
+        <button class="nav-btn" data-tab="manufacturing" data-i18n="nav_manufacturing">🏭 التصنيع</button>
+        <button class="nav-btn" data-tab="crm" data-i18n="nav_crm">🎯 CRM</button>
+        <button class="nav-btn" data-tab="warehouses" data-i18n="nav_warehouses">🏬 المستودعات والجرد</button>
+        <button class="nav-btn" data-tab="pos" data-i18n="nav_pos">🖥️ شاشة الكاشير</button>
+        <button class="nav-btn" data-tab="shifts" data-i18n="nav_shifts">🕐 ورديات الكاشير</button>
+        <button class="nav-btn" data-tab="reports" data-i18n="nav_reports">📈 تقارير</button>
+        <button class="nav-btn" data-tab="settings" data-i18n="nav_settings">⚙️ الإعدادات</button>
+        <button class="nav-btn" data-tab="users" data-i18n="nav_users">👤 المستخدمون والصلاحيات</button>
+        <button class="nav-btn" data-tab="branches" data-i18n="nav_branches">🏢 الفروع</button>
+        <button class="nav-btn" data-tab="employees" data-i18n="nav_employees">🧑‍💼 الموظفون</button>
+        <button class="nav-btn" data-tab="hr" data-i18n="nav_hr">💵 الرواتب</button>
+        <button class="nav-btn" data-tab="assets" data-i18n="nav_assets">🏭 الأصول الثابتة</button>
+        <button class="nav-btn" data-tab="expenses" data-i18n="nav_expenses">🧾 المصروفات</button>
+        <button id="nav-dev" class="nav-btn hidden" data-tab="dev" data-i18n="nav_dev">🛠️ لوحة المطوّر</button>
       </nav>
     </aside>
 
@@ -194,23 +245,23 @@
       <!-- لوحة المؤشرات -->
       <section id="tab-dashboard" class="tab">
         <div class="cards">
-          <div class="card"><div class="card-num" id="c-items">0</div><div class="card-lbl">الأصناف</div></div>
-          <div class="card"><div class="card-num" id="c-customers">0</div><div class="card-lbl">العملاء</div></div>
-          <div class="card"><div class="card-num" id="c-suppliers">0</div><div class="card-lbl">الموردون</div></div>
-          <div class="card"><div class="card-num" id="c-invoices">0</div><div class="card-lbl">الفواتير</div></div>
-          <div class="card card-gold"><div class="card-num" id="c-sales">0</div><div class="card-lbl">مبيعات الشهر</div></div>
+          <div class="card"><div class="card-num" id="c-items">0</div><div class="card-lbl" data-i18n="dash_items">الأصناف</div></div>
+          <div class="card"><div class="card-num" id="c-customers">0</div><div class="card-lbl" data-i18n="dash_customers">العملاء</div></div>
+          <div class="card"><div class="card-num" id="c-suppliers">0</div><div class="card-lbl" data-i18n="dash_suppliers">الموردون</div></div>
+          <div class="card"><div class="card-num" id="c-invoices">0</div><div class="card-lbl" data-i18n="dash_invoices">الفواتير</div></div>
+          <div class="card card-gold"><div class="card-num" id="c-sales">0</div><div class="card-lbl" data-i18n="dash_month_sales">مبيعات الشهر</div></div>
         </div>
       </section>
 
       <!-- الأصناف -->
       <section id="tab-items" class="tab hidden">
         <div class="toolbar">
-          <button id="btn-add-item" class="btn btn-gold">+ إضافة صنف</button>
-          <button id="btn-import-afaq" class="btn btn-ghost">📥 استيراد من آفاق</button>
+          <button id="btn-add-item" class="btn btn-gold" data-i18n="btn_add_item">+ إضافة صنف</button>
+          <button id="btn-import-afaq" class="btn btn-ghost" data-i18n="btn_import_afaq">📥 استيراد من آفاق</button>
           <input type="file" id="file-afaq" accept=".xlsx,.xls,.csv" class="hidden">
         </div>
         <div class="table-wrap"><table>
-          <thead><tr><th>الكود</th><th>الاسم</th><th>الوحدة</th><th>سعر البيع</th><th>الرصيد (المخزن الرئيسي)</th><th>إجراءات</th></tr></thead>
+          <thead><tr><th data-i18n="col_code">الكود</th><th data-i18n="col_name">الاسم</th><th data-i18n="col_unit">الوحدة</th><th data-i18n="col_sale_price">سعر البيع</th><th data-i18n="col_balance_main">الرصيد (المخزن الرئيسي)</th><th data-i18n="col_actions">إجراءات</th></tr></thead>
           <tbody id="tbl-items"></tbody>
         </table></div>
       </section>
@@ -218,10 +269,10 @@
       <!-- العملاء والموردون -->
       <section id="tab-parties" class="tab hidden">
         <div class="toolbar">
-          <button id="btn-add-party" class="btn btn-gold">+ إضافة (عميل/مورد)</button>
+          <button id="btn-add-party" class="btn btn-gold" data-i18n="btn_add_party">+ إضافة (عميل/مورد)</button>
         </div>
         <div class="table-wrap"><table>
-          <thead><tr><th>الاسم</th><th>الجوال</th><th>النوع</th><th>الرصيد</th><th>إجراءات</th></tr></thead>
+          <thead><tr><th data-i18n="col_name">الاسم</th><th data-i18n="col_phone">الجوال</th><th data-i18n="col_kind">النوع</th><th data-i18n="col_balance">الرصيد</th><th data-i18n="col_actions">إجراءات</th></tr></thead>
           <tbody id="tbl-parties"></tbody>
         </table></div>
       </section>
@@ -246,6 +297,27 @@
         <div class="toolbar sub-tabs">
           <button class="btn btn-ghost btn-sm sub-tab active" id="sub-pi" data-sub="pi">فواتير الشراء</button>
           <button class="btn btn-ghost btn-sm sub-tab" id="sub-pr" data-sub="pr">مرتجعات المشتريات</button>
+          <button class="btn btn-ghost btn-sm sub-tab" id="sub-po" data-sub="po" data-i18n="po_tab">أوامر الشراء</button>
+          <button class="btn btn-ghost btn-sm sub-tab" id="sub-cdn" data-sub="cdn" data-i18n="cdn_tab">إشعارات دائن/مدين</button>
+        </div>
+        <div id="purch-pane-po" class="hidden">
+          <div class="toolbar">
+            <input id="po-search" data-i18n-ph="po_search_ph" placeholder="بحث برقم الأمر أو اسم المورد" style="max-width:260px">
+            <button id="btn-new-po" class="btn btn-gold" data-i18n="po_new_btn">+ أمر شراء</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th data-i18n="po_number">الرقم</th><th data-i18n="po_date">التاريخ</th><th data-i18n="frm_supplier">المورد</th><th data-i18n="po_expected">التوريد المتوقع</th><th data-i18n="tot_gross">الإجمالي</th><th data-i18n="po_status">الحالة</th><th></th></tr></thead>
+            <tbody id="tbl-purchase-orders"></tbody>
+          </table></div>
+        </div>
+        <div id="purch-pane-cdn" class="hidden">
+          <div class="toolbar">
+            <button id="btn-new-cdn" class="btn btn-gold" data-i18n="cdn_new_btn">+ إشعار دائن/مدين</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th data-i18n="cdn_number">الرقم</th><th data-i18n="cdn_date">التاريخ</th><th data-i18n="cdn_kind">النوع</th><th data-i18n="cdn_party">الطرف</th><th data-i18n="cdn_ref_invoice">الفاتورة المرجعية</th><th data-i18n="tot_gross">الإجمالي</th><th></th></tr></thead>
+            <tbody id="tbl-credit-notes"></tbody>
+          </table></div>
         </div>
         <div id="purch-pane-pi" class="table-wrap"><table>
           <thead><tr><th>الرقم</th><th>التاريخ</th><th>المورد</th><th>الإجمالي</th><th>الحالة</th><th>إجراءات</th></tr></thead>
@@ -267,6 +339,221 @@
           <thead><tr><th>الرقم</th><th>التاريخ</th><th>العميل</th><th>الإجمالي</th><th>البيان</th><th>إجراءات</th></tr></thead>
           <tbody id="tbl-sales-returns"></tbody>
         </table></div>
+      </section>
+
+      <!-- 🔐 المرحلة 17: الفوترة الإلكترونية — زاتكا الجيل الثاني -->
+      <section id="tab-einvoices" class="tab hidden">
+        <div class="toolbar sub-tabs" style="margin-top:0">
+          <button class="btn btn-ghost btn-sm sub-tab active" data-sub="list" data-i18n="zp2_sub_list">🔐 سجل الفواتير الإلكترونية</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="settings" data-i18n="zp2_sub_settings">⚙️ إعدادات الجيل الثاني</button>
+        </div>
+
+        <!-- سجل الفواتير الإلكترونية -->
+        <div id="zp2-pane-list">
+          <div class="logo-note" style="margin-bottom:12px" data-i18n="zp2_note">
+            ℹ️ توليد XML متوافق مع UBL 2.1 (زاتكا) لكل فاتورة مبيعات + سلسلة هاش (PIH) + توقيع ECDSA تجريبي + QR الجيل الثاني عند التفعيل.
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th data-i18n="inv_number">الرقم</th><th data-i18n="inv_date">التاريخ</th>
+              <th data-i18n="zp2_type">النوع</th><th data-i18n="tot_gross">الإجمالي</th>
+              <th data-i18n="zp2_status">الحالة</th><th data-i18n="zp2_hash">الهاش</th>
+              <th data-i18n="hr_actions">إجراءات</th>
+            </tr></thead>
+            <tbody id="tbl-einvoices"></tbody>
+          </table></div>
+        </div>
+
+        <!-- إعدادات الجيل الثاني -->
+        <div id="zp2-pane-settings" class="hidden">
+          <div class="report-box" style="max-width:640px">
+            <h3 data-i18n="zp2_settings_title">⚙️ إعدادات زاتكا — الجيل الثاني (الربط والتكامل)</h3>
+            <label style="display:flex;align-items:center;gap:8px;margin:10px 0;font-size:14px">
+              <input type="checkbox" id="zp2-enabled" style="width:auto">
+              <span data-i18n="zp2_enable_lbl">تفعيل الجيل الثاني (QR موسّع Tags 6-8 على الفواتير المولّدة)</span>
+            </label>
+            <label class="lbl" data-i18n="zp2_env">البيئة</label>
+            <select id="zp2-env" onchange="zp2FillEnvUrls()">
+              <option value="sandbox" data-i18n="zp2_env_sandbox">Sandbox (تجريبية للمطورين)</option>
+              <option value="simulation" data-i18n="zp2_env_sim">Simulation (محاكاة)</option>
+              <option value="production" data-i18n="zp2_env_prod">Production (إنتاج)</option>
+            </select>
+            <label class="lbl">Compliance Endpoint</label>
+            <input id="zp2-compliance-url" dir="ltr" style="text-align:left">
+            <label class="lbl">Reporting Endpoint (B2C)</label>
+            <input id="zp2-reporting-url" dir="ltr" style="text-align:left">
+            <label class="lbl">Clearance Endpoint (B2B)</label>
+            <input id="zp2-clearance-url" dir="ltr" style="text-align:left">
+            <label class="lbl" data-i18n="zp2_csid">CSID (binarySecurityToken من منصة فاتورة)</label>
+            <input id="zp2-csid" dir="ltr" style="text-align:left">
+            <label class="lbl" data-i18n="zp2_secret">Secret</label>
+            <input id="zp2-secret" type="password" dir="ltr" style="text-align:left">
+            <button class="btn btn-gold btn-block" style="margin-top:12px" onclick="zp2Save()" data-i18n="zp2_save">💾 حفظ إعدادات الجيل الثاني</button>
+          </div>
+
+          <div class="report-box" style="max-width:640px">
+            <h3 data-i18n="zp2_reg_title">🪪 التسجيل الأولي (Compliance CSID)</h3>
+            <div class="logo-note" data-i18n="zp2_reg_note">
+              ℹ️ أدخل CSR المولّد من SDK/أداة شهادات زاتكا + OTP من تطبيق فاتورة، ثم اطلب الشهادة. إن رفض المتصفح الاتصال (CORS) استخدم Edge Function الوسيطة الجاهزة (edge-function-report-invoice.ts).
+            </div>
+            <label class="lbl" data-i18n="zp2_csr">CSR (base64 — من أداة شهادات زاتكا)</label>
+            <textarea id="zp2-csr" dir="ltr" rows="3" style="width:100%;text-align:left;font-family:monospace"></textarea>
+            <label class="lbl" data-i18n="zp2_otp">OTP (من تطبيق/منصة فاتورة)</label>
+            <input id="zp2-otp" dir="ltr" style="text-align:left" maxlength="6" inputmode="numeric">
+            <button class="btn btn-gold" style="margin-top:10px" onclick="zp2RequestCompliance()" data-i18n="zp2_req_btn">🪪 طلب Compliance CSID</button>
+            <pre id="zp2-compliance-resp" dir="ltr" style="text-align:left;max-height:160px;overflow:auto;background:#FAF6F1;padding:10px;border-radius:8px;font-size:11px;margin-top:10px"></pre>
+          </div>
+
+          <div class="report-box" style="max-width:640px">
+            <h3 data-i18n="zp2_keys_title">🔑 مفاتيح التوقيع (بيئة تجريبية)</h3>
+            <div class="logo-note" data-i18n="zp2_keys_note">
+              ⚠️ تُولَّد مفاتيح ECDSA P-256 وتُخزَّن محلياً في متصفحك — للبيئة التجريبية فقط. الإنتاج يتطلب شهادة زاتكا الرسمية (CSID) من منصة فاتورة.
+            </div>
+            <p id="zp2-key-status" style="font-weight:700">—</p>
+            <button class="btn btn-gold" onclick="zp2GenKeys()" data-i18n="zp2_genkeys_btn">🔑 توليد زوج مفاتيح جديد</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- التكاملات (سلة/زد) + API مفتوح — المرحلة 18 -->
+      <section id="tab-integrations" class="tab hidden">
+        <div class="toolbar sub-tabs" style="margin-top:0">
+          <button class="btn btn-ghost btn-sm sub-tab active" data-sub="stores" onclick="switchIgSub('stores')" data-i18n="ig_sub_stores">🛍️ المتاجر</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="log" onclick="switchIgSub('log')" data-i18n="ig_sub_log">🧾 سجل المزامنة</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="apikeys" onclick="switchIgSub('apikeys')" data-i18n="ig_sub_apikeys">🔑 مفاتيح API</button>
+        </div>
+
+        <!-- بطاقات المتاجر -->
+        <div id="ig-pane-stores">
+          <div class="logo-note" style="margin-bottom:12px" data-i18n="ig_note">
+            ℹ️ اربط متجرك (سلة/زد) بإدخال بيانات الاتصال ثم «اختبار الاتصال». زر «مزامنة الآن» يجلب الطلبات الجديدة ويحوّلها تلقائياً إلى فواتير مبيعات (بدون تكرار).
+          </div>
+
+          <div class="report-box" style="border:1px solid var(--line);border-radius:10px;padding:14px">
+            <h3>🛍️ <span data-i18n="ig_salla">سلة (Salla)</span> — <span id="ig-salla-status"></span></h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px">
+              <input id="ig-salla-url" dir="ltr" data-i18n-ph="ig_store_url_ph" placeholder="رابط المتجر https://api.salla.dev أو متجرك">
+              <input id="ig-salla-token" dir="ltr" type="password" data-i18n-ph="ig_token_ph" placeholder="Access Token (OAuth من لوحة سلة)">
+            </div>
+            <div class="modal-actions" style="justify-content:flex-start">
+              <button class="btn btn-gold" onclick="igSave('salla')" data-i18n="btn_save">حفظ</button>
+              <button class="btn" id="ig-salla-test" onclick="igTest('salla')" data-i18n="ig_test">🔌 اختبار الاتصال</button>
+              <button class="btn" id="ig-salla-sync" onclick="igSync('salla')" data-i18n="ig_sync_now">🔄 مزامنة الآن</button>
+            </div>
+            <div id="ig-salla-result"></div>
+          </div>
+
+          <div class="report-box" style="border:1px solid var(--line);border-radius:10px;padding:14px">
+            <h3>🛒 <span data-i18n="ig_zid">زد (Zid)</span> — <span id="ig-zid-status"></span></h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px">
+              <input id="ig-zid-token" dir="ltr" type="password" data-i18n-ph="ig_token_ph" placeholder="Access Token (Bearer)">
+              <input id="ig-zid-mtoken" dir="ltr" type="password" data-i18n-ph="ig_mtoken_ph" placeholder="X-Manager-Token">
+            </div>
+            <div class="modal-actions" style="justify-content:flex-start">
+              <button class="btn btn-gold" onclick="igSave('zid')" data-i18n="btn_save">حفظ</button>
+              <button class="btn" id="ig-zid-test" onclick="igTest('zid')" data-i18n="ig_test">🔌 اختبار الاتصال</button>
+              <button class="btn" id="ig-zid-sync" onclick="igSync('zid')" data-i18n="ig_sync_now">🔄 مزامنة الآن</button>
+            </div>
+            <div id="ig-zid-result"></div>
+          </div>
+        </div>
+
+        <!-- سجل المزامنة -->
+        <div id="ig-pane-log" class="hidden">
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th data-i18n="ig_col_time">الوقت</th><th data-i18n="ig_col_provider">التكامل</th>
+              <th data-i18n="ig_col_action">العملية</th><th data-i18n="ig_col_fetched">المجلوب</th>
+              <th data-i18n="ig_col_imported">المستورد</th><th data-i18n="ig_col_skipped">المتخطَّى</th>
+              <th data-i18n="zp2_status">الحالة</th>
+            </tr></thead>
+            <tbody id="tbl-synclog"></tbody>
+          </table></div>
+        </div>
+
+        <!-- مفاتيح API -->
+        <div id="ig-pane-apikeys" class="hidden">
+          <div class="logo-note" style="margin-bottom:12px" data-i18n="ak_note">
+            🔑 مفاتيح API تتيح للمطورين الوصول للقراءة عبر RPC آمن: supabase rpc api_request مع المعاملات p_key (المفتاح)، p_action (get_balance / list_invoices / get_item)، p_payload (jsonb). يُخزَّن هاش المفتاح فقط ولا يظهر النص الصريح إلا مرة واحدة عند التوليد. لإضافة إجراءات جديدة: وسّع القائمة البيضاء داخل الدالة في hazem-integrations.sql (قراءة فقط).
+          </div>
+          <div class="toolbar">
+            <button class="btn btn-gold" onclick="akForm()" data-i18n="ak_new">➕ مفتاح جديد</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th data-i18n="ak_col_name">الاسم</th><th data-i18n="ak_col_prefix">المفتاح</th>
+              <th data-i18n="ak_col_scope">الصلاحية</th><th data-i18n="ak_col_created">تاريخ الإنشاء</th>
+              <th data-i18n="ak_col_used">آخر استخدام</th><th data-i18n="zp2_status">الحالة</th>
+              <th></th>
+            </tr></thead>
+            <tbody id="tbl-apikeys"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- المرحلة 19: التصنيع / قوائم المكونات + أوامر التصنيع -->
+      <section id="tab-manufacturing" class="tab hidden">
+        <div class="toolbar sub-tabs" style="margin-top:0">
+          <button class="btn btn-ghost btn-sm sub-tab active" data-sub="bom" onclick="switchMfSub('bom')" data-i18n="mf_sub_bom">🧩 قوائم المكونات</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="orders" onclick="switchMfSub('orders')" data-i18n="mf_sub_orders">🏭 أوامر التصنيع</button>
+        </div>
+
+        <div id="mf-pane-bom">
+          <div class="logo-note" style="margin-bottom:12px" data-i18n="mf_note">
+            ℹ️ لكل منتج تام قائمة مكونات (صنف خام + كمية لكل وحدة). تكلفة المنتج = مجموع (كمية المكون × متوسط تكلفته من فواتير الشراء).
+          </div>
+          <div class="toolbar">
+            <button class="btn btn-gold" onclick="mfBomForm()" data-i18n="mf_new_bom">➕ قائمة مكونات جديدة</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th data-i18n="mf_finished_item">المنتج التام</th><th data-i18n="mf_comp_count">عدد المكونات</th>
+              <th data-i18n="mf_notes">ملاحظات</th><th data-i18n="col_date">التاريخ</th><th data-i18n="col_actions">إجراءات</th>
+            </tr></thead>
+            <tbody id="tbl-boms"></tbody>
+          </table></div>
+        </div>
+
+        <div id="mf-pane-orders" class="hidden">
+          <div class="logo-note" style="margin-bottom:12px" data-i18n="mf_orders_note">
+            ℹ️ عند تنفيذ أمر التصنيع: يُرحَّل قيد يومية (مدين مخزون منتج تام / دائن مخزون خامات بتكلفة المكونات) وتُسجَّل حركات مخزون (صرف مكونات + إدخال منتج تام) في المستودع الرئيسي.
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th data-i18n="col_number">الرقم</th><th data-i18n="mf_finished_item">المنتج التام</th>
+              <th data-i18n="col_qty">الكمية</th><th data-i18n="mf_total_cost">التكلفة</th>
+              <th data-i18n="zp2_status">الحالة</th><th data-i18n="col_actions">إجراءات</th>
+            </tr></thead>
+            <tbody id="tbl-orders"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- المرحلة 19: CRM مبسّط -->
+      <section id="tab-crm" class="tab hidden">
+        <div class="toolbar sub-tabs" style="margin-top:0">
+          <button class="btn btn-ghost btn-sm sub-tab active" data-sub="board" onclick="switchCrmSub('board')" data-i18n="crm_sub_board">🎯 لوحة العملاء المحتملين</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="followups" onclick="switchCrmSub('followups')" data-i18n="crm_sub_followups">📞 متابعات اليوم</button>
+        </div>
+
+        <div id="crm-pane-board">
+          <div class="toolbar">
+            <button class="btn btn-gold" onclick="crmLeadForm()" data-i18n="crm_new_lead">➕ عميل محتمل جديد</button>
+          </div>
+          <div id="crm-counters" style="margin-bottom:10px"></div>
+          <div id="crm-board" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+        </div>
+
+        <div id="crm-pane-followups" class="hidden">
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th data-i18n="crm_lead">العميل المحتمل</th><th data-i18n="crm_act_type">النشاط</th>
+              <th data-i18n="crm_act_note">ملاحظة</th><th data-i18n="crm_remind_at">تاريخ التذكير</th>
+              <th data-i18n="zp2_status">الحالة</th><th></th>
+            </tr></thead>
+            <tbody id="tbl-followups"></tbody>
+          </table></div>
+        </div>
       </section>
 
       <!-- عروض الأسعار -->
@@ -412,6 +699,13 @@
           <button class="btn btn-ghost btn-sm sub-tab" data-sub="balance">🏛️ الميزانية العمومية</button>
           <button class="btn btn-ghost btn-sm sub-tab" data-sub="sales">💹 تقارير المبيعات</button>
           <button class="btn btn-ghost btn-sm sub-tab" data-sub="purch">🛒 تقارير المشتريات</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="vat">🧾 إقرار الضريبة</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="vatledger">📒 دفتر الضريبة</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="ps" data-i18n="rep_ps_tab">🏭 مشتريات حسب المورد</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="poopen" data-i18n="rep_poopen_tab">📋 أوامر شراء مفتوحة</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="aging" data-i18n="rep_aging_tab">⏳ أعمار الذمم</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="cashflow" data-i18n="rep_cf_tab">💸 التدفقات النقدية</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="margin" data-i18n="rep_margin_tab">📊 هامش الربح</button>
         </div>
 
         <!-- تقارير المخزون -->
@@ -593,9 +887,194 @@
             </div>
           </div>
         </div>
+
+        <!-- مشتريات حسب المورد/الفترة (المرحلة 14) -->
+        <div id="rep-pane-ps" class="hidden">
+          <div class="report-box">
+            <h3 data-i18n="rep_ps_title">🏭 تقرير المشتريات حسب المورد والفترة</h3>
+            <div class="toolbar">
+              <select id="rep-ps-supp" style="max-width:220px"></select>
+              <label class="lbl" style="margin:0" data-i18n="rep_from">من</label>
+              <input type="date" id="rep-ps-from" style="width:auto;margin-bottom:0">
+              <label class="lbl" style="margin:0" data-i18n="rep_to">إلى</label>
+              <input type="date" id="rep-ps-to" style="width:auto;margin-bottom:0">
+              <button id="btn-rep-ps" class="btn btn-gold" data-i18n="rep_run">عرض التقرير</button>
+              <button class="btn btn-ghost" data-rep-print="ps" data-i18n="btn_preview_print">🖨️ معاينة / طباعة</button>
+            </div>
+            <div class="cards" style="margin-bottom:18px">
+              <div class="card card-gold"><div class="card-num" id="rep-ps-total">0</div><div class="card-lbl" data-i18n="rep_ps_total">إجمالي المشتريات</div></div>
+              <div class="card"><div class="card-num" id="rep-ps-count">0</div><div class="card-lbl" data-i18n="rep_ps_count">عدد الفواتير</div></div>
+            </div>
+            <div class="table-wrap"><table>
+              <thead><tr><th data-i18n="po_number">الرقم</th><th data-i18n="po_date">التاريخ</th><th data-i18n="frm_supplier">المورد</th><th data-i18n="tot_gross">الإجمالي</th></tr></thead>
+              <tbody id="tbl-rep-ps"></tbody>
+            </table></div>
+          </div>
+        </div>
+
+        <!-- أوامر الشراء المفتوحة (المرحلة 14) -->
+        <div id="rep-pane-poopen" class="hidden">
+          <div class="report-box">
+            <h3 data-i18n="rep_poopen_title">📋 أوامر الشراء المفتوحة (لم تُستلم بالكامل)</h3>
+            <div class="toolbar">
+              <button id="btn-rep-poopen" class="btn btn-gold" data-i18n="rep_run">عرض التقرير</button>
+              <button class="btn btn-ghost" data-rep-print="poopen" data-i18n="btn_preview_print">🖨️ معاينة / طباعة</button>
+            </div>
+            <div class="table-wrap"><table>
+              <thead><tr><th data-i18n="po_number">الرقم</th><th data-i18n="po_date">التاريخ</th><th data-i18n="frm_supplier">المورد</th><th data-i18n="po_expected">التوريد المتوقع</th><th data-i18n="tot_gross">الإجمالي</th><th data-i18n="rep_poopen_recv">المستلم / المطلوب</th><th data-i18n="po_status">الحالة</th></tr></thead>
+              <tbody id="tbl-rep-poopen"></tbody>
+            </table></div>
+          </div>
+        </div>
+
+        <!-- إقرار ضريبة القيمة المضافة (دفعة زاتكا/VAT) -->
+        <div id="rep-pane-vat" class="hidden">
+          <div class="report-box">
+            <h3>🧾 إقرار ضريبة القيمة المضافة (15%)</h3>
+            <div class="toolbar">
+              <label class="lbl" style="margin:0">من</label>
+              <input type="date" id="rep-vat-from" style="width:auto;margin-bottom:0">
+              <label class="lbl" style="margin:0">إلى</label>
+              <input type="date" id="rep-vat-to" style="width:auto;margin-bottom:0">
+              <button id="btn-rep-vat" class="btn btn-gold">عرض الإقرار</button>
+              <button class="btn btn-ghost" id="btn-vat-print">🖨️ معاينة / طباعة</button>
+              <button class="btn btn-ghost" id="btn-vat-excel">تصدير Excel</button>
+            </div>
+            <div class="cards" style="margin-bottom:18px">
+              <div class="card card-gold"><div class="card-num" id="vat-out-tax">0</div><div class="card-lbl">ضريبة المخرجات</div></div>
+              <div class="card"><div class="card-num" id="vat-in-tax">0</div><div class="card-lbl">ضريبة المدخلات القابلة للخصم</div></div>
+              <div class="card"><div class="card-num" id="vat-net-due">0</div><div class="card-lbl">صافي الضريبة المستحقة</div></div>
+            </div>
+            <div class="report-box">
+              <h3>المبيعات (ضريبة المخرجات)</h3>
+              <div class="table-wrap"><table>
+                <thead><tr><th>البند</th><th>المبلغ الصافي</th><th>مبلغ الضريبة</th></tr></thead>
+                <tbody id="tbl-vat-sales"></tbody>
+              </table></div>
+            </div>
+            <div class="report-box">
+              <h3>المشتريات (ضريبة المدخلات)</h3>
+              <div class="table-wrap"><table>
+                <thead><tr><th>البند</th><th>المبلغ الصافي</th><th>مبلغ الضريبة</th></tr></thead>
+                <tbody id="tbl-vat-purch"></tbody>
+              </table></div>
+            </div>
+            <div class="je-totals" id="vat-return-totals" style="margin-top:12px"></div>
+            <p style="color:#7A6A5C;font-size:12px;margin-top:10px">إقرار إرشادي داخلي يحاكي نموذج هيئة الزكاة والضريبة والجمارك — راجعه مع محاسبك القانوني قبل التقديم الرسمي.</p>
+          </div>
+        </div>
+
+        <!-- دفتر أستاذ الضريبة -->
+        <div id="rep-pane-vatledger" class="hidden">
+          <div class="report-box">
+            <h3>📒 دفتر أستاذ ضريبة القيمة المضافة</h3>
+            <div class="toolbar">
+              <label class="lbl" style="margin:0">من</label>
+              <input type="date" id="rep-vatledger-from" style="width:auto;margin-bottom:0">
+              <label class="lbl" style="margin:0">إلى</label>
+              <input type="date" id="rep-vatledger-to" style="width:auto;margin-bottom:0">
+              <button id="btn-rep-vatledger" class="btn btn-gold">عرض الدفتر</button>
+              <button class="btn btn-ghost" data-rep-print="vatledger">🖨️ معاينة / طباعة</button>
+            </div>
+            <div class="table-wrap"><table>
+              <thead><tr><th>التاريخ</th><th>البيان</th><th>مدين (مدخلات)</th><th>دائن (مخرجات)</th><th>الرصيد</th></tr></thead>
+              <tbody id="tbl-vat-ledger"></tbody>
+            </table></div>
+            <div class="je-totals" id="vat-ledger-totals" style="margin-top:12px"></div>
+          </div>
+        </div>
+
+        <!-- ⏳ المرحلة 16: تقرير أعمار الذمم (عملاء مدينون / موردون دائنون) -->
+        <div id="rep-pane-aging" class="hidden">
+          <div class="report-box">
+            <h3 data-i18n="rep_aging_title">⏳ تقرير أعمار الذمم</h3>
+            <div class="toolbar">
+              <label class="lbl" style="margin:0" data-i18n="rep_aging_asof">حتى تاريخ</label>
+              <input type="date" id="rep-aging-date" style="width:auto;margin-bottom:0">
+              <button id="btn-rep-aging" class="btn btn-gold" data-i18n="rep_run">عرض التقرير</button>
+              <button id="btn-aging-print" class="btn btn-ghost" data-i18n="btn_preview_print">🖨️ معاينة / طباعة</button>
+              <button id="btn-aging-excel" class="btn btn-ghost" data-i18n="btn_export_excel">تصدير Excel</button>
+            </div>
+            <p style="color:#7A6A5C;font-size:12px" data-i18n="rep_aging_hint">الاستحقاق = تاريخ الفاتورة + 30 يوماً؛ السندات تُوزَّع FIFO على الفواتير الأقدم أولاً</p>
+            <div class="report-box">
+              <h3 data-i18n="rep_aging_cust">👥 العملاء (ذمم مدينة)</h3>
+              <div class="table-wrap"><table>
+                <thead><tr><th data-i18n="frm_customer">العميل</th><th data-i18n="rep_aging_b30">0-30 يوماً</th><th data-i18n="rep_aging_b60">31-60</th><th data-i18n="rep_aging_b90">61-90</th><th data-i18n="rep_aging_b90p">+90</th><th data-i18n="tot_gross">الإجمالي</th></tr></thead>
+                <tbody id="tbl-rep-aging-cust"></tbody>
+              </table></div>
+              <div class="je-totals" id="rep-aging-cust-totals" style="margin-top:10px"></div>
+            </div>
+            <div class="report-box">
+              <h3 data-i18n="rep_aging_supp">🏭 الموردون (ذمم دائنة)</h3>
+              <div class="table-wrap"><table>
+                <thead><tr><th data-i18n="frm_supplier">المورد</th><th data-i18n="rep_aging_b30">0-30 يوماً</th><th data-i18n="rep_aging_b60">31-60</th><th data-i18n="rep_aging_b90">61-90</th><th data-i18n="rep_aging_b90p">+90</th><th data-i18n="tot_gross">الإجمالي</th></tr></thead>
+                <tbody id="tbl-rep-aging-supp"></tbody>
+              </table></div>
+              <div class="je-totals" id="rep-aging-supp-totals" style="margin-top:10px"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 💸 المرحلة 16: قائمة التدفقات النقدية (مبسطة مباشرة من حركات 11xx) -->
+        <div id="rep-pane-cashflow" class="hidden">
+          <div class="report-box">
+            <h3 data-i18n="cf_title">💸 قائمة التدفقات النقدية</h3>
+            <div class="toolbar">
+              <label class="lbl" style="margin:0" data-i18n="rep_from">من</label>
+              <input type="date" id="rep-cf-from" style="width:auto;margin-bottom:0">
+              <label class="lbl" style="margin:0" data-i18n="rep_to">إلى</label>
+              <input type="date" id="rep-cf-to" style="width:auto;margin-bottom:0">
+              <button id="btn-rep-cf" class="btn btn-gold" data-i18n="rep_run">عرض التقرير</button>
+              <button id="btn-cf-print" class="btn btn-ghost" data-i18n="btn_preview_print">🖨️ معاينة / طباعة</button>
+              <button id="btn-cf-excel" class="btn btn-ghost" data-i18n="btn_export_excel">تصدير Excel</button>
+            </div>
+            <p style="color:#7A6A5C;font-size:12px" data-i18n="cf_hint">مبنية على حركات القيود الفعلية على حسابات النقدية/البنوك (11xx)</p>
+            <div class="table-wrap"><table>
+              <thead><tr><th data-i18n="cf_item">البند</th><th data-i18n="cf_amount">المبلغ</th></tr></thead>
+              <tbody id="tbl-rep-cf"></tbody>
+            </table></div>
+            <div class="je-totals" id="rep-cf-totals" style="margin-top:12px"></div>
+          </div>
+        </div>
+
+        <!-- 📊 المرحلة 16: تحليل هامش الربح حسب الصنف -->
+        <div id="rep-pane-margin" class="hidden">
+          <div class="report-box">
+            <h3 data-i18n="rep_margin_title">📊 تحليل هامش الربح حسب الصنف</h3>
+            <div class="toolbar">
+              <label class="lbl" style="margin:0" data-i18n="rep_from">من</label>
+              <input type="date" id="rep-margin-from" style="width:auto;margin-bottom:0">
+              <label class="lbl" style="margin:0" data-i18n="rep_to">إلى</label>
+              <input type="date" id="rep-margin-to" style="width:auto;margin-bottom:0">
+              <button id="btn-rep-margin" class="btn btn-gold" data-i18n="rep_run">عرض التقرير</button>
+              <button id="btn-margin-print" class="btn btn-ghost" data-i18n="btn_preview_print">🖨️ معاينة / طباعة</button>
+              <button id="btn-margin-excel" class="btn btn-ghost" data-i18n="btn_export_excel">تصدير Excel</button>
+            </div>
+            <p style="color:#7A6A5C;font-size:12px" data-i18n="rep_margin_hint">التكلفة = متوسط موزون من فواتير الشراء؛ مرتب تنازلياً بمجمل الربح</p>
+            <div class="table-wrap"><table>
+              <thead><tr><th data-i18n="bc_item">الصنف</th><th data-i18n="col_qty">الكمية</th><th data-i18n="rep_margin_sales">المبيعات</th><th data-i18n="rep_margin_cost">التكلفة</th><th data-i18n="rep_margin_profit">مجمل الربح</th><th data-i18n="rep_margin_pct">الهامش %</th></tr></thead>
+              <tbody id="tbl-rep-margin"></tbody>
+            </table></div>
+            <div class="je-totals" id="rep-margin-totals" style="margin-top:12px"></div>
+          </div>
+        </div>
       </section>
 
       <!-- الإعدادات -->
+      <!-- ═══ ملصقات الباركود (المرحلة 14) ═══ -->
+      <section id="tab-barcode" class="tab hidden">
+        <div class="toolbar">
+          <input id="bc-search" data-i18n-ph="bc_search_ph" placeholder="بحث عن صنف / باركود" style="max-width:260px">
+          <button id="btn-bc-all" class="btn btn-ghost" data-i18n="bc_select_all">تحديد الكل</button>
+          <button id="btn-bc-gen" class="btn btn-ghost" data-i18n="bc_gen_btn">توليد باركود للأصناف الناقصة</button>
+          <button id="btn-bc-print" class="btn btn-gold" data-i18n="bc_print_btn">🖨️ طباعة الملصقات</button>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th></th><th data-i18n="bc_item">الصنف</th><th data-i18n="bc_barcode">الباركود</th><th data-i18n="col_price">السعر</th><th data-i18n="bc_count">عدد الملصقات</th></tr></thead>
+          <tbody id="tbl-barcode"></tbody>
+        </table></div>
+      </section>
+
       <section id="tab-settings" class="tab hidden">
         <div class="report-box">
           <h3>🖼️ شعار الشركة (اللوجو)</h3>
@@ -613,6 +1092,34 @@
           </div>
           <div id="logo-file-name" style="color:#B42318;font-size:13px;margin-top:8px"></div>
         </div>
+        <!-- الإعدادات الضريبية — زاتكا الجيل الأول (دفعة ZATCA/VAT) -->
+        <div class="report-box" id="tax-settings-box" style="max-width:560px">
+          <h3 id="tax-settings-title">🧾 الإعدادات الضريبية — هيئة الزكاة والضريبة والجمارك (زاتكا)</h3>
+          <div class="logo-note" id="tax-settings-note">ℹ️ هذه البيانات تظهر على الفواتير الضريبية وداخل رمز QR المتوافق مع متطلبات زاتكا (الجيل الأول).</div>
+          <label class="lbl" id="lbl-tax-name">الاسم الضريبي</label>
+          <input id="tax-name" placeholder="الاسم الضريبي للمنشأة">
+          <label class="lbl" id="lbl-tax-vat">الرقم الضريبي (15 رقماً — يبدأ بـ 3 وينتهي بـ 3)</label>
+          <input id="tax-vat-number" placeholder="3xxxxxxxxxxxx3" dir="ltr" style="text-align:left" maxlength="15" inputmode="numeric">
+          <label class="lbl" id="lbl-tax-cr">السجل التجاري</label>
+          <input id="tax-cr-number" placeholder="رقم السجل التجاري" dir="ltr" style="text-align:left">
+          <label class="lbl" id="lbl-tax-addr">العنوان الوطني</label>
+          <input id="tax-national-address" placeholder="المدينة، الحي، الشارع، الرمز البريدي">
+          <button id="btn-save-tax" class="btn btn-gold btn-block" style="margin-top:12px">💾 حفظ الإعدادات الضريبية</button>
+        </div>
+
+        <!-- 🔒 المرحلة 16: قفل الفترات المحاسبية -->
+        <div class="report-box" id="pl-box" style="max-width:560px">
+          <h3 data-i18n="pl_title">🔒 قفل الفترات المحاسبية</h3>
+          <div class="logo-note" id="pl-note">ℹ️ لا يُسمح بقيود بتاريخ قبل تاريخ القفل.</div>
+          <p style="font-size:14px"><b data-i18n="pl_current">القفل الحالي</b>: <span id="pl-current" dir="ltr">—</span></p>
+          <label class="lbl" data-i18n="pl_date">لا قيود قبل تاريخ</label>
+          <input type="date" id="pl-date" dir="ltr" style="text-align:left">
+          <div class="modal-actions" style="justify-content:flex-start">
+            <button id="btn-pl-save" class="btn btn-gold" data-i18n="btn_save">حفظ</button>
+            <button id="btn-pl-clear" class="btn btn-danger" data-i18n="pl_clear">إلغاء القفل</button>
+          </div>
+        </div>
+
         <div class="report-box">
           <h3>🏢 بيانات الشركة</h3>
           <div class="table-wrap"><table>
@@ -668,6 +1175,385 @@
             <thead><tr><th>الاسم</th><th>العنوان</th><th>الهاتف</th><th>النوع</th><th>إجراءات</th></tr></thead>
             <tbody id="tbl-branches"></tbody>
           </table></div>
+        </div>
+      </section>
+
+      <!-- الموظفون (المرحلة 12: HR) -->
+      <section id="tab-employees" class="tab hidden">
+        <div class="toolbar">
+          <button id="btn-add-employee" class="btn btn-gold" data-i18n="hr_add_emp_btn">+ إضافة موظف</button>
+          <input id="emp-search" data-i18n-ph="hr_search_ph" placeholder="بحث بالاسم أو رقم الهوية..." style="max-width:280px">
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr>
+            <th data-i18n="hr_employee">الموظف</th><th data-i18n="hr_id_number">رقم الهوية/الإقامة</th>
+            <th data-i18n="hr_nationality">الجنسية</th><th data-i18n="hr_job">الوظيفة</th>
+            <th data-i18n="hr_branch">الفرع</th><th data-i18n="hr_basic">الراتب الأساسي</th>
+            <th data-i18n="hr_status">الحالة</th><th data-i18n="hr_actions">إجراءات</th>
+          </tr></thead>
+          <tbody id="tbl-employees"></tbody>
+        </table></div>
+      </section>
+
+      <!-- الرواتب والموارد البشرية (المرحلة 12) -->
+      <section id="tab-hr" class="tab hidden">
+        <div class="toolbar sub-tabs" style="margin-top:0">
+          <button class="btn btn-ghost btn-sm sub-tab active" data-sub="runs" data-i18n="hr_sub_runs">💵 مسيرات الرواتب</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="advances" data-i18n="hr_sub_advances">💸 السلف</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="deductions" data-i18n="hr_sub_deductions">➖ الخصومات</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="eos" data-i18n="hr_sub_eos">🏁 نهاية الخدمة</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="reports" data-i18n="hr_sub_reports">📊 تقارير HR</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="settings" data-i18n="hr_sub_settings">⚙️ إعدادات GOSI</button>
+        </div>
+
+        <!-- مسيرات الرواتب -->
+        <div id="hr-pane-runs">
+          <div class="toolbar">
+            <input type="month" id="hr-run-month">
+            <button id="btn-gen-run" class="btn btn-gold" data-i18n="hr_gen_run">⚙️ توليد مسيّر الشهر</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th data-i18n="hr_month">الشهر</th><th data-i18n="hr_emp_count">عدد الموظفين</th>
+              <th data-i18n="hr_gross">الإجمالي</th><th data-i18n="hr_net">الصافي</th>
+              <th data-i18n="hr_status">الحالة</th><th data-i18n="hr_actions">إجراءات</th>
+            </tr></thead>
+            <tbody id="tbl-payroll-runs"></tbody>
+          </table></div>
+          <div id="hr-slips-box" class="hidden" style="margin-top:16px">
+            <h3 id="hr-slips-title" style="margin:0 0 10px"></h3>
+            <div class="table-wrap"><table>
+              <thead><tr>
+                <th data-i18n="hr_employee">الموظف</th><th data-i18n="hr_basic">الأساسي</th>
+                <th data-i18n="hr_allowances">البدلات</th><th data-i18n="hr_deductions">الخصومات</th>
+                <th data-i18n="hr_advance_ded">قسط السلفة</th><th data-i18n="hr_gosi_emp">GOSI الموظف</th>
+                <th data-i18n="hr_net">الصافي</th><th data-i18n="hr_payslip">قسيمة</th>
+              </tr></thead>
+              <tbody id="tbl-payroll-slips"></tbody>
+            </table></div>
+          </div>
+        </div>
+
+        <!-- السلف -->
+        <div id="hr-pane-advances" class="hidden">
+          <div class="toolbar">
+            <button id="btn-add-advance" class="btn btn-gold" data-i18n="hr_add_advance">+ سلفة جديدة</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th data-i18n="hr_employee">الموظف</th><th data-i18n="hr_amount">المبلغ</th>
+              <th data-i18n="hr_date">التاريخ</th><th data-i18n="hr_inst_paid">الأقساط المسددة</th>
+              <th data-i18n="hr_remaining">المتبقي</th><th data-i18n="hr_status">الحالة</th><th></th>
+            </tr></thead>
+            <tbody id="tbl-advances"></tbody>
+          </table></div>
+        </div>
+
+        <!-- الخصومات -->
+        <div id="hr-pane-deductions" class="hidden">
+          <div class="toolbar">
+            <button id="btn-add-deduction" class="btn btn-gold" data-i18n="hr_add_deduction">+ خصم / جزاء</button>
+            <input type="month" id="hr-ded-month">
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th data-i18n="hr_month">الشهر</th><th data-i18n="hr_employee">الموظف</th>
+              <th data-i18n="hr_amount">المبلغ</th><th data-i18n="hr_reason">السبب</th><th></th>
+            </tr></thead>
+            <tbody id="tbl-deductions"></tbody>
+          </table></div>
+        </div>
+
+        <!-- نهاية الخدمة -->
+        <div id="hr-pane-eos" class="hidden">
+          <div class="report-box" style="max-width:560px">
+            <h3 data-i18n="hr_eos_title">🏁 حاسبة مكافأة نهاية الخدمة</h3>
+            <label class="lbl" data-i18n="hr_employee">الموظف</label>
+            <select id="eos-emp"></select>
+            <div class="form-grid">
+              <div><label class="lbl" data-i18n="hr_hire_date">تاريخ التعيين</label><input type="date" id="eos-hire"></div>
+              <div><label class="lbl" data-i18n="hr_eos_end">تاريخ نهاية الخدمة</label><input type="date" id="eos-end"></div>
+              <div><label class="lbl" data-i18n="hr_eos_wage">آخر أجر شامل شهري</label><input type="number" step="0.01" id="eos-wage"></div>
+              <div><label class="lbl" data-i18n="hr_eos_reason">سبب انتهاء العلاقة</label>
+                <select id="eos-reason">
+                  <option value="termination" data-i18n="hr_eos_by_employer">إنهاء من صاحب العمل</option>
+                  <option value="resignation" data-i18n="hr_eos_resignation">استقالة الموظف</option>
+                </select></div>
+            </div>
+            <div class="modal-actions" style="justify-content:flex-start">
+              <button id="btn-eos-calc" class="btn btn-gold" data-i18n="hr_eos_calc">🧮 احسب المكافأة</button>
+              <button id="eos-post" class="btn btn-ghost" disabled data-i18n="hr_eos_post">📒 ترحيل كقيد</button>
+            </div>
+            <div id="eos-result"></div>
+          </div>
+        </div>
+
+        <!-- تقارير HR -->
+        <div id="hr-pane-reports" class="hidden">
+          <div class="toolbar">
+            <input type="month" id="hr-rep-month">
+          </div>
+          <div class="report-box">
+            <h3 data-i18n="hr_rep_payroll">📊 كشف الرواتب الشهري الإجمالي</h3>
+            <div class="modal-actions" style="justify-content:flex-start">
+              <button class="btn btn-gold btn-sm" onclick="hrReport('payroll')" data-i18n="btn_preview_print">🖨️ معاينة / طباعة</button>
+              <button class="btn btn-ghost btn-sm" onclick="hrReport('payroll').then(()=>hrReportExcel())" data-i18n="btn_export_excel">تصدير Excel</button>
+            </div>
+          </div>
+          <div class="report-box">
+            <h3 data-i18n="hr_rep_gosi">🛡️ تقرير GOSI الشهري (التأمينات)</h3>
+            <div class="modal-actions" style="justify-content:flex-start">
+              <button class="btn btn-gold btn-sm" onclick="hrReport('gosi')" data-i18n="btn_preview_print">🖨️ معاينة / طباعة</button>
+              <button class="btn btn-ghost btn-sm" onclick="hrReport('gosi').then(()=>hrReportExcel())" data-i18n="btn_export_excel">تصدير Excel</button>
+            </div>
+          </div>
+          <div class="report-box">
+            <h3 data-i18n="hr_rep_advances">💸 تقرير السلف القائمة</h3>
+            <div class="modal-actions" style="justify-content:flex-start">
+              <button class="btn btn-gold btn-sm" onclick="hrReport('advances')" data-i18n="btn_preview_print">🖨️ معاينة / طباعة</button>
+              <button class="btn btn-ghost btn-sm" onclick="hrReport('advances').then(()=>hrReportExcel())" data-i18n="btn_export_excel">تصدير Excel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- إعدادات GOSI -->
+        <div id="hr-pane-settings" class="hidden">
+          <div class="report-box" style="max-width:560px">
+            <h3 data-i18n="hr_gosi_settings">⚙️ إعدادات التأمينات الاجتماعية (GOSI)</h3>
+            <div class="form-grid">
+              <div><label class="lbl" data-i18n="hr_gosi_sa_emp">حصة الموظف السعودي %</label><input type="number" step="0.01" id="gosi-sa-emp"></div>
+              <div><label class="lbl" data-i18n="hr_gosi_sa_er">حصة صاحب العمل (سعودي) %</label><input type="number" step="0.01" id="gosi-sa-er"></div>
+              <div><label class="lbl" data-i18n="hr_gosi_expat_er">حصة صاحب العمل (غير سعودي) %</label><input type="number" step="0.01" id="gosi-expat-er"></div>
+              <div><label class="lbl" data-i18n="hr_gosi_cap">الحد الأقصى للأجر الخاضع</label><input type="number" step="1" id="gosi-cap"></div>
+            </div>
+            <p style="color:#7A6A5C;font-size:13px" data-i18n="hr_gosi_note">أساس الاحتساب = الأساسي + بدل السكن، بحد أقصى. السعودي: 10% موظف (9% معاشات + 1% ساند) و12% صاحب عمل؛ غير السعودي: 2% أخطار مهنية على صاحب العمل فقط.</p>
+            <button id="btn-save-gosi" class="btn btn-gold" data-i18n="btn_save">حفظ</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- الأصول الثابتة والإهلاك (المرحلة 13) -->
+      <section id="tab-assets" class="tab hidden">
+        <div class="toolbar sub-tabs" style="margin-top:0">
+          <button class="btn btn-ghost btn-sm sub-tab active" data-sub="register" data-i18n="as_sub_register">🏭 سجل الأصول</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="cats" data-i18n="as_sub_cats">🗂️ الفئات</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="dep" data-i18n="as_sub_dep">📉 ترحيل الإهلاك</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="reports" data-i18n="as_sub_reports">📊 تقارير الأصول</button>
+        </div>
+
+        <!-- سجل الأصول -->
+        <div id="as-pane-register">
+          <div class="toolbar">
+            <button id="btn-add-asset" class="btn btn-gold" data-i18n="as_add_asset_btn">+ إضافة أصل</button>
+            <input id="as-search" data-i18n-ph="as_search_ph" placeholder="بحث بالكود أو الاسم..." style="max-width:280px">
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th data-i18n="as_code">الكود</th><th data-i18n="as_asset">الأصل</th>
+              <th data-i18n="as_category">الفئة</th><th data-i18n="hr_branch">الفرع</th>
+              <th data-i18n="as_purchase_date">تاريخ الشراء</th><th data-i18n="as_cost">التكلفة</th>
+              <th data-i18n="as_accum">مجمع الإهلاك</th><th data-i18n="as_net_book">الصافي الدفتري</th>
+              <th data-i18n="as_method">الطريقة</th><th data-i18n="hr_status">الحالة</th>
+              <th data-i18n="hr_actions">إجراءات</th>
+            </tr></thead>
+            <tbody id="tbl-assets"></tbody>
+          </table></div>
+        </div>
+
+        <!-- الفئات -->
+        <div id="as-pane-cats" class="hidden">
+          <div class="toolbar">
+            <button id="btn-add-cat" class="btn btn-gold" data-i18n="as_add_cat">+ فئة جديدة</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th data-i18n="as_name_ar">الاسم (عربي)</th><th data-i18n="as_name_en">الاسم (إنجليزي)</th>
+              <th data-i18n="as_count">عدد الأصول</th><th data-i18n="hr_actions">إجراءات</th>
+            </tr></thead>
+            <tbody id="tbl-asset-cats"></tbody>
+          </table></div>
+        </div>
+
+        <!-- ترحيل الإهلاك -->
+        <div id="as-pane-dep" class="hidden">
+          <div class="toolbar">
+            <input type="month" id="as-dep-month">
+            <button id="btn-as-due" class="btn btn-gold" data-i18n="as_show_due">📋 عرض الأصول المستحقة</button>
+            <button id="btn-as-post-dep" class="btn btn-gold" disabled data-i18n="as_post_dep">📒 ترحيل قيد الإهلاك</button>
+            <span style="font-weight:700"><span data-i18n="as_dep_total">إجمالي الإهلاك</span>: <span id="as-dep-total">0</span></span>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th data-i18n="as_code">الكود</th><th data-i18n="as_asset">الأصل</th>
+              <th data-i18n="as_method">الطريقة</th><th data-i18n="as_accum">مجمع سابق</th>
+              <th data-i18n="as_remaining">المتبقي حتى الخردة</th><th data-i18n="as_units">الوحدات</th>
+              <th data-i18n="as_dep_amt">إهلاك الفترة</th><th data-i18n="hr_status">الحالة</th>
+            </tr></thead>
+            <tbody id="tbl-dep-due"></tbody>
+          </table></div>
+        </div>
+
+        <!-- تقارير الأصول -->
+        <div id="as-pane-reports" class="hidden">
+          <div class="toolbar">
+            <label class="lbl" style="margin:0" data-i18n="vat_period_from">من تاريخ</label><input type="month" id="as-rep-from">
+            <label class="lbl" style="margin:0" data-i18n="vat_period_to">إلى تاريخ</label><input type="month" id="as-rep-to">
+          </div>
+          <div class="report-box">
+            <h3 data-i18n="as_rep_register">🏭 سجل الأصول (تكلفة/مجمع/صافي دفتري)</h3>
+            <div class="modal-actions" style="justify-content:flex-start">
+              <button class="btn btn-gold btn-sm" onclick="asReport('register')" data-i18n="btn_preview_print">🖨️ معاينة / طباعة</button>
+              <button class="btn btn-ghost btn-sm" onclick="asReport('register').then(()=>asReportExcel())" data-i18n="btn_export_excel">تصدير Excel</button>
+            </div>
+          </div>
+          <div class="report-box">
+            <h3 data-i18n="as_rep_dep">📉 حركات الإهلاك لفترة</h3>
+            <div class="modal-actions" style="justify-content:flex-start">
+              <button class="btn btn-gold btn-sm" onclick="asReport('depmov')" data-i18n="btn_preview_print">🖨️ معاينة / طباعة</button>
+              <button class="btn btn-ghost btn-sm" onclick="asReport('depmov').then(()=>asReportExcel())" data-i18n="btn_export_excel">تصدير Excel</button>
+            </div>
+          </div>
+          <div class="report-box">
+            <h3 data-i18n="as_rep_bycat">🗂️ الأصول حسب الفئة</h3>
+            <div class="modal-actions" style="justify-content:flex-start">
+              <button class="btn btn-gold btn-sm" onclick="asReport('bycat')" data-i18n="btn_preview_print">🖨️ معاينة / طباعة</button>
+              <button class="btn btn-ghost btn-sm" onclick="asReport('bycat').then(()=>asReportExcel())" data-i18n="btn_export_excel">تصدير Excel</button>
+            </div>
+          </div>
+          <div class="report-box">
+            <h3 data-i18n="as_rep_bybranch">🏢 الأصول حسب الفرع</h3>
+            <div class="modal-actions" style="justify-content:flex-start">
+              <button class="btn btn-gold btn-sm" onclick="asReport('bybranch')" data-i18n="btn_preview_print">🖨️ معاينة / طباعة</button>
+              <button class="btn btn-ghost btn-sm" onclick="asReport('bybranch').then(()=>asReportExcel())" data-i18n="btn_export_excel">تصدير Excel</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 🧾 المرحلة 15: المصروفات + مراكز التكلفة + الفواتير المتكررة + تذكيرات التحصيل -->
+      <section id="tab-expenses" class="tab hidden">
+        <div class="toolbar sub-tabs" style="margin-top:0">
+          <button class="btn btn-ghost btn-sm sub-tab active" data-sub="list" data-i18n="ex_sub_list">🧾 المصروفات</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="cats" data-i18n="ex_sub_cats">🗂️ التصنيفات</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="ccs" data-i18n="ex_sub_ccs">🎯 مراكز التكلفة</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="ccrep" data-i18n="ex_sub_ccrep">📊 تقرير المراكز</button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="rec"><span data-i18n="ex_sub_rec">🔁 الفواتير المتكررة</span> <span id="ex-due-badge" class="hidden" style="background:#B42318;color:#fff;border-radius:10px;padding:0 7px;font-size:11px">0</span></button>
+          <button class="btn btn-ghost btn-sm sub-tab" data-sub="rem" data-i18n="ex_sub_rem">📨 تذكيرات التحصيل</button>
+        </div>
+
+        <!-- سندات المصروفات -->
+        <div id="ex-pane-list">
+          <div class="toolbar">
+            <button id="btn-add-expense" class="btn btn-gold" data-i18n="ex_add_btn">+ سند مصروف</button>
+            <input id="ex-search" data-i18n-ph="ex_search_ph" placeholder="بحث بالرقم أو التصنيف أو المرجع..." style="max-width:280px">
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th data-i18n="inv_number">الرقم</th><th data-i18n="ex_date">التاريخ</th>
+              <th data-i18n="ex_category">التصنيف</th><th data-i18n="ex_amount">المبلغ</th>
+              <th data-i18n="tot_vat">الضريبة</th><th data-i18n="ex_pay_method">طريقة الدفع</th>
+              <th data-i18n="ex_treasury">الخزينة</th><th data-i18n="ex_cc">مركز التكلفة</th>
+              <th data-i18n="hr_actions">إجراءات</th>
+            </tr></thead>
+            <tbody id="tbl-expenses"></tbody>
+          </table></div>
+        </div>
+
+        <!-- تصنيفات المصروفات -->
+        <div id="ex-pane-cats" class="hidden">
+          <div class="toolbar">
+            <button id="btn-add-excat" class="btn btn-gold" data-i18n="ex_cat_add">+ تصنيف جديد</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th data-i18n="as_name_ar">الاسم (عربي)</th><th data-i18n="as_name_en">الاسم (إنجليزي)</th>
+              <th data-i18n="ex_cat_account">الحساب المرتبط</th><th data-i18n="hr_actions">إجراءات</th>
+            </tr></thead>
+            <tbody id="tbl-expense-cats"></tbody>
+          </table></div>
+        </div>
+
+        <!-- مراكز التكلفة -->
+        <div id="ex-pane-ccs" class="hidden">
+          <div class="toolbar">
+            <button id="btn-add-cc" class="btn btn-gold" data-i18n="cc_add">+ مركز تكلفة</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th data-i18n="cc_code">الكود</th><th data-i18n="cc_name">الاسم</th>
+              <th data-i18n="hr_branch">الفرع</th><th data-i18n="hr_actions">إجراءات</th>
+            </tr></thead>
+            <tbody id="tbl-cost-centers"></tbody>
+          </table></div>
+        </div>
+
+        <!-- تقرير مراكز التكلفة -->
+        <div id="ex-pane-ccrep" class="hidden">
+          <div class="toolbar">
+            <label class="lbl" style="margin:0" data-i18n="vat_period_from">من</label>
+            <input type="date" id="ex-ccrep-from">
+            <label class="lbl" style="margin:0" data-i18n="vat_period_to">إلى</label>
+            <input type="date" id="ex-ccrep-to">
+            <button id="btn-ccrep-run" class="btn btn-gold" data-i18n="ccrep_run">📊 عرض التقرير</button>
+            <button id="btn-ccrep-print" class="btn btn-ghost btn-sm" data-i18n="btn_preview_print">🖨️ معاينة / طباعة</button>
+            <button id="btn-ccrep-excel" class="btn btn-ghost btn-sm" data-i18n="btn_export_excel">تصدير Excel</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th data-i18n="ex_cc">مركز التكلفة</th><th data-i18n="ccrep_revenue">الإيرادات</th>
+              <th data-i18n="ccrep_expense">المصروفات</th><th data-i18n="ccrep_net">صافي الربح</th>
+            </tr></thead>
+            <tbody id="tbl-ccrep"></tbody>
+          </table></div>
+          <div class="je-totals" id="ccrep-totals"></div>
+        </div>
+
+        <!-- الفواتير المتكررة -->
+        <div id="ex-pane-rec" class="hidden">
+          <div class="toolbar">
+            <button id="btn-add-rec" class="btn btn-gold" data-i18n="rec_add">+ قالب فاتورة متكررة</button>
+          </div>
+          <div class="report-box">
+            <h3 data-i18n="rec_due_today">⚡ المستحقة اليوم</h3>
+            <div class="table-wrap"><table>
+              <thead><tr>
+                <th data-i18n="frm_customer">العميل</th><th data-i18n="rec_freq">التكرار</th>
+                <th data-i18n="rec_next">التشغيل التالي</th><th data-i18n="tot_gross">الإجمالي</th>
+                <th data-i18n="hr_actions">إجراءات</th>
+              </tr></thead>
+              <tbody id="tbl-rec-due"></tbody>
+            </table></div>
+          </div>
+          <div class="report-box">
+            <h3 data-i18n="rec_all">كل القوالب</h3>
+            <div class="table-wrap"><table>
+              <thead><tr>
+                <th data-i18n="rec_name">اسم القالب</th><th data-i18n="frm_customer">العميل</th>
+                <th data-i18n="rec_freq">التكرار</th><th data-i18n="rec_start">تاريخ البدء</th>
+                <th data-i18n="rec_end">تاريخ الانتهاء</th><th data-i18n="rec_next">التشغيل التالي</th>
+                <th data-i18n="rec_times">عدد الإصدارات</th><th data-i18n="hr_status">الحالة</th>
+                <th data-i18n="hr_actions">إجراءات</th>
+              </tr></thead>
+              <tbody id="tbl-recurring"></tbody>
+            </table></div>
+          </div>
+        </div>
+
+        <!-- تذكيرات التحصيل -->
+        <div id="ex-pane-rem" class="hidden">
+          <div class="toolbar">
+            <button id="btn-rem-run" class="btn btn-gold" data-i18n="rem_run">📨 عرض الفواتير المتأخرة</button>
+            <span style="color:#7A6A5C;font-size:12px" data-i18n="rem_hint">تاريخ الاستحقاق = تاريخ الفاتورة + 30 يوماً؛ المقبوضات تُوزَّع على الفواتير الأقدم أولاً</span>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr>
+              <th data-i18n="frm_customer">العميل</th><th data-i18n="inv_number">رقم الفاتورة</th>
+              <th data-i18n="rem_due_date">تاريخ الاستحقاق</th><th data-i18n="rem_remaining">المتبقي</th>
+              <th data-i18n="rem_days">أيام التأخير</th><th data-i18n="hr_actions">إجراءات</th>
+            </tr></thead>
+            <tbody id="tbl-reminders"></tbody>
+          </table></div>
+          <div class="je-totals" id="rem-totals"></div>
         </div>
       </section>
 
@@ -744,11 +1630,47 @@
   </div>
 
   <!-- ═══════════ نافذة منبثقة عامة ═══════════ -->
+  <!-- ملصقات الباركود للطباعة (المرحلة 14) -->
+  <div id="lbl-overlay" class="hidden">
+    <div class="lbl-toolbar">
+      <button id="lbl-print" class="btn btn-gold" data-i18n="btn_print">طباعة</button>
+      <button id="lbl-close" class="btn btn-ghost" data-i18n="btn_close">إغلاق</button>
+    </div>
+    <div id="lbl-sheet"></div>
+  </div>
+
   <div id="modal-overlay" class="modal-overlay hidden">
     <div class="modal" id="modal-body"></div>
   </div>
 
+  <!-- المرحلة 19: المساعد الذكي العربي (محرك قواعد محلي — بلا API خارجي) -->
+  <button id="assistant-fab" class="assistant-fab hidden" title="المساعد الذكي">🤖</button>
+  <div id="assistant-panel" class="assistant-panel hidden">
+    <div class="assistant-head">
+      <b data-i18n="as_title">🤖 المساعد الذكي</b>
+      <button id="as-close" class="btn btn-ghost btn-sm">✕</button>
+    </div>
+    <div id="as-messages" class="assistant-messages"></div>
+    <div class="assistant-input">
+      <input id="as-input" data-i18n-ph="as_input_ph" placeholder="اسأل: مبيعات الشهر ده…">
+      <button id="as-send" class="btn btn-gold btn-sm" data-i18n="as_send">إرسال</button>
+    </div>
+  </div>
+
   <script src="config.js"></script>
+  <script src="i18n.js"></script>
+  <script src="vat.js"></script>
+  <script src="qr.js"></script>
+  <script src="zatca2.js"></script>
   <script src="app.js"></script>
+  <script src="hr.js"></script>
+  <script src="assets.js"></script>
+  <script src="procurement.js"></script>
+  <script src="expenses.js"></script>
+  <script src="reports.js"></script>
+  <script src="integrations.js"></script>
+  <script src="manufacturing.js"></script>
+  <script src="crm.js"></script>
+  <script src="assistant.js"></script>
 </body>
 </html>
