@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   H. ERP — المرحلة 14: دورة المشتريات + الإشعارات + الباركود
+   HAZEM.ERP — المرحلة 14: دورة المشتريات + الإشعارات + الباركود
    جزآن في ملف واحد (بلا build step):
    • منطق نقي قابل للاختبار في Node: EAN-13 (checksum + توليد داخلي 200)،
      راسم Code128-B (SVG بلا مكتبات)، حالة استلام أمر الشراء،
@@ -187,7 +187,7 @@
           ${['draft','sent','partial'].includes(p.status) ? `<button class="btn btn-gold btn-sm" onclick="poReceive('${p.id}')">${t('po_receive')}</button>` : ''}
           ${!['received','cancelled'].includes(p.status) ? `<button class="btn btn-danger" onclick="poCancel('${p.id}')">${t('po_cancel')}</button>` : ''}
         </td>
-      </tr>`).join('') || `<tr><td colspan="7" style="color:#7A6A5C">${t('po_none')}</td></tr>`;
+      </tr>`).join('') || `<tr><td colspan="7" style="color:#66707E">${t('po_none')}</td></tr>`;
   }
 
   // ─────────── أمر شراء جديد ───────────
@@ -443,7 +443,7 @@
         <td>${n.ref_invoice_number != null ? esc(String(n.ref_invoice_number)) : '—'}</td>
         <td>${fmt(n.total)}</td>
         <td><button class="btn btn-ghost btn-sm" onclick="cdnPrint('${n.id}')">🖨️ ${t('btn_print')}</button></td>
-      </tr>`).join('') || `<tr><td colspan="7" style="color:#7A6A5C">${t('cdn_none')}</td></tr>`;
+      </tr>`).join('') || `<tr><td colspan="7" style="color:#66707E">${t('cdn_none')}</td></tr>`;
   }
 
   // نموذج إشعار جديد: دائن مشتريات (مرتجع) / دائن مبيعات (مرتجع) / مدين
@@ -740,7 +740,7 @@
         <td dir="ltr">${esc(i.barcode || '—')}</td>
         <td>${fmt(i.sale_price)}</td>
         <td><input class="bc-count" data-id="${i.id}" type="number" min="1" step="1" value="1" style="width:70px"></td>
-      </tr>`).join('') || `<tr><td colspan="5" style="color:#7A6A5C">${t('bc_none')}</td></tr>`;
+      </tr>`).join('') || `<tr><td colspan="5" style="color:#66707E">${t('bc_none')}</td></tr>`;
   }
 
   // توليد باركود داخلي (EAN-13 بادئة 200) لكل صنف بلا باركود
@@ -820,7 +820,7 @@
       return `<tr><td>${v.number}</td>
         <td>${new Date(v.created_at).toLocaleDateString('ar-EG')}</td>
         <td>${esc(v.parties?.name)}</td><td>${fmt(v.total)}</td></tr>`;
-    }).join('') || `<tr><td colspan="4" style="color:#7A6A5C">${t('rep_none')}</td></tr>`;
+    }).join('') || `<tr><td colspan="4" style="color:#66707E">${t('rep_none')}</td></tr>`;
     $('#rep-ps-total').textContent = fmt(tot);
     $('#rep-ps-count').textContent = fmt(list.length);
   }
@@ -845,7 +845,7 @@
         <td>${esc(p.parties?.name)}</td><td>${esc(p.expected_date || '—')}</td>
         <td>${fmt(p.total)}</td><td>${fmt(s.recv)} / ${fmt(s.qty)}</td>
         <td>${L[p.status] || esc(p.status)}</td></tr>`;
-    }).join('') || `<tr><td colspan="7" style="color:#7A6A5C">${t('rep_poopen_none')}</td></tr>`;
+    }).join('') || `<tr><td colspan="7" style="color:#66707E">${t('rep_poopen_none')}</td></tr>`;
   }
 
   // ربط أزرار التقارير الجديدة

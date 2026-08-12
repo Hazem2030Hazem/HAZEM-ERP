@@ -494,7 +494,7 @@
       // فشل الشبكة/CORS — رسالة إرشادية واضحة
       openModal(`<h3>⚠️ ${t('zp2_cors_title')}</h3>
         <p style="line-height:2">${t('zp2_cors_msg')}</p>
-        <p style="line-height:2;color:#7A6A5C;font-size:13px">${t('zp2_cors_fix')}</p>
+        <p style="line-height:2;color:#66707E;font-size:13px">${t('zp2_cors_fix')}</p>
         <div class="modal-actions"><button class="btn btn-gold" onclick="closeModal()">${t('btn_ok')}</button></div>`);
     }
   }
@@ -586,7 +586,7 @@
       .select('uuid, hash, pih, status, signature, created_at, api_response')
       .eq('invoice_id', invoiceId).eq('tenant_id', state.tenant).single();
     if (error || !data) return toast(t('zp2_dl_first'), false);
-    const row = (k, v) => `<tr><td style="color:#7A6A5C">${k}</td>
+    const row = (k, v) => `<tr><td style="color:#66707E">${k}</td>
       <td dir="ltr" style="text-align:left;word-break:break-all;font-family:monospace;font-size:12px">${v || '—'}</td></tr>`;
     openModal(`<h3>🔐 ${t('zp2_hash_title')}</h3>
       <div class="table-wrap"><table><tbody>
@@ -625,7 +625,7 @@
       loadEinvoicesList();
       openModal(`<h3>⚠️ ${t('zp2_cors_title')}</h3>
         <p style="line-height:2">${t('zp2_cors_msg')}</p>
-        <p style="line-height:2;color:#7A6A5C;font-size:13px">${t('zp2_cors_fix')}</p>
+        <p style="line-height:2;color:#66707E;font-size:13px">${t('zp2_cors_fix')}</p>
         <div class="modal-actions"><button class="btn btn-gold" onclick="closeModal()">${t('btn_ok')}</button></div>`);
       return;
     }
@@ -652,7 +652,7 @@
     const statusLbl = (s) => ({
       draft: t('zp2_st_draft'), reported: t('zp2_st_reported'),
       cleared: t('zp2_st_cleared'), failed: t('zp2_st_failed') }[s] || '—');
-    const statusColor = { draft: '#7A6A5C', reported: '#166534', cleared: '#166534', failed: '#B42318' };
+    const statusColor = { draft: '#66707E', reported: '#166534', cleared: '#166534', failed: '#B42318' };
     tb.innerHTML = (invs || []).map(v => {
       const e = map[v.id];
       const typeLbl = v.invoice_type === 'standard' ? t('zp2_type_std') : t('zp2_type_simp');
@@ -661,7 +661,7 @@
         <td>${new Date(v.created_at).toLocaleDateString('ar-EG')}</td>
         <td>${typeLbl}</td>
         <td>${fmt(v.total)}</td>
-        <td>${e ? `<b style="color:${statusColor[e.status] || '#7A6A5C'}">${statusLbl(e.status)}</b>` : '<span style="color:#7A6A5C">—</span>'}</td>
+        <td>${e ? `<b style="color:${statusColor[e.status] || '#66707E'}">${statusLbl(e.status)}</b>` : '<span style="color:#66707E">—</span>'}</td>
         <td dir="ltr" style="font-family:monospace;font-size:11px">${e ? String(e.hash || '').slice(0, 14) + '…' : '—'}</td>
         <td style="white-space:nowrap">
           <button class="btn btn-gold btn-sm" onclick="zp2Generate('${v.id}')">⚡ ${t('zp2_gen_btn')}</button>
@@ -670,7 +670,7 @@
           <button class="btn btn-ghost btn-sm" onclick="zp2Submit('${v.id}')">${e.status === 'failed' ? '🔁' : '📤'} ${t('zp2_send_btn')}</button>` : ''}
         </td>
       </tr>`;
-    }).join('') || '<tr><td colspan="7" style="color:#7A6A5C">' + t('zp2_empty') + '</td></tr>';
+    }).join('') || '<tr><td colspan="7" style="color:#66707E">' + t('zp2_empty') + '</td></tr>';
   }
 
   // ─── تبديل التابات الفرعية ───

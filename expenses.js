@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   H. ERP — المرحلة 15: المصروفات + مراكز التكلفة + الفواتير المتكررة + تذكيرات التحصيل
+   HAZEM.ERP — المرحلة 15: المصروفات + مراكز التكلفة + الفواتير المتكررة + تذكيرات التحصيل
    جزآن في ملف واحد (بلا build step):
    • منطق نقي قابل للاختبار في Node: بناء قيد المصروف (مع/بدون ضريبة مدخلات)،
      حساب next_run_date للتكرارات (شهري/ربع سنوي/سنوي مع ضبط نهاية الشهر)،
@@ -252,7 +252,7 @@
         <td>
           <button class="btn btn-ghost btn-sm" onclick="exPrint('${e.id}')">🖨️ ${t('btn_print')}</button>
         </td>
-      </tr>`).join('') || `<tr><td colspan="9" style="color:#7A6A5C">${t('ex_none')}</td></tr>`;
+      </tr>`).join('') || `<tr><td colspan="9" style="color:#66707E">${t('ex_none')}</td></tr>`;
   }
   if ($('#ex-search')) $('#ex-search').oninput = () => renderExpenses($('#ex-search').value.trim());
 
@@ -434,7 +434,7 @@
           <button class="btn btn-ghost btn-sm" onclick="exCatForm('${c.id}')">✏️ ${t('btn_edit')}</button>
           <button class="btn btn-danger" onclick="exCatDel('${c.id}')">${t('btn_delete')}</button>
         </td>
-      </tr>`).join('') || `<tr><td colspan="4" style="color:#7A6A5C">${t('ex_cats_none')}</td></tr>`;
+      </tr>`).join('') || `<tr><td colspan="4" style="color:#66707E">${t('ex_cats_none')}</td></tr>`;
   }
 
   // حسابات المصروفات 5xxx المتاحة للربط
@@ -494,7 +494,7 @@
           <button class="btn btn-ghost btn-sm" onclick="ccForm('${c.id}')">✏️ ${t('btn_edit')}</button>
           <button class="btn btn-danger" onclick="ccDel('${c.id}')">${t('btn_delete')}</button>
         </td>
-      </tr>`).join('') || `<tr><td colspan="4" style="color:#7A6A5C">${t('cc_none')}</td></tr>`;
+      </tr>`).join('') || `<tr><td colspan="4" style="color:#66707E">${t('cc_none')}</td></tr>`;
   }
 
   window.ccForm = async function (id) {
@@ -568,7 +568,7 @@
         <td>${fmt(r.revenue)}</td><td>${fmt(r.expense)}</td>
         <td><b style="color:${r.net >= 0 ? '#166534' : '#B42318'}">${fmt(r.net)}</b></td>
       </tr>`;
-    }).join('') || `<tr><td colspan="4" style="color:#7A6A5C">${t('ccrep_none')}</td></tr>`;
+    }).join('') || `<tr><td colspan="4" style="color:#66707E">${t('ccrep_none')}</td></tr>`;
     $('#ccrep-totals').innerHTML = rows.length ? `
       <span class="t-c">${t('ccrep_revenue')}: ${fmt(tRev)}</span>
       <span class="t-d">${t('ccrep_expense')}: ${fmt(tExp)}</span>
@@ -611,7 +611,7 @@
         <td dir="ltr">${esc(r.next_run_date || '—')}</td>
         <td>${fmt(r.total || _recTotal(r))}</td>
         <td><button class="btn btn-gold btn-sm" onclick="recGenerate('${r.id}')">⚙️ ${t('rec_generate')}</button></td>
-      </tr>`).join('') || `<tr><td colspan="5" style="color:#7A6A5C">${t('rec_none_due')}</td></tr>`;
+      </tr>`).join('') || `<tr><td colspan="5" style="color:#66707E">${t('rec_none_due')}</td></tr>`;
     // كل القوالب
     $('#tbl-recurring').innerHTML = (state.recurringInvoices || []).map(r => `
       <tr>
@@ -628,7 +628,7 @@
           <button class="btn btn-ghost btn-sm" onclick="recToggle('${r.id}')">${r.is_active !== false ? '⏸️' : '▶️'}</button>
           ${recurringIsDue(r, today) ? `<button class="btn btn-gold btn-sm" onclick="recGenerate('${r.id}')">⚙️</button>` : ''}
         </td>
-      </tr>`).join('') || `<tr><td colspan="9" style="color:#7A6A5C">${t('rec_none')}</td></tr>`;
+      </tr>`).join('') || `<tr><td colspan="9" style="color:#66707E">${t('rec_none')}</td></tr>`;
     updateDueBadge();
   }
 
@@ -842,7 +842,7 @@
         <td>${fmt(rw.remaining)}</td>
         <td><b style="color:${rw.overdue_days > 60 ? '#B42318' : '#92400e'}">${rw.overdue_days}</b></td>
         <td><button class="btn btn-gold btn-sm" onclick="remLetter('${rw.party_id}')">📨 ${t('rem_letter')}</button></td>
-      </tr>`).join('') || `<tr><td colspan="6" style="color:#7A6A5C">${t('rem_none')}</td></tr>`;
+      </tr>`).join('') || `<tr><td colspan="6" style="color:#66707E">${t('rem_none')}</td></tr>`;
     const totRem = r2(_remRows.reduce((s, r) => s + r.remaining, 0));
     $('#rem-totals').innerHTML = _remRows.length ? `
       <span class="t-d">${t('rem_total')}: ${fmt(totRem)}</span>

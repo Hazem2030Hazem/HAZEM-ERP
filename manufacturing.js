@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   H. ERP — المرحلة 19: التصنيع / قوائم المكونات (BOM) + أوامر التصنيع
+   HAZEM.ERP — المرحلة 19: التصنيع / قوائم المكونات (BOM) + أوامر التصنيع
    ─────────────────────────────────────────────────────────────
    قرارات التنفيذ الموثقة:
    • bom_headers/bom_lines: لكل منتج تام قائمة مكونات (صنف خام + كمية لكل وحدة).
@@ -129,7 +129,7 @@
           <button class="btn btn-sm btn-gold" onclick="mfNewOrder('${b.id}')">${t('mf_new_order')}</button>
           <button class="btn btn-sm btn-danger" onclick="mfDeleteBom('${b.id}')">${t('btn_delete')}</button>
         </td></tr>`;
-    }).join('') || `<tr><td colspan="5" style="color:#7A6A5C">${t('mf_no_boms')}</td></tr>`;
+    }).join('') || `<tr><td colspan="5" style="color:#66707E">${t('mf_no_boms')}</td></tr>`;
   }
   g.loadBoms = loadBoms;
 
@@ -274,7 +274,7 @@
         ? `<button class="btn btn-sm btn-gold" onclick="mfExecuteOrder('${o.id}')">${t('mf_execute')}</button>
            <button class="btn btn-sm btn-danger" onclick="mfCancelOrder('${o.id}')">${t('btn_cancel')}</button>`
         : (o.created_at || '').slice(0, 10)}</td></tr>`
-    ).join('') || `<tr><td colspan="6" style="color:#7A6A5C">${t('mf_no_orders')}</td></tr>`;
+    ).join('') || `<tr><td colspan="6" style="color:#66707E">${t('mf_no_orders')}</td></tr>`;
   }
   g.loadOrders = loadOrders;
 

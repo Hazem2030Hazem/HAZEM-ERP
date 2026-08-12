@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   H. ERP — المرحلة 13: الأصول الثابتة والإهلاك
+   HAZEM.ERP — المرحلة 13: الأصول الثابتة والإهلاك
    جزآن في ملف واحد (بلا build step):
    • منطق نقي قابل للاختبار في Node: جداول الإهلاك (قسط ثابت /
      قسط متناقص / وحدات إنتاج)، احتساب الاستبعاد، بناء سطور القيود.
@@ -254,7 +254,7 @@
       const acc = accumulatedOf(a.id);
       return `<tr>
         <td dir="ltr">${esc(a.code)}</td>
-        <td>${esc(a.name_ar)}${a.name_en ? ' <span style="color:#7A6A5C">(' + esc(a.name_en) + ')</span>' : ''}</td>
+        <td>${esc(a.name_ar)}${a.name_en ? ' <span style="color:#66707E">(' + esc(a.name_en) + ')</span>' : ''}</td>
         <td>${esc(_catName(a.category_id))}</td>
         <td>${esc(_branchName(a.branch_id))}</td>
         <td dir="ltr">${esc(a.purchase_date || '—')}</td>
@@ -269,7 +269,7 @@
           ${a.status === 'active' ? `<button class="btn btn-gold btn-sm" onclick="openDisposalForm('${a.id}')">💰 ${t('as_dispose')}</button>` : ''}
         </td>
       </tr>`;
-    }).join('') || `<tr><td colspan="11" style="color:#7A6A5C">${t('as_no_assets')}</td></tr>`;
+    }).join('') || `<tr><td colspan="11" style="color:#66707E">${t('as_no_assets')}</td></tr>`;
   }
 
   // كود تلقائي: AST-0001 تصاعدياً (من الأكواد الموجودة)
@@ -386,7 +386,7 @@
           <tr><td>${t('as_total_units')}</td><td>${fmt(a.total_units)}</td></tr>
           <tr><td>${t('as_dep_start')}</td><td dir="ltr">${esc(startP || '—')}</td></tr>
         </tbody></table></div>
-        <p style="color:#7A6A5C;font-size:13px">${t('as_uop_note')}</p>
+        <p style="color:#66707E;font-size:13px">${t('as_uop_note')}</p>
         <div class="modal-actions"><button class="btn btn-gold" onclick="closeModal()">${t('btn_close')}</button></div>`);
       return;
     }
@@ -399,7 +399,7 @@
     }).join('');
     openModal(`
       <h3>📅 ${t('as_schedule')} — ${esc(a.name_ar)}</h3>
-      <p style="color:#7A6A5C;font-size:13px;margin:0 0 10px">
+      <p style="color:#66707E;font-size:13px;margin:0 0 10px">
         ${t(METHODS[a.dep_method] || a.dep_method)} — ${t('as_dep_start')}: <b dir="ltr">${esc(startP || '—')}</b></p>
       <div class="table-wrap" style="max-height:60vh;overflow:auto"><table>
         <thead><tr><th>#</th><th>${t('as_period')}</th><th>${t('as_bv_open')}</th>
@@ -421,7 +421,7 @@
           ${count === 0 ? `<button class="btn btn-ghost btn-sm" onclick="deleteCat('${c.id}')">🗑️ ${t('btn_delete')}</button>` : ''}
         </td>
       </tr>`;
-    }).join('') || `<tr><td colspan="4" style="color:#7A6A5C">${t('as_no_cats')}</td></tr>`;
+    }).join('') || `<tr><td colspan="4" style="color:#66707E">${t('as_no_cats')}</td></tr>`;
   }
 
   window.openCatForm = function (id) {
@@ -479,7 +479,7 @@
           : `<td>—</td><td id="as-due-${i}">${fmt(r.amt)}</td>`}
         <td>${r.posted ? '✅ ' + t('as_posted_already') : '⏳'}</td>
       </tr>`;
-    }).join('') || `<tr><td colspan="8" style="color:#7A6A5C">${t('as_no_due')}</td></tr>`;
+    }).join('') || `<tr><td colspan="8" style="color:#66707E">${t('as_no_due')}</td></tr>`;
     // تحديث مبلغ uop لحظياً مع إدخال الوحدات
     _dueRows.forEach((r, i) => {
       if (r.a.dep_method !== 'uop' || r.posted) return;
@@ -576,7 +576,7 @@
         ? `<span style="color:#15803d">${t('as_gain')}: ${fmt(d.gainLoss)}</span>`
         : d.gainLoss < 0
           ? `<span style="color:#B42318">${t('as_loss')}: ${fmt(-d.gainLoss)}</span>`
-          : `<span style="color:#7A6A5C">${t('as_no_gainloss')}</span>`;
+          : `<span style="color:#66707E">${t('as_no_gainloss')}</span>`;
     };
     $('#df-type').onchange = syncDisp;
     $('#df-price').oninput = syncDisp;

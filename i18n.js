@@ -567,6 +567,7 @@
       qb_sp_empty: 'لا توجد عناصر حالياً', qb_sp_due: 'ذمة مستحقة',
       qb_sp_open: 'فتح اللوحة', qb_sp_close: 'طي اللوحة',
       qb_n_returns: 'المرتجعات', qb_n_wh: 'المستودعات والجرد', qb_n_reports: 'التقارير',
+      qb_menu_sidebar: 'إظهار / إخفاء شريط التنقل الجانبي',
     },
     en: {
       menu_home: 'Home',
@@ -1102,6 +1103,7 @@
       qb_sp_empty: 'No items right now', qb_sp_due: 'Due balance',
       qb_sp_open: 'Expand panel', qb_sp_close: 'Collapse panel',
       qb_n_returns: 'Returns', qb_n_wh: 'Warehouses & Stock Count', qb_n_reports: 'Reports',
+      qb_menu_sidebar: 'Show / Hide Navigation Sidebar',
     },
   };
 

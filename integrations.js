@@ -214,7 +214,7 @@
     else if (hasCreds)
       el.innerHTML = '<b style="color:#b45309">● ' + t('ig_configured') + '</b>';
     else
-      el.innerHTML = '<b style="color:#7A6A5C">● ' + t('ig_disconnected') + '</b>';
+      el.innerHTML = '<b style="color:#66707E">● ' + t('ig_disconnected') + '</b>';
   }
 
   // ─── حفظ الإعدادات (upsert) ───
@@ -235,7 +235,7 @@
     openModal(`<h3>⚠️ ${t('ig_cors_title')}</h3>
       <p style="line-height:2">${t('ig_cors_msg')}</p>
       <p dir="ltr" style="text-align:left;font-family:monospace;font-size:12px;background:#FAF6F1;padding:8px;border-radius:8px">edge-function-${p}-sync.ts</p>
-      <p style="line-height:2;color:#7A6A5C;font-size:13px">${t('ig_cors_fix')}</p>
+      <p style="line-height:2;color:#66707E;font-size:13px">${t('ig_cors_fix')}</p>
       <div class="modal-actions"><button class="btn btn-gold" onclick="closeModal()">${t('btn_ok')}</button></div>`);
   }
 
@@ -414,10 +414,10 @@
       <td>${r.fetched | 0}</td>
       <td style="color:#166534">${r.imported | 0}</td>
       <td>${r.skipped | 0}</td>
-      <td><b style="color:${stColor[r.status] || '#7A6A5C'}">${stLbl(r.status)}</b>
+      <td><b style="color:${stColor[r.status] || '#66707E'}">${stLbl(r.status)}</b>
         ${ei >= 0 ? `<button class="btn btn-ghost btn-sm" onclick="igShowErrors(${ei})">⚠️</button>` : ''}</td>
     </tr>`;
-    }).join('') || '<tr><td colspan="7" style="color:#7A6A5C">' + t('ig_log_empty') + '</td></tr>';
+    }).join('') || '<tr><td colspan="7" style="color:#66707E">' + t('ig_log_empty') + '</td></tr>';
   }
   g.igShowErrors = (idx) => {
     const errs = __syncErrs[idx] || [];
@@ -446,7 +446,7 @@
       <td>${k.revoked_at ? '<b style="color:#B42318">' + t('ak_revoked') + '</b>'
                          : '<b style="color:#166534">' + t('ak_active') + '</b>'}</td>
       <td>${k.revoked_at ? '' : `<button class="btn btn-danger" onclick="akRevoke('${k.id}')">${t('ak_revoke')}</button>`}</td>
-    </tr>`).join('') || '<tr><td colspan="7" style="color:#7A6A5C">' + t('ak_empty') + '</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="7" style="color:#66707E">' + t('ak_empty') + '</td></tr>';
   }
 
   // توليد مفتاح جديد — يُعرض النص الصريح مرة واحدة فقط ثم يُخزَّن الهاش

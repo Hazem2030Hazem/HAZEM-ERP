@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   H. ERP — المرحلة 19: CRM مبسّط (عملاء محتملون + متابعات)
+   HAZEM.ERP — المرحلة 19: CRM مبسّط (عملاء محتملون + متابعات)
    ─────────────────────────────────────────────────────────────
    • crm_leads: عميل محتمل (اسم/جوال/مصدر/حالة/ملاحظات).
      الحالات: new (جديد) → contacted (تواصل) → quoted (عرض سعر)
@@ -104,7 +104,7 @@
                 ? `<button class="btn btn-sm btn-gold" onclick="crmConvertLead('${l.id}')">${t('crm_convert')}</button>`
                 : ''}
             </div>
-          </div>`).join('') || `<small style="color:#7A6A5C">${t('crm_empty_col')}</small>`}
+          </div>`).join('') || `<small style="color:#66707E">${t('crm_empty_col')}</small>`}
       </div>`).join('');
   }
   g.loadLeads = loadLeads;
@@ -214,7 +214,7 @@
         ? `<span style="color:var(--red)">${t('crm_overdue')}</span>`
         : `<span style="color:var(--green)">${t('crm_today')}</span>`}</td>
       <td><button class="btn btn-sm btn-gold" onclick="crmDoneActivity('${a.id}')">${t('crm_mark_done')}</button></td>
-    </tr>`).join('') || `<tr><td colspan="6" style="color:#7A6A5C">${t('crm_no_followups')}</td></tr>`;
+    </tr>`).join('') || `<tr><td colspan="6" style="color:#66707E">${t('crm_no_followups')}</td></tr>`;
   }
   g.loadFollowups = loadFollowups;
 

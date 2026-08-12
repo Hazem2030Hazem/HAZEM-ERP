@@ -15,9 +15,9 @@ if (!_cfgOk) {
       '<ol style="margin:0;padding-right:20px">' +
       '<li>افتح مشروعك في Supabase ← <b>Project Settings ← API</b></li>' +
       '<li>انسخ <b>Project URL</b> و <b>anon public key</b></li>' +
-      '<li>افتح ملف <code style="color:#7B4B26">config.js</code> والصقهما مكان الكلمتين المؤقتتين</li>' +
+      '<li>افتح ملف <code style="color:#3B4252">config.js</code> والصقهما مكان الكلمتين المؤقتتين</li>' +
       '<li>ارفع الملف على GitHub وحدّث الصفحة</li>' +
-      '</ol><p style="color:#7A6A5C;font-size:13px;margin-bottom:0">ولا تنسى تشغيل ملف schema.sql في SQL Editor مرة واحدة قبل أول استخدام.</p>' +
+      '</ol><p style="color:#66707E;font-size:13px;margin-bottom:0">ولا تنسى تشغيل ملف schema.sql في SQL Editor مرة واحدة قبل أول استخدام.</p>' +
       '</div></div>';
   });
   throw new Error('HAZEM.ERP SYSTEM MANAGER: config.js غير مُعدّ بعد');
@@ -294,14 +294,15 @@ function qbMenuDispatch(ds) {
     if (ds.action === 'sysinfo') return openModal(`
       <h3>🖥️ معلومات النظام</h3>
       <div class="table-wrap"><table><tbody>
-        <tr><td style="color:#7A6A5C">النظام</td><td style="font-weight:700">HAZEM.ERP SYSTEM MANAGER</td></tr>
-        <tr><td style="color:#7A6A5C">الشركة</td><td>${esc(state.tenantName || '—')}</td></tr>
-        <tr><td style="color:#7A6A5C">المستخدم</td><td dir="ltr">${esc(state.user?.email || '—')}</td></tr>
-        <tr><td style="color:#7A6A5C">الإصدار</td><td>1.0.0</td></tr>
-        <tr><td style="color:#7A6A5C">التاريخ</td><td>${new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}</td></tr>
+        <tr><td style="color:#66707E">النظام</td><td style="font-weight:700">HAZEM.ERP SYSTEM MANAGER</td></tr>
+        <tr><td style="color:#66707E">الشركة</td><td>${esc(state.tenantName || '—')}</td></tr>
+        <tr><td style="color:#66707E">المستخدم</td><td dir="ltr">${esc(state.user?.email || '—')}</td></tr>
+        <tr><td style="color:#66707E">الإصدار</td><td>1.0.0</td></tr>
+        <tr><td style="color:#66707E">التاريخ</td><td>${new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}</td></tr>
       </tbody></table></div>
       <div class="modal-actions"><button class="btn btn-gold" onclick="closeModal()">موافق</button></div>`);
-    if (leaf.dataset.action === 'about') return openModal(`
+    if (ds.action === 'toggle-sidebar') return qbToggleSidebar(); // إظهار/إخفاء شريط التنقل الجانبي (قائمة «النافذة»)
+    if (ds.action === 'about') return openModal(`
       <h3 style="text-align:center">HAZEM.ERP SYSTEM MANAGER</h3>
       <p style="text-align:center;color:var(--muted);line-height:2.2;margin:0">
         الإصدار 1.0.0<br>نظام محاسبة وإدارة متكامل<br>
@@ -310,6 +311,21 @@ function qbMenuDispatch(ds) {
         <button class="btn btn-gold" onclick="closeModal()">موافق</button></div>`);
 }
 window.qbMenuDispatch = qbMenuDispatch;
+
+// ── شريط التنقل الجانبي: مخفي افتراضياً — يظهر فقط بطلب صريح من قائمة «النافذة» ──
+// الحالة محفوظة في localStorage['hazem_show_sidebar'] ('1' = ظاهر). الافتراضي: مخفي.
+// الإخفاء عبر CSS فقط (.app.sb-on .sidebar) فتبقى كل عناصر السايدبار في DOM ولا تتعطل
+// أي دالة تقرأ منها (switchTab تظلّل .mb-leaf، btn-menu، closeAllMenus ...).
+function qbApplySidebar() {
+  const app = $('#app-screen');
+  if (app) app.classList.toggle('sb-on', localStorage.getItem('hazem_show_sidebar') === '1');
+}
+function qbToggleSidebar() {
+  localStorage.setItem('hazem_show_sidebar', localStorage.getItem('hazem_show_sidebar') === '1' ? '0' : '1');
+  qbApplySidebar();
+}
+window.qbToggleSidebar = qbToggleSidebar;
+qbApplySidebar();
 
 // عناصر القوائم: تبويب أو إجراء
 $$('.mb-leaf').forEach(leaf => {
@@ -740,7 +756,7 @@ function invoiceForm() {
       <label class="lbl">${t('buyer_vat_number')}</label>
       <input id="inv-buyer-vat" dir="ltr" style="text-align:left" maxlength="15" placeholder="3xxxxxxxxxxxx3">
     </div>
-    <p style="color:#7A6A5C;font-size:12px;margin:6px 0">💡 الأسعار المدخلة شاملة ضريبة القيمة المضافة — تُستخرج الضريبة تلقائياً حسب تصنيف كل بند.</p>
+    <p style="color:#66707E;font-size:12px;margin:6px 0">💡 الأسعار المدخلة شاملة ضريبة القيمة المضافة — تُستخرج الضريبة تلقائياً حسب تصنيف كل بند.</p>
     <input id="inv-barcode" dir="ltr" placeholder="${t('bc_scan_ph')}" style="margin:4px 0">
     <div id="inv-lines"></div>
     <button class="btn btn-ghost btn-sm" id="inv-add-line">${t('btn_add_line')}</button>
@@ -1101,7 +1117,7 @@ async function runVatLedger() {
       <td>${new Date(l.journal_entries.created_at).toLocaleDateString('ar-EG')}</td>
       <td>${esc(l.journal_entries.memo || '')}</td>
       <td>${fmt(l.debit)}</td><td>${fmt(l.credit)}</td><td>${fmt(run)}</td></tr>`;
-  }).join('') || `<tr><td colspan="5" style="color:#7A6A5C">${esc(t('vat_no_data'))}</td></tr>`;
+  }).join('') || `<tr><td colspan="5" style="color:#66707E">${esc(t('vat_no_data'))}</td></tr>`;
   $('#vat-ledger-totals').innerHTML = `
     <span class="t-d">${t('col_debit')}: ${fmt(td)}</span>
     <span class="t-c">${t('col_credit')}: ${fmt(tc)}</span>
@@ -1223,7 +1239,7 @@ async function runTrialBalance() {
       <td>${fmt(s.d)}</td><td>${fmt(s.c)}</td>
       <td style="font-weight:700;color:${bal >= 0 ? 'var(--green)' : 'var(--red)'}">${fmt(bal)}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="5" style="color:#7A6A5C">لا توجد حسابات بعد</td></tr>';
+  }).join('') || '<tr><td colspan="5" style="color:#66707E">لا توجد حسابات بعد</td></tr>';
   const ok = Math.abs(td - tc) < 0.0001;
   $('#rep-trial-totals').innerHTML = `
     <span class="t-d">إجمالي مدين: ${fmt(td)}</span>
@@ -1246,13 +1262,13 @@ async function runIncomeStatement() {
     const bal = s.c - s.d; // طبيعة الإيراد دائنة
     totalRev += bal;
     return row(a, bal);
-  }).join('') || '<tr><td colspan="3" style="color:#7A6A5C">لا توجد حسابات إيرادات</td></tr>';
+  }).join('') || '<tr><td colspan="3" style="color:#66707E">لا توجد حسابات إيرادات</td></tr>';
   $('#tbl-rep-income-exp').innerHTML = g.accs.filter(a => a.kind === 'expense').map(a => {
     const s = sums[a.id] || { d: 0, c: 0 };
     const bal = s.d - s.c; // طبيعة المصروف مدينة
     totalExp += bal;
     return row(a, bal);
-  }).join('') || '<tr><td colspan="3" style="color:#7A6A5C">لا توجد حسابات مصروفات</td></tr>';
+  }).join('') || '<tr><td colspan="3" style="color:#66707E">لا توجد حسابات مصروفات</td></tr>';
   const net = totalRev - totalExp;
   $('#rep-income-net').innerHTML = `
     <span class="t-d">إجمالي الإيرادات: ${fmt(totalRev)}</span>
@@ -1274,17 +1290,17 @@ async function runBalanceSheet() {
     const s = sums[a.id] || { d: 0, c: 0 };
     ta += s.d - s.c;
     return row(a, s.d - s.c);
-  }).join('') || '<tr><td colspan="3" style="color:#7A6A5C">لا توجد حسابات أصول</td></tr>';
+  }).join('') || '<tr><td colspan="3" style="color:#66707E">لا توجد حسابات أصول</td></tr>';
   $('#tbl-rep-bs-liab').innerHTML = g.accs.filter(a => a.kind === 'liability').map(a => {
     const s = sums[a.id] || { d: 0, c: 0 };
     tl += s.c - s.d;
     return row(a, s.c - s.d);
-  }).join('') || '<tr><td colspan="3" style="color:#7A6A5C">لا توجد حسابات التزامات</td></tr>';
+  }).join('') || '<tr><td colspan="3" style="color:#66707E">لا توجد حسابات التزامات</td></tr>';
   $('#tbl-rep-bs-equity').innerHTML = g.accs.filter(a => a.kind === 'equity').map(a => {
     const s = sums[a.id] || { d: 0, c: 0 };
     te += s.c - s.d;
     return row(a, s.c - s.d);
-  }).join('') || '<tr><td colspan="3" style="color:#7A6A5C">لا توجد حسابات حقوق ملكية</td></tr>';
+  }).join('') || '<tr><td colspan="3" style="color:#66707E">لا توجد حسابات حقوق ملكية</td></tr>';
   g.accs.forEach(a => {
     const s = sums[a.id] || { d: 0, c: 0 };
     if (a.kind === 'revenue') rev += s.c - s.d;
@@ -1326,7 +1342,7 @@ async function runTradeReport(kind) {
   // أكثر الأصناف (كمية/قيمة) — مرتبة تنازلياً بالقيمة
   if (lr.error) {
     $('#tbl-rep-' + kind + '-items').innerHTML =
-      '<tr><td colspan="3" style="color:#7A6A5C">تفصيل الأصناف غير متاح لهذه المستندات</td></tr>';
+      '<tr><td colspan="3" style="color:#66707E">تفصيل الأصناف غير متاح لهذه المستندات</td></tr>';
   } else {
     const byItem = {};
     (lr.data || []).forEach(l => {
@@ -1339,7 +1355,7 @@ async function runTradeReport(kind) {
     const items = Object.entries(byItem).sort((a, b) => b[1].val - a[1].val);
     $('#tbl-rep-' + kind + '-items').innerHTML = items.map(([name, s]) =>
       `<tr><td>${esc(name)}</td><td>${fmt(s.qty)}</td><td>${fmt(s.val)}</td></tr>`
-    ).join('') || '<tr><td colspan="3" style="color:#7A6A5C">لا توجد حركات في هذه الفترة</td></tr>';
+    ).join('') || '<tr><td colspan="3" style="color:#66707E">لا توجد حركات في هذه الفترة</td></tr>';
   }
 
   // التوزيع حسب الطرف (عميل/مورد) — مرتب تنازلياً بالإجمالي
@@ -1352,7 +1368,7 @@ async function runTradeReport(kind) {
   const parties = Object.entries(byParty).sort((a, b) => b[1].t - a[1].t);
   $('#tbl-rep-' + kind + (isSales ? '-cust' : '-supp')).innerHTML = parties.map(([name, s]) =>
     `<tr><td>${esc(name)}</td><td>${fmt(s.n)}</td><td>${fmt(s.t)}</td></tr>`
-  ).join('') || '<tr><td colspan="3" style="color:#7A6A5C">لا توجد فواتير في هذه الفترة</td></tr>';
+  ).join('') || '<tr><td colspan="3" style="color:#66707E">لا توجد فواتير في هذه الفترة</td></tr>';
 }
 $('#btn-rep-sales').onclick = () => runTradeReport('sales');
 $('#btn-rep-purch').onclick = () => runTradeReport('purch');
@@ -1466,7 +1482,7 @@ async function loadDevPanel() {
       <td>${c.created_at ? new Date(c.created_at).toLocaleDateString('ar-EG') : '—'}</td>
       <td>${fmt(c.members)}</td>
       <td>${fmt(c.invoices_count)}</td>
-    </tr>`).join('') || '<tr><td colspan="4" style="color:#7A6A5C">لا توجد شركات بعد</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="4" style="color:#66707E">لا توجد شركات بعد</td></tr>';
 }
 
 // قالب config.js للنسخة المُصدَّرة (بدون أي مفاتيح حقيقية)
@@ -1488,10 +1504,10 @@ function dlLauncherHtml(version, customer) {
 '.card{max-width:560px;width:100%;background:#FAF6F1;border:1px solid #E7DDD1;border-top:5px solid #B42318;border-radius:18px;padding:36px;text-align:center;box-shadow:0 10px 30px rgba(28,23,18,.08)}\n' +
 'img.logo{width:110px;height:110px;object-fit:contain;margin-bottom:14px}\n' +
 'h1{margin:0 0 4px;color:#1C1712;font-size:26px}h1 span{color:#B42318}\n' +
-'.sub{color:#7B4B26;margin:0 0 22px;font-size:14px}\n' +
+'.sub{color:#3B4252;margin:0 0 22px;font-size:14px}\n' +
 '.btn{display:block;background:#B42318;color:#fff;text-decoration:none;font-weight:700;font-size:18px;padding:14px;border-radius:12px;margin-bottom:14px}\n' +
-'.links a{color:#7B4B26;text-decoration:none;font-size:13px;margin:0 8px}\n' +
-'.meta{color:#7A6A5C;font-size:12px;margin-top:18px;line-height:1.9}\n' +
+'.links a{color:#3B4252;text-decoration:none;font-size:13px;margin:0 8px}\n' +
+'.meta{color:#66707E;font-size:12px;margin-top:18px;line-height:1.9}\n' +
 '</style>\n</head>\n<body>\n<div class="card">\n' +
 '<img class="logo" src="logo.png" alt="HAZEM.ERP" onerror="this.style.display=\'none\'">\n' +
 '<h1>HAZEM.ERP <span>SYSTEM MANAGER</span></h1>\n' +
@@ -1628,7 +1644,7 @@ async function loadAccounts() {
       <td>${ACCOUNT_KINDS[a.kind] || esc(a.kind || '—')}</td>
       <td>${fmt(s.d)}</td><td>${fmt(s.c)}</td><td>${fmt(s.d - s.c)}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="6" style="color:#7A6A5C">لا توجد حسابات بعد</td></tr>';
+  }).join('') || '<tr><td colspan="6" style="color:#66707E">لا توجد حسابات بعد</td></tr>';
 }
 
 $('#btn-add-account').onclick = () => {
@@ -1677,7 +1693,7 @@ async function loadJournal() {
       <td>${fmt(s.d)}</td><td>${fmt(s.c)}</td>
       <td><button class="btn btn-ghost btn-sm" onclick="viewEntry('${e.id}')">عرض</button></td>
     </tr>`;
-  }).join('') || '<tr><td colspan="6" style="color:#7A6A5C">لا توجد قيود بعد</td></tr>';
+  }).join('') || '<tr><td colspan="6" style="color:#66707E">لا توجد قيود بعد</td></tr>';
 }
 
 // تفاصيل قيد (قراءة فقط — السطور لا تُعدَّل ولا تُحذف)
@@ -1865,7 +1881,7 @@ async function loadVouchers() {
       <td>${fmt(v.amount)}</td>
       <td>${esc(v.memo || '—')}</td>
       <td><button class="btn btn-ghost btn-sm" onclick="previewVoucher('${v.id}')">🖨️ معاينة</button></td>
-    </tr>`).join('') || '<tr><td colspan="7" style="color:#7A6A5C">لا توجد سندات بعد</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="7" style="color:#66707E">لا توجد سندات بعد</td></tr>';
 }
 
 // نموذج سند (قبض / صرف / تحويل)
@@ -1985,7 +2001,7 @@ async function loadPurchases() {
       <td>${fmt(v.total)}</td>
       <td>${v.status === 'posted' ? 'مرحّلة' : esc(v.status)}</td>
       <td><button class="btn btn-ghost btn-sm" onclick="previewDoc('purchase_invoice','${v.id}')">🖨️ معاينة</button></td>
-    </tr>`).join('') || '<tr><td colspan="6" style="color:#7A6A5C">لا توجد فواتير شراء بعد</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="6" style="color:#66707E">لا توجد فواتير شراء بعد</td></tr>';
   $('#tbl-purchase-returns').innerHTML = (rets || []).map(v => `
     <tr>
       <td>${v.number}</td>
@@ -1993,7 +2009,7 @@ async function loadPurchases() {
       <td>${esc(v.parties?.name)}</td>
       <td>${fmt(v.total)}</td>
       <td><button class="btn btn-ghost btn-sm" onclick="previewDoc('purchase_return','${v.id}')">🖨️ معاينة</button></td>
-    </tr>`).join('') || '<tr><td colspan="5" style="color:#7A6A5C">لا توجد مرتجعات مشتريات بعد</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="5" style="color:#66707E">لا توجد مرتجعات مشتريات بعد</td></tr>';
 }
 
 async function loadSalesReturns() {
@@ -2007,7 +2023,7 @@ async function loadSalesReturns() {
       <td>${fmt(v.total)}</td>
       <td>${esc(v.memo || '—')}</td>
       <td><button class="btn btn-ghost btn-sm" onclick="previewDoc('sales_return','${v.id}')">🖨️ معاينة</button></td>
-    </tr>`).join('') || '<tr><td colspan="6" style="color:#7A6A5C">لا توجد مرتجعات مبيعات بعد</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="6" style="color:#66707E">لا توجد مرتجعات مبيعات بعد</td></tr>';
 }
 
 const QUOTE_STATUS = { open: 'مفتوح', converted: 'محوَّل لفاتورة', cancelled: 'ملغي' };
@@ -2026,7 +2042,7 @@ async function loadQuotes() {
       <td><button class="btn btn-ghost btn-sm" onclick="previewDoc('quote','${q.id}')">🖨️ معاينة</button>${q.status === 'open' ? `
         <button class="btn btn-gold btn-sm" onclick="convertQuote('${q.id}')">تحويل لفاتورة</button>
         <button class="btn btn-danger" onclick="cancelQuote('${q.id}')">إلغاء</button>` : ''}</td>
-    </tr>`).join('') || '<tr><td colspan="6" style="color:#7A6A5C">لا توجد عروض أسعار بعد</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="6" style="color:#66707E">لا توجد عروض أسعار بعد</td></tr>';
 }
 
 // ─── تحويل / إلغاء عرض الأسعار ───
@@ -2072,7 +2088,7 @@ async function docForm(kind) {
     <select id="doc-party">
       ${parties.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}
     </select>
-    ${isPurchInv ? `<p style="color:#7A6A5C;font-size:12px;margin:6px 0">💡 التكاليف المدخلة شاملة الضريبة — تُستخرج ضريبة المدخلات تلقائياً حسب تصنيف كل بند.</p>` : ''}
+    ${isPurchInv ? `<p style="color:#66707E;font-size:12px;margin:6px 0">💡 التكاليف المدخلة شاملة الضريبة — تُستخرج ضريبة المدخلات تلقائياً حسب تصنيف كل بند.</p>` : ''}
     <input id="doc-barcode" dir="ltr" placeholder="${t('bc_scan_ph')}" style="margin:4px 0">
     <div id="doc-lines"></div>
     <button class="btn btn-ghost btn-sm" id="doc-add-line">+ إضافة سطر</button>
@@ -2101,7 +2117,7 @@ async function docForm(kind) {
         <option value="exempt">${t('tax_cat_exempt')}</option>
         <option value="out_of_scope">${t('tax_cat_out')}</option>
       </select>` : ''}
-      <span class="ln-sum" style="font-weight:700;color:#7B4B26">0</span>
+      <span class="ln-sum" style="font-weight:700;color:#3B4252">0</span>
       <button class="del-line" title="حذف السطر">✕</button>`;
     const sel = d.querySelector('.ln-item');
     const priceIn = d.querySelector('.ln-price');
@@ -2252,7 +2268,7 @@ async function loadWarehouses() {
       <td>${w.is_main ? '⭐ رئيسي' : 'فرعي'}</td>
       <td>${fmt(s.items)}</td><td>${fmt(s.qty)}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="4" style="color:#7A6A5C">لا توجد مستودعات بعد</td></tr>';
+  }).join('') || '<tr><td colspan="4" style="color:#66707E">لا توجد مستودعات بعد</td></tr>';
 
   // تحديث قوائم المستودعات في الجرد
   $('#count-wh').innerHTML = state.warehouses.map(w =>
@@ -2308,7 +2324,7 @@ async function loadTransfers() {
       <td>${esc(p.out.warehouses?.name)}</td>
       <td>${esc(p.in.warehouses?.name)}</td>
       <td>${fmt(p.in.qty)}</td>
-    </tr>`).join('') || '<tr><td colspan="5" style="color:#7A6A5C">لا توجد تحويلات بعد</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="5" style="color:#66707E">لا توجد تحويلات بعد</td></tr>';
 }
 
 // ─── نموذج تحويل جديد (مع الرصيد المتاح في المصدر لحظياً) ───
@@ -2380,7 +2396,7 @@ async function loadCount() {
       <td><input class="cnt-actual" type="number" min="0" step="any" value="${book}" style="margin:0;padding:8px;max-width:130px"></td>
       <td class="cnt-diff" style="font-weight:700">0</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="4" style="color:#7A6A5C">لا توجد أصناف</td></tr>';
+  }).join('') || '<tr><td colspan="4" style="color:#66707E">لا توجد أصناف</td></tr>';
   // الفرق يتحدث لحظياً مع كل إدخال
   $$('#tbl-count .cnt-actual').forEach(inp => inp.oninput = () => {
     const tr = inp.closest('tr');
@@ -2659,7 +2675,7 @@ async function loadShifts() {
       <td>${s.closing_cash == null ? '—' : fmt(s.closing_cash)}</td>
       <td>${s.sales_total == null ? '—' : fmt(s.sales_total)}</td>
       <td>${SHIFT_STATUS[s.status] || esc(s.status)}</td>
-    </tr>`).join('') || '<tr><td colspan="8" style="color:#7A6A5C">لا توجد ورديات بعد</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="8" style="color:#66707E">لا توجد ورديات بعد</td></tr>';
 }
 
 // ─────────── ١١-ص) دفعة B — محرك معاينة الطباعة الاحترافية ───────────
@@ -3161,7 +3177,7 @@ async function loadUsers() {
         : esc(ROLE_NAMES[m.role] || m.role));
     // خلية الإجراءات: المالك لا يُحذف — وزر الحذف للمالك فقط
     const actCell = isOwnerRow
-      ? '<span style="color:#7A6A5C;font-size:12px">لا يمكن حذفه</span>'
+      ? '<span style="color:#66707E;font-size:12px">لا يمكن حذفه</span>'
       : (isOwner
         ? `<button class="btn btn-danger" onclick="removeMember('${esc(m.user_id)}', '${esc(m.email)}')">حذف</button>`
         : '—');
@@ -3171,7 +3187,7 @@ async function loadUsers() {
       <td>${m.joined_at ? new Date(m.joined_at).toLocaleDateString('ar-EG') : '—'}</td>
       <td>${actCell}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="4" style="color:#7A6A5C">لا يوجد أعضاء</td></tr>';
+  }).join('') || '<tr><td colspan="4" style="color:#66707E">لا يوجد أعضاء</td></tr>';
 }
 
 // ربط عضو جديد بالبريد (مالك فقط — والواجهة نفسها تخفي النموذج عن غيره)
@@ -3230,7 +3246,7 @@ async function loadBranches() {
     <td>
       <button class="btn btn-ghost btn-sm" onclick="editBranch('${b.id}')">تعديل</button>
       ${b.is_main
-        ? '<span style="color:#7A6A5C;font-size:12px">الفرع الرئيسي لا يُحذف</span>'
+        ? '<span style="color:#66707E;font-size:12px">الفرع الرئيسي لا يُحذف</span>'
         : `<button class="btn btn-ghost btn-sm" onclick="setMainBranch('${b.id}')">⭐ تعيين رئيسي</button>
            <button class="btn btn-danger" onclick="delBranch('${b.id}')">حذف</button>`}
     </td>
@@ -3400,7 +3416,8 @@ const QB_MENUS = [
   { k: 'qb_menu_window', items: [
     { k: 'mi_open_dash', tab: 'dashboard' }, { k: 'mi_cashier', tab: 'pos' },
     { k: 'mi_exp_list', tab: 'expenses' }, { k: 'mi_exp_cc', tab: 'expenses', sub: 'ccs' },
-    { k: 'mi_exp_rec', tab: 'expenses', sub: 'rec' }, { k: 'mi_exp_rem', tab: 'expenses', sub: 'rem' },
+    { k: 'mi_exp_rec', tab: 'expenses', sub: 'rec' }, { k: 'mi_exp_rem', tab: 'expenses', sub: 'rem' }, '-',
+    { k: 'qb_menu_sidebar', action: 'toggle-sidebar' },
   ]},
   { k: 'qb_menu_help', items: [
     { k: 'mi_guide', disabled: true }, { k: 'mi_about', action: 'about' },

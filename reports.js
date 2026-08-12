@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   H. ERP — المرحلة 16: تقارير متقدمة (أعمار الذمم / التدفقات النقدية /
+   HAZEM.ERP — المرحلة 16: تقارير متقدمة (أعمار الذمم / التدفقات النقدية /
    هامش الربح) + قفل الفترات المحاسبية + تسجيل Service Worker (PWA)
    جزآن في ملف واحد (بلا build step):
    • منطق نقي قابل للاختبار في Node: شرائح الأعمار (0-30/31-60/61-90/+90
@@ -236,7 +236,7 @@
       const renderRows = (agg, empty) => agg.rows.map(r => `
         <tr><td>${esc(r.party_name)}</td><td>${fmt(r.b30)}</td><td>${fmt(r.b60)}</td>
           <td>${fmt(r.b90)}</td><td><b style="color:#B42318">${fmt(r.b90p)}</b></td><td><b>${fmt(r.total)}</b></td></tr>`
-      ).join('') || `<tr><td colspan="6" style="color:#7A6A5C">${empty}</td></tr>`;
+      ).join('') || `<tr><td colspan="6" style="color:#66707E">${empty}</td></tr>`;
       $('#tbl-rep-aging-cust').innerHTML = renderRows(cust, t('rep_aging_none'));
       $('#tbl-rep-aging-supp').innerHTML = renderRows(supp, t('rep_aging_none'));
       $('#rep-aging-cust-totals').innerHTML = cust.rows.length ? `
@@ -391,7 +391,7 @@
       <tr><td>${esc(r.name)}</td><td>${fmt(r.qty)}</td><td>${fmt(r.sales)}</td><td>${fmt(r.cost)}</td>
         <td style="font-weight:700;color:${r.profit >= 0 ? 'var(--green)' : 'var(--red)'}">${fmt(r.profit)}</td>
         <td>${fmt(r.margin)}%</td></tr>`
-    ).join('') || `<tr><td colspan="6" style="color:#7A6A5C">${t('rep_none')}</td></tr>`;
+    ).join('') || `<tr><td colspan="6" style="color:#66707E">${t('rep_none')}</td></tr>`;
     $('#rep-margin-totals').innerHTML = m.rows.length ? `
       <span class="t-d">${t('rep_margin_sales')}: ${fmt(m.totals.sales)}</span>
       <span class="t-c">${t('rep_margin_cost')}: ${fmt(m.totals.cost)}</span>

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   H. ERP — المرحلة 12: الموارد البشرية والرواتب (السعودية)
+   HAZEM.ERP — المرحلة 12: الموارد البشرية والرواتب (السعودية)
    جزآن في ملف واحد (بلا build step):
    • منطق نقي قابل للاختبار في Node: GOSI / نهاية الخدمة / أقساط السلف / صافي القسيمة.
    • واجهات HR (تعمل في المتصفح فقط، بعد app.js): الموظفون، مسيرات الرواتب،
@@ -143,7 +143,7 @@
       (e.id_number || '').includes(q));
     $('#tbl-employees').innerHTML = list.map(e => `
       <tr>
-        <td>${esc(e.name_ar)}${e.name_en ? ' <span style="color:#7A6A5C">(' + esc(e.name_en) + ')</span>' : ''}</td>
+        <td>${esc(e.name_ar)}${e.name_en ? ' <span style="color:#66707E">(' + esc(e.name_en) + ')</span>' : ''}</td>
         <td dir="ltr">${esc(e.id_number || '—')}</td>
         <td>${esc(e.nationality || '—')}</td>
         <td>${esc(e.job_title || '—')}</td>
@@ -156,7 +156,7 @@
             ${e.status === 'active' ? '⏸️ ' + t('hr_suspend') : '▶️ ' + t('hr_activate')}</button>
         </td>
       </tr>`).join('') ||
-      `<tr><td colspan="8" style="color:#7A6A5C">${t('hr_no_emps')}</td></tr>`;
+      `<tr><td colspan="8" style="color:#66707E">${t('hr_no_emps')}</td></tr>`;
   }
 
   // نموذج إضافة/تعديل موظف — بدلات أخرى مرنة (بنود label+amount)
@@ -296,7 +296,7 @@
           ${r.status === 'posted' ? `<button class="btn btn-gold btn-sm" onclick="payPayrollRun('${r.id}')">💵 ${t('hr_pay_run')}</button>` : ''}
           <button class="btn btn-ghost btn-sm" onclick="exportWps('${r.id}')">📄 WPS</button>
         </td>
-      </tr>`).join('') || `<tr><td colspan="6" style="color:#7A6A5C">${t('hr_no_runs')}</td></tr>`;
+      </tr>`).join('') || `<tr><td colspan="6" style="color:#66707E">${t('hr_no_runs')}</td></tr>`;
     $('#hr-slips-box').classList.add('hidden');
   }
 
@@ -559,7 +559,7 @@
         <td>${a.status === 'open' ? t('hr_adv_open') : t('hr_adv_closed')}</td>
         <td><button class="btn btn-ghost btn-sm" onclick="viewAdvance('${a.id}')">📋 ${t('hr_schedule')}</button></td>
       </tr>`;
-    }).join('') || `<tr><td colspan="7" style="color:#7A6A5C">${t('hr_no_advances')}</td></tr>`;
+    }).join('') || `<tr><td colspan="7" style="color:#66707E">${t('hr_no_advances')}</td></tr>`;
   }
 
   window.openAdvanceForm = function () {
@@ -618,7 +618,7 @@
         <td dir="ltr">${esc(d.month)}</td><td>${esc(d.employees?.name_ar || '—')}</td>
         <td>${fmt(d.amount)}</td><td>${esc(d.reason || '—')}</td>
         <td><button class="btn btn-ghost btn-sm" onclick="deleteDeduction('${d.id}')">🗑️</button></td>
-      </tr>`).join('') || `<tr><td colspan="5" style="color:#7A6A5C">${t('hr_no_deductions')}</td></tr>`;
+      </tr>`).join('') || `<tr><td colspan="5" style="color:#66707E">${t('hr_no_deductions')}</td></tr>`;
   }
 
   window.openDeductionForm = function () {

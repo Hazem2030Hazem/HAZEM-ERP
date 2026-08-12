@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   H. ERP — ترقية نقاط البيع (POS+): مدفوعات منقّسة + تقارير مدفوعات
+   HAZEM.ERP — ترقية نقاط البيع (POS+): مدفوعات منقّسة + تقارير مدفوعات
    + مبيعات بالساعة + صنف جديد سريع + إيصال حراري (80/58مم + ESC/POS
    raster عبر WebSerial) + إقفال وردية Z-report + تعليق/استرجاع + مرتجع.
    قرارات التنفيذ:
@@ -389,7 +389,7 @@
       </tbody></table>
       ${qrImg ? '<hr><div class="c">' + qrImg + '</div>' : ''}
       <hr><div class="c b">${esc(footer)}</div>
-      <div class="c" style="font-size:9px;margin-top:4px">H. ERP SYSTEM MANAGER</div>
+      <div class="c" style="font-size:9px;margin-top:4px">HAZEM.ERP SYSTEM MANAGER</div>
       </body></html>`;
   }
 
