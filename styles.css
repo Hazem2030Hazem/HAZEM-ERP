@@ -617,3 +617,193 @@ td .btn{margin-inline-start:6px}
   .qb-sidepanel.collapsed{flex-basis:auto;width:auto}
 }
 @media print{.qb-menubar,.qb-iconbar,.qb-sidepanel,.qb-sp-toggle{display:none!important}}
+
+/* ═══════════════════════════════════════════════════════════════
+   دفعة AFAQ Desktop (v25) — سطح مكتب كلاسيكي: هيدر بنفسجي + شريط
+   قوائم بيج + خلفية عملات + لوحة جانبية بساعة + نوافذ Windows-classic
+   ═══════════════════════════════════════════════════════════════ */
+/* إخفاء بقايا التخطيط القديم دون حذفها من DOM (تبقى دوال app.js تعمل) */
+#app-screen .topbar, #app-screen #qb-menubar, #app-screen #qb-iconbar,
+#app-screen #tabbar, #app-screen .sidebar, #app-screen .fab { display: none !important; }
+#app-screen .main { padding: 0 !important; margin: 0 !important; max-width: none !important;
+  display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: #2A3A8C; }
+
+/* ── الهيدر البنفسجي اللافندر ── */
+#afaq-header {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 14px;
+  padding: 6px 16px; min-height: 64px; color: #fff;
+  background: linear-gradient(180deg, #8A6FD8 0%, #7A5CCB 55%, #6B4CBE 100%);
+  border-bottom: 2px solid #54399F;
+}
+#afaq-header .afx-logo {
+  width: 46px; height: 46px; border-radius: 50%; flex: 0 0 auto;
+  background: radial-gradient(circle at 35% 30%, #B8A5EE, #5B3CA8 70%);
+  border: 2px solid #D9CCF7; color: #fff; font-weight: 800; font-size: 22px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,.35);
+}
+#afaq-header .afx-brand { line-height: 1.25; }
+#afaq-header .afx-brand b { font-size: 19px; letter-spacing: .5px; display: block; }
+#afaq-header .afx-brand small { font-size: 12px; color: #E4DBFA; }
+#afaq-header .afx-slogan { margin-inline-start: auto; font-size: 14px; color: #EFE9FD; font-weight: 600; }
+
+/* ── شريط القوائم الكلاسيكي البيج ── */
+#afaq-menubar {
+  flex: 0 0 auto; display: flex; align-items: stretch; gap: 0;
+  background: #F5F0E6; border-bottom: 1px solid #B9B2A2;
+  font-size: 13px; user-select: none; position: relative; z-index: 60;
+  padding: 0 4px; overflow: visible;
+}
+#afaq-menubar .afx-mi {
+  padding: 6px 11px; cursor: pointer; color: #111; white-space: nowrap;
+  border: 1px solid transparent; font-weight: 600; background: none; font-family: inherit; font-size: 13px;
+}
+#afaq-menubar .afx-mi.red { color: #C00000; }
+#afaq-menubar .afx-mi:hover, #afaq-menubar .afx-mi.open { background: #DCE6F2; border-color: #9EB6D8; }
+#afaq-menubar .afx-spacer { flex: 1; }
+#afaq-menubar .afx-lang {
+  margin: 2px 4px; padding: 2px 14px; background: #2C5FB3; color: #fff; border: 1px solid #1C4587;
+  font-weight: 700; cursor: pointer; font-family: inherit; font-size: 13px; align-self: center;
+}
+#afaq-menubar .afx-search {
+  align-self: center; margin: 2px 4px; border: 1px solid #A9A294; background: #fff;
+  font-size: 12px; padding: 3px 8px; width: 170px; font-family: inherit; color: #333;
+}
+
+/* القوائم المنسدلة */
+.afx-drop {
+  position: absolute; top: 100%; z-index: 200; min-width: 230px;
+  background: #F5F0E6; border: 1px solid #9A927F; box-shadow: 3px 3px 6px rgba(0,0,0,.35);
+  padding: 2px; font-size: 13px;
+}
+.afx-drop .afx-di {
+  display: flex; align-items: center; gap: 8px; padding: 4px 10px 4px 14px;
+  cursor: pointer; color: #111; white-space: nowrap; position: relative;
+}
+.afx-drop .afx-di .sc { margin-inline-start: auto; padding-inline-start: 24px; font-size: 11px; color: #333; font-weight: 700; direction: ltr; }
+.afx-drop .afx-di.red { color: #C00000; font-weight: 700; }
+.afx-drop .afx-di:hover { background: #B7D0EE; color: #000; }
+.afx-drop .afx-di .sub-arrow { position: absolute; inset-inline-start: 3px; color: #444; font-size: 10px; }
+.afx-drop .afx-sep { height: 1px; background: #C6BFAE; margin: 3px 2px; }
+.afx-drop .afx-sub { display: none; position: absolute; top: -3px; inset-inline-end: 100%;
+  background: #F5F0E6; border: 1px solid #9A927F; box-shadow: 3px 3px 6px rgba(0,0,0,.35); padding: 2px; min-width: 200px; }
+.afx-drop .afx-di.has-sub:hover > .afx-sub, .afx-drop .afx-di.has-sub.sub-open > .afx-sub { display: block; }
+
+/* ── جسم سطح المكتب ── */
+#afaq-body { flex: 1; display: flex; min-height: 0; position: relative; }
+
+/* اللوحة الجانبية (يمين الشاشة كما في المرجع) */
+#afaq-side {
+  flex: 0 0 250px; width: 250px; background: #fff; border-inline-start: 1px solid #8B93A8;
+  display: flex; flex-direction: column; overflow-y: auto; z-index: 20;
+}
+.afx-panel { border-bottom: 1px solid #C9CEDA; }
+.afx-panel > .afx-panel-head {
+  background: linear-gradient(180deg, #FBFAF7, #E9E6DD); border-bottom: 1px solid #C9CEDA;
+  padding: 4px 10px; font-weight: 700; font-size: 13px; color: #222; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.afx-panel > .afx-panel-body { padding: 8px 12px; font-size: 12.5px; line-height: 2; color: #222; }
+.afx-panel-body .row { display: flex; justify-content: space-between; gap: 8px; }
+.afx-panel-body .row .k { color: #555; }
+.afx-panel-body .row .v { font-weight: 700; text-align: end; }
+#afx-clock-wrap { display: flex; justify-content: center; padding: 14px 0 18px; }
+
+/* سطح المكتب: خلفية زرقاء داكنة بلمسة عملات (CSS + SVG داخلي فقط) */
+#afaq-desk {
+  flex: 1; position: relative; overflow: hidden; min-width: 0;
+  background:
+    radial-gradient(ellipse 60% 45% at 70% 30%, rgba(120,140,230,.35), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 25% 75%, rgba(90,110,210,.28), transparent 70%),
+    linear-gradient(160deg, #1C2A6E 0%, #2A3A8C 45%, #1A2760 100%);
+}
+#afaq-desk::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+  background-image:
+    radial-gradient(circle 34px at 18% 22%, rgba(210,220,255,.10) 0 30px, rgba(210,220,255,.03) 31px, transparent 36px),
+    radial-gradient(circle 28px at 82% 60%, rgba(210,220,255,.10) 0 24px, rgba(210,220,255,.03) 25px, transparent 30px),
+    radial-gradient(circle 40px at 55% 85%, rgba(210,220,255,.09) 0 35px, transparent 42px),
+    radial-gradient(circle 22px at 40% 45%, rgba(210,220,255,.12) 0 18px, transparent 24px),
+    radial-gradient(circle 26px at 92% 15%, rgba(210,220,255,.10) 0 21px, transparent 27px);
+}
+#afaq-desk .afx-coin { position: absolute; border-radius: 50%; pointer-events: none;
+  border: 2px solid rgba(200,212,255,.16); background: radial-gradient(circle at 38% 32%, rgba(190,200,245,.14), rgba(120,135,210,.05) 65%);
+  color: rgba(205,215,255,.20); display: flex; align-items: center; justify-content: center; font-weight: 800; }
+
+/* ── النوافذ الكلاسيكية ── */
+.afx-win {
+  position: absolute; display: flex; flex-direction: column; min-width: 320px; min-height: 160px;
+  background: #F0EDE6; border: 1px solid #6E7686; box-shadow: 4px 4px 12px rgba(0,0,0,.45);
+}
+.afx-win.active { border-color: #3E4C66; }
+.afx-win-title {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 8px; cursor: move; user-select: none;
+  background: linear-gradient(180deg, #FDFCFA, #E7E3D9); border-bottom: 1px solid #B4AC9B;
+  padding: 3px 6px; font-size: 13px; font-weight: 700; color: #222;
+}
+.afx-win.active > .afx-win-title { background: linear-gradient(180deg, #EEF3FB, #D5E0F0); color: #0B2A5B; }
+.afx-win-title .afx-wt-txt { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.afx-win-btns { display: flex; gap: 3px; direction: ltr; }
+.afx-win-btns button {
+  width: 21px; height: 18px; font-size: 11px; line-height: 1; cursor: pointer;
+  background: linear-gradient(180deg, #FFFFFF, #DCD7CB); border: 1px solid #8B8474; color: #222; padding: 0;
+}
+.afx-win-btns button:hover { background: #DCE6F2; }
+.afx-win-body { flex: 1; overflow: auto; padding: 8px; font-size: 13px; }
+.afx-win-body > section.tab { display: block !important; }
+.afx-win.min > .afx-win-body { display: none; }
+
+/* حقول وأزرار كلاسيكية داخل النوافذ */
+.afx-win input, .afx-win select, .afx-win textarea {
+  background: #fff; border: 1px solid #9B968B; font-size: 12.5px; padding: 2px 5px; font-family: inherit; color: #111;
+}
+.afx-win input:focus, .afx-win select:focus { outline: 1px solid #4A80C4; }
+.afx-btn {
+  background: linear-gradient(180deg, #FFFFFF, #DCD7CB); border: 1px solid #8B8474; color: #111;
+  font-size: 12.5px; padding: 3px 14px; cursor: pointer; font-family: inherit; min-width: 64px;
+}
+.afx-btn:hover { background: #DCE6F2; }
+.afx-btn:active { background: #C9D8EC; }
+.afx-btn.afx-green { background: linear-gradient(180deg, #4CAF50, #2E7D32); color: #fff; border-color: #1B5E20; font-weight: 700; }
+.afx-lbl { font-size: 12px; color: #222; font-weight: 700; white-space: nowrap; }
+table.afx-grid { border-collapse: collapse; width: 100%; font-size: 12.5px; background: #fff; }
+table.afx-grid th { background: #E3E7EE; border: 1px solid #AAB2BF; padding: 3px 6px; font-weight: 700; white-space: nowrap; }
+table.afx-grid td { border: 1px solid #C3CAD4; padding: 2px 6px; }
+table.afx-grid tr:nth-child(even) td { background: #EAF3FB; }
+table.afx-grid tr:nth-child(odd) td { background: #FDF6E3; }
+table.afx-grid input, table.afx-grid select { border: none; background: transparent; width: 100%; padding: 1px 2px; }
+
+/* نافذة فاتورة المبيعات */
+.afx-sinv-toolbar { display: flex; gap: 4px; align-items: center; margin-bottom: 6px; flex-wrap: wrap; }
+.afx-sinv-toolbar .nav-arrows button { width: 30px; height: 24px; }
+.afx-sinv-form { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 6px; }
+.afx-sinv-form .cols { flex: 1; min-width: 420px; display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 3px 8px; align-items: center; }
+.afx-sinv-side { flex: 0 0 200px; display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; align-items: center;
+  border-inline-start: 1px solid #C6BFAE; padding-inline-start: 12px; }
+.afx-sinv-foot { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 6px;
+  border-top: 1px solid #C6BFAE; padding-top: 5px; }
+.afx-sinv-foot .f { display: flex; gap: 4px; align-items: center; }
+.afx-sinv-foot input { width: 80px; text-align: center; }
+.afx-paid { background: #2E7D32 !important; color: #fff !important; font-weight: 700; }
+.afx-sinv-actions { display: flex; gap: 6px; justify-content: center; margin-top: 8px; border-top: 1px solid #C6BFAE; padding-top: 7px; }
+fieldset.afx-sec { border: 1px solid #B4AC9B; margin: 6px 0; padding: 5px 8px 8px; }
+fieldset.afx-sec > legend { font-size: 12.5px; font-weight: 700; padding: 0 6px; cursor: pointer; color: #222; }
+
+/* كشف الحساب */
+.afx-stmt-sec { border: 1px solid #C6BFAE; margin-bottom: 6px; }
+.afx-stmt-sec > .h { background: linear-gradient(180deg,#FBFAF7,#E9E6DD); padding: 4px 10px; font-weight: 700;
+  cursor: pointer; display: flex; justify-content: space-between; border-bottom: 1px solid #C6BFAE; }
+.afx-stmt-sec > .b { padding: 8px 10px; }
+.afx-stmt-sec.closed > .b { display: none; }
+.afx-stmt-sec.closed > .h { border-bottom: none; }
+
+/* مودال stub */
+.afx-stub { text-align: center; padding: 34px 18px; color: #444; }
+.afx-stub .ic { font-size: 40px; }
+
+/* موبايل */
+@media (max-width: 900px) {
+  #afaq-side { display: none; }
+  #afaq-menubar { overflow-x: auto; }
+  .afx-win { inset: 2px !important; width: auto !important; height: auto !important; max-width: none !important; }
+}

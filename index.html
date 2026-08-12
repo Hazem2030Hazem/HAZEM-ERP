@@ -217,6 +217,43 @@
 
     <!-- ═══ المحتوى: شريط علوي + شريط تبويبات الشاشات المفتوحة ═══ -->
     <main class="main">
+      <!-- ═══ دفعة AFAQ (v25): هيدر بنفسجي + شريط قوائم كلاسيكي + سطح مكتب ═══ -->
+      <header id="afaq-header">
+        <div class="afx-logo">H</div>
+        <div class="afx-brand">
+          <b>HAZEM.ERP SYSTEM MANAGER</b>
+          <small data-i18n="afx_brand_sub">لإدارة الأعمال والمحاسبة</small>
+        </div>
+        <div class="afx-slogan" id="afx-header-company">—</div>
+      </header>
+      <nav id="afaq-menubar" aria-label="القوائم الرئيسية"></nav>
+      <div id="afaq-body">
+        <aside id="afaq-side">
+          <div class="afx-panel">
+            <div class="afx-panel-head"><span data-i18n="afx_panel_system">النظام</span><span>▾</span></div>
+            <div class="afx-panel-body" id="afx-sysinfo">
+              <div class="row"><span class="v" id="afx-si-company">—</span><span class="k" data-i18n="afx_company">الشركة</span></div>
+              <div class="row"><span class="v" data-i18n="afx_branch">الفرع الرئيسي</span><span class="k">الفرع</span></div>
+              <div class="row"><span class="v" id="afx-si-fy">—</span><span class="k" data-i18n="afx_fy">السنة المالية</span></div>
+              <div class="row"><span class="v" id="afx-si-date" dir="ltr">—</span><span class="k" data-i18n="afx_date_g">التاريخ الميلادي</span></div>
+              <div class="row"><span class="v" data-i18n="afx_fy_active">نشطة</span><span class="k" data-i18n="afx_fy_state">حالة السنة</span></div>
+              <div class="row"><span class="v" id="afx-si-user">Admin</span><span class="k" data-i18n="afx_user">اسم المستخدم</span></div>
+              <div class="row"><span class="v" id="afx-si-server" dir="ltr">—</span><span class="k" data-i18n="afx_server">الخادم</span></div>
+              <div class="row"><span class="v">HAZEM.ERP</span><span class="k" data-i18n="afx_db">قاعدة البيانات</span></div>
+              <div class="row"><span class="v" dir="ltr">V25.0</span><span class="k" data-i18n="afx_version">إصدار رقم</span></div>
+              <div class="row"><span class="v" data-i18n="afx_lic_type">نوع النسخة: محدودة ثلاثة فروع</span></div>
+              <div class="row"><span class="v" data-i18n="afx_conn_type">نوع الاتصال: مستخدم داخلي</span></div>
+              <div class="row"><span class="v" data-i18n="afx_copy_one">نسخة واحدة</span></div>
+            </div>
+          </div>
+          <div class="afx-panel" style="flex:1">
+            <div class="afx-panel-head"><span data-i18n="afx_panel_clock">الساعة</span><span>▾</span></div>
+            <div class="afx-panel-body" id="afx-clock-wrap"></div>
+          </div>
+        </aside>
+        <div id="afaq-desk"></div>
+      </div>
+      <div id="afaq-park" class="hidden" style="display:none"></div>
       <header class="topbar">
         <button id="btn-menu" class="btn btn-ghost btn-menu" title="القائمة">☰</button>
         <img id="tenant-logo" class="tenant-logo hidden" alt="شعار الشركة">
@@ -1741,6 +1778,8 @@
   <script src="qr.js"></script>
   <script src="zatca2.js"></script>
   <script src="app.js"></script>
+  <!-- دفعة AFAQ (v25): مدير النوافذ الكلاسيكية + القوائم + الساعة + شاشتي الفاتورة/كشف الحساب -->
+  <script src="afaq-windows.js"></script>
   <script src="pos-plus.js"></script>
   <script src="hr.js"></script>
   <script src="assets.js"></script>
