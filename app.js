@@ -533,6 +533,8 @@ function itemForm(item) {
       <button class="btn btn-gold" id="f-save">حفظ</button>
       <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
     </div>`);
+  // v28: قائمة الوحدات في نموذج الصنف تُجلب من جدول الوحدات (المرحلة 20)
+  if (typeof window.afaqFeedItemUnits === 'function') window.afaqFeedItemUnits();
   // v27: قارئ الباركود keyboard wedge — التركيز على حقل الباركود مع تحديد النص عند الفتح
   setTimeout(() => { const b = $('#f-barcode'); if (b) { b.focus(); b.select(); } }, 40);
   // توليد باركود داخلي (المرحلة 14 — procurement.js)

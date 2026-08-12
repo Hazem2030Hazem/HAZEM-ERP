@@ -156,24 +156,24 @@
       M('afx_sys_years', { sc: 'Alt+F', ds: { tab: 'settings' } }),
       M('afx_sys_periods', { ds: { tab: 'settings' } }),
       M('afx_sys_currencies', { sc: 'Alt+R', ds: { tab: 'settings' } }),
-      M('afx_sys_countries', { stub: 1 }), M('afx_sys_cities', { stub: 1 }),
-      M('afx_sys_regions', { stub: 1 }), M('afx_sys_nats', { stub: 1 }),
+      M('afx_sys_countries', { scr: 'geo' }), M('afx_sys_cities', { scr: 'geo' }),
+      M('afx_sys_regions', { scr: 'geo' }), M('afx_sys_nats', { scr: 'geo' }),
       SEP,
-      M('afx_sys_doctypes', { stub: 1 }), M('afx_sys_docclass', { stub: 1 }),
-      M('afx_sys_supgrps', { stub: 1 }), M('afx_sys_suppliers', { ds: { tab: 'parties' } }),
-      M('afx_sys_custgrps', { stub: 1 }), M('afx_sys_customers', { ds: { tab: 'parties' } }),
-      M('afx_sys_sponsors', { stub: 1 }), M('afx_sys_emps', { ds: { tab: 'employees' } }),
-      M('afx_sys_empbranch', { stub: 1 }),
+      M('afx_sys_doctypes', { scr: 'doctypes' }), M('afx_sys_docclass', { scr: 'docclass' }),
+      M('afx_sys_supgrps', { scr: 'supgrps' }), M('afx_sys_suppliers', { ds: { tab: 'parties' } }),
+      M('afx_sys_custgrps', { scr: 'custgrps' }), M('afx_sys_customers', { ds: { tab: 'parties' } }),
+      M('afx_sys_sponsors', { scr: 'sponsors' }), M('afx_sys_emps', { ds: { tab: 'employees' } }),
+      M('afx_sys_empbranch', { scr: 'emp_branch' }),
       SEP,
-      M('afx_sys_sms', { stub: 1 }),
-      M('afx_sys_activeyear', { sc: 'Alt+Y', red: true, stub: 1 }),
+      M('afx_sys_sms', { scr: 'sms' }),
+      M('afx_sys_activeyear', { sc: 'Alt+Y', red: true, scr: 'fy' }),
       M('afx_sys_users', { sc: 'Alt+U', ds: { tab: 'users' } }),
-      M('afx_sys_alertcfg', { stub: 1 }), M('afx_sys_alerts', { stub: 1 }),
+      M('afx_sys_alertcfg', { scr: 'alert_cfg' }), M('afx_sys_alerts', { scr: 'alerts_today' }),
       M('afx_sys_device', { ds: { action: 'pos-settings' } }),
       { k: 'afx_sys_db', red: true, sub: [
         M('afx_sys_backup', { ds: { action: 'export-excel' } }),
-        M('afx_sys_restore', { red: true, stub: 1 }),
-        M('afx_sys_dbcfg', { stub: 1 }),
+        M('afx_sys_restore', { red: true, scr: 'restore' }),
+        M('afx_sys_dbcfg', { scr: 'dbcfg' }),
       ]},
       M('afx_sys_logout', { sc: 'Alt+L', ds: { action: 'logout' } }),
       M('afx_sys_exit', { sc: 'Alt+F4', ds: { action: 'logout' } }),
@@ -212,27 +212,27 @@
       M('afx_iv_wh', { ds: { action: 'warehouses' } }),
       M('afx_iv_items', { red: true, ds: { tab: 'items' } }),
       { k: 'afx_iv_more', sub: [
-        M('afx_iv_units', { stub: 1 }), M('afx_iv_groups', { stub: 1 }),
-        M('afx_iv_comp', { ds: { tab: 'manufacturing' } }), M('afx_iv_specs', { stub: 1 }),
-        M('afx_iv_levels', { stub: 1 }), M('afx_iv_itemcos', { stub: 1 }),
-        M('afx_iv_max', { stub: 1 }), M('afx_iv_more2', { stub: 1 }),
+        M('afx_iv_units', { scr: 'units' }), M('afx_iv_groups', { scr: 'item_groups' }),
+        M('afx_iv_comp', { ds: { tab: 'manufacturing' } }), M('afx_iv_specs', { scr: 'item_specs' }),
+        M('afx_iv_levels', { scr: 'group_levels' }), M('afx_iv_itemcos', { scr: 'item_companies' }),
+        M('afx_iv_max', { scr: 'item_max' }), M('afx_iv_more2', { scr: 'more_data' }),
       ]},
       SEP,
-      M('afx_iv_openbal', { red: true, stub: 1 }),
+      M('afx_iv_openbal', { red: true, scr: 'receipt' }),
       M('afx_iv_assemble', { ds: { tab: 'manufacturing' } }),
-      M('afx_iv_disassemble', { stub: 1 }), M('afx_iv_pack', { stub: 1 }),
-      M('afx_iv_rcv', { red: true, stub: 1 }), M('afx_iv_issue', { red: true, stub: 1 }),
+      M('afx_iv_disassemble', { scr: 'disassemble' }), M('afx_iv_pack', { scr: 'pack' }),
+      M('afx_iv_rcv', { red: true, scr: 'receipt' }), M('afx_iv_issue', { red: true, scr: 'issue' }),
       M('afx_iv_transfer', { ds: { action: 'stock-transfer' } }),
-      M('afx_iv_transfer_rcv', { stub: 1 }), M('afx_iv_receive', { stub: 1 }),
-      M('afx_iv_destroy', { stub: 1 }),
-      M('afx_iv_count_rec', { ds: { action: 'stock-count' } }),
+      M('afx_iv_transfer_rcv', { scr: 'transfer_linked' }), M('afx_iv_receive', { scr: 'receive_transferred' }),
+      M('afx_iv_destroy', { scr: 'destroy' }),
+      M('afx_iv_count_rec', { scr: 'stockcount' }),
       M('afx_iv_count', { red: true, ds: { action: 'stock-count' } }),
-      M('afx_iv_hold', { stub: 1 }), M('afx_iv_unhold', { stub: 1 }),
-      M('afx_iv_bal', { ds: { report: 'stock' } }), M('afx_iv_cost', { stub: 1 }),
-      M('afx_iv_serial', { sc: 'Ctrl+F7', stub: 1 }),
+      M('afx_iv_hold', { scr: 'hold' }), M('afx_iv_unhold', { scr: 'unhold' }),
+      M('afx_iv_bal', { ds: { report: 'stock' } }), M('afx_iv_cost', { scr: 'costtrack' }),
+      M('afx_iv_serial', { sc: 'Ctrl+F7', scr: 'serial' }),
       M('afx_iv_barcode', { ds: { tab: 'barcode' } }),
       M('afx_iv_prices', { red: true, ds: { tab: 'items' } }),
-      M('afx_iv_post', { stub: 1 }),
+      M('afx_iv_post', { scr: 'stock_approve' }),
     ]},
     { k: 'afx_m_purch', items: [
       M('afx_pu_orders', { ds: { action: 'purchase-order' } }),
@@ -244,7 +244,7 @@
       M('afx_pu_review', { sc: 'Ctrl+Alt+U', ds: { tab: 'purchases' } }),
     ]},
     { k: 'afx_m_sales', items: [
-      M('afx_sa_compol', { stub: 1 }), M('afx_sa_comm', { stub: 1 }),
+      M('afx_sa_compol', { scr: 'comm_policy' }), M('afx_sa_comm', { scr: 'comm_reps' }),
       SEP,
       M('afx_sa_quotes', { ds: { action: 'quote' } }),
       M('afx_sa_orders', { ds: { tab: 'quotes' } }),
@@ -253,7 +253,7 @@
       M('afx_sa_notes', { ds: { action: 'credit-note' } }),
       M('afx_sa_review', { sc: 'Ctrl+Alt+S', ds: { tab: 'invoices' } }),
       M('afx_sa_prices', { ds: { tab: 'items' } }),
-      M('afx_sa_offers', { stub: 1 }),
+      M('afx_sa_offers', { scr: 'offers' }),
     ]},
     { k: 'afx_m_pos', red: true, items: [
       M('afx_pos_ops', { ds: { tab: 'users' } }),
@@ -267,7 +267,7 @@
       { k: 'afx_pos_reps', sub: [
         M('afx_pos_rinv', { ds: { tab: 'posrep' } }),
         M('afx_pos_rprofit', { ds: { tab: 'poshourly' } }),
-        M('afx_pos_rtrack', { red: true, stub: 1 }),
+        M('afx_pos_rtrack', { red: true, scr: 'postrack' }),
       ]},
     ]},
     { k: 'afx_m_glrep', red: true, items: [
@@ -287,7 +287,7 @@
       M('afx_gr_transfers', { ds: { tab: 'vouchers' } }),
       SEP,
       M('afx_gr_cc_tx', { ds: { tab: 'expenses', sub: 'ccs' } }),
-      M('afx_gr_cc_levels', { stub: 1 }), M('afx_gr_cc_acc', { stub: 1 }), M('afx_gr_acc_cc', { stub: 1 }),
+      M('afx_gr_cc_levels', { scr: 'cc_levels' }), M('afx_gr_cc_acc', { scr: 'cc_acc' }), M('afx_gr_acc_cc', { scr: 'acc_cc' }),
     ]},
     { k: 'afx_m_reports', red: true, items: [
       { k: 'afx_rp_items', sub: [
@@ -306,14 +306,14 @@
       { k: 'afx_rp_customers', sub: [
         M('afx_rp_aging', { ds: { report: 'aging' } }), M('mi_stmt', { ds: { report: 'stmt' } }),
       ]},
-      { k: 'afx_rp_reps', sub: [ M('afx_sa_comm', { stub: 1 }) ]},
+      { k: 'afx_rp_reps', sub: [ M('afx_sa_comm', { scr: 'comm_reps' }) ]},
       { k: 'afx_rp_tax', sub: [
         M('afx_rp_vat', { ds: { report: 'vat' } }), M('afx_rp_vatledger', { ds: { report: 'vatledger' } }),
       ]},
       { k: 'afx_rp_admin', sub: [
         M('afx_rp_cashflow', { ds: { report: 'cashflow' } }), M('afx_rp_margin', { ds: { report: 'margin' } }),
       ]},
-      { k: 'afx_rp_users', red: true, sub: [ M('afx_rp_users', { stub: 1 }) ]},
+      { k: 'afx_rp_users', red: true, sub: [ M('afx_rp_users', { scr: 'usertrack' }) ]},
     ]},
     { k: 'afx_m_integrated', red: true, items: [
       M('afx_ig_einv', { red: true, ds: { tab: 'einvoices' } }),
@@ -322,13 +322,14 @@
       M('afx_ig_credit', { ds: { action: 'credit-note' } }),
     ]},
     { k: 'afx_m_help', items: [
-      M('afx_hlp_guide', { stub: 1 }),
+      M('afx_hlp_guide', { scr: 'guide' }),
       M('mi_about', { ds: { action: 'about' } }),
     ]},
   ];
 
   /* ═══════════ 4) بناء شريط القوائم والقوائم المنسدلة ═══════════ */
   function dispatchItem(it, label) {
+    if (it.scr && window.openAfaqScreen) return window.openAfaqScreen(it.scr);
     if (it.afaq === 'sinv') return openAfaqSalesInvoice();
     if (it.afaq === 'stmt') return openAfaqStatement();
     if (it.stub || (!it.ds && !it.sub)) return afaqStub(label);
@@ -794,7 +795,7 @@
   document.addEventListener('keydown', (e) => {
     if ($('#app-screen') && $('#app-screen').classList.contains('hidden')) return;
     const combo = (e.ctrlKey ? 'ctrl+' : '') + (e.altKey ? 'alt+' : '') + e.key.toLowerCase();
-    if (e.ctrlKey && e.key === 'F7') { e.preventDefault(); return afaqStub(T('afx_iv_serial')); }
+    if (e.ctrlKey && e.key === 'F7') { e.preventDefault(); return window.openAfaqScreen('serial'); }
     if (SHORTCUTS[combo]) {
       if (e.target.closest('input,textarea,select') && combo !== 'alt+l') return;
       e.preventDefault();

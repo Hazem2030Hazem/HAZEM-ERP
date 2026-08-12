@@ -9,7 +9,7 @@
    ═══════════════════════════════════════════════════════════════ */
 'use strict';
 
-const CACHE_NAME = 'hazem-erp-v27';
+const CACHE_NAME = 'hazem-erp-v28';
 const STATIC_FILES = [
   'index.html',
   'styles.css',
@@ -22,6 +22,7 @@ const STATIC_FILES = [
   'afaq-windows.js',
   'entities.js',
   'afaq-a4.js',
+  'afaq-screens.js',
   'pos-plus.js',
   'hr.js',
   'assets.js',
