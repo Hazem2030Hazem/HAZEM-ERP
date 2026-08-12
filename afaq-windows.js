@@ -170,7 +170,7 @@
       M('afx_sys_users', { sc: 'Alt+U', ds: { tab: 'users' } }),
       M('afx_sys_alertcfg', { scr: 'alert_cfg' }), M('afx_sys_alerts', { scr: 'alerts_today' }),
       M('afx_sys_device', { ds: { action: 'pos-settings' } }),
-      { k: 'afx_sys_db', red: true, sub: [
+      { k: 'afx_sys_db', red: true, scr: 'db_switch', sub: [
         M('afx_sys_backup', { ds: { action: 'export-excel' } }),
         M('afx_sys_restore', { red: true, scr: 'restore' }),
         M('afx_sys_dbcfg', { scr: 'dbcfg' }),
@@ -329,7 +329,11 @@
 
   /* ═══════════ 4) بناء شريط القوائم والقوائم المنسدلة ═══════════ */
   function dispatchItem(it, label) {
-    if (it.scr && window.openAfaqScreen) return window.openAfaqScreen(it.scr);
+    if (it.scr && window.openAfaqScreen) {
+      try { return window.openAfaqScreen(it.scr); }
+      catch (err) { console.error(err); return window.toast && toast('تعذر فتح الشاشة — اضغط Ctrl+Shift+R لتحديث البرنامج', false); }
+    }
+    if (it.scr && !window.openAfaqScreen) return window.toast && toast('الملفات لم تُحدّث بعد — اضغط Ctrl+Shift+R', false);
     if (it.afaq === 'sinv') return openAfaqSalesInvoice();
     if (it.afaq === 'stmt') return openAfaqStatement();
     if (it.stub || (!it.ds && !it.sub)) return afaqStub(label);
@@ -355,6 +359,13 @@
           const need = Math.min(sub.scrollHeight, window.innerHeight - 96);
           const roomBelow = window.innerHeight - d.getBoundingClientRect().top - 10;
           d.classList.toggle('flip', roomBelow < need);
+        });
+        // نقرة على البند الأب: تنفّذ إجراءه لو موجود (وإلا تُظهر القائمة الفرعية)
+        d.addEventListener('click', (e) => {
+          if (e.target.closest('.afx-sub')) return;
+          e.stopPropagation();
+          if (it.scr || it.ds) { onPick(); dispatchItem(it, label); }
+          else d.classList.toggle('sub-open');
         });
       }
       else d.addEventListener('click', (e) => { e.stopPropagation(); onPick(); dispatchItem(it, label); });
