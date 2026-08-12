@@ -315,6 +315,11 @@
       ]},
       { k: 'afx_rp_users', red: true, sub: [ M('afx_rp_users', { stub: 1 }) ]},
     ]},
+    { k: 'afx_m_integrated', red: true, items: [
+      M('afx_ig_einv', { red: true, ds: { tab: 'einvoices' } }),
+      M('afx_ig_debit', { ds: { action: 'credit-note' } }),
+      M('afx_ig_credit', { ds: { action: 'credit-note' } }),
+    ]},
     { k: 'afx_m_help', items: [
       M('afx_hlp_guide', { stub: 1 }),
       M('mi_about', { ds: { action: 'about' } }),
@@ -340,7 +345,16 @@
       d.innerHTML = `<span class="txt">${escH(label)}</span>` +
         (it.sub ? '<span class="sub-arrow">◂</span>' : '') +
         (it.sc ? `<span class="sc">${escH(it.sc)}</span>` : '');
-      if (it.sub) d.appendChild(buildDrop(it.sub, onPick)).classList.add('afx-sub');
+      if (it.sub) {
+        d.appendChild(buildDrop(it.sub, onPick)).classList.add('afx-sub');
+        // v26: القائمة الفرعية تفتح لفوق لو لا يوجد مكان كافٍ تحت
+        d.addEventListener('mouseenter', () => {
+          const sub = d.querySelector('.afx-sub');
+          const need = Math.min(sub.scrollHeight, window.innerHeight - 96);
+          const roomBelow = window.innerHeight - d.getBoundingClientRect().top - 10;
+          d.classList.toggle('flip', roomBelow < need);
+        });
+      }
       else d.addEventListener('click', (e) => { e.stopPropagation(); onPick(); dispatchItem(it, label); });
       drop.appendChild(d);
     });
@@ -372,6 +386,8 @@
         drop.style.top = '100%';
         b.style.position = 'relative';
         b.appendChild(drop);
+        // v26: ارتفاع القائمة لا يتجاوز أسفل الشاشة أبداً — كل البنود reachable بالسكرول
+        drop.style.maxHeight = Math.max(180, window.innerHeight - drop.getBoundingClientRect().top - 8) + 'px';
         b.classList.add('open');
         openMenuBtn = b;
       });
@@ -459,10 +475,10 @@
   function fillSysinfo() {
     const st = (typeof state !== 'undefined' && state) ? state : {};
     const name = st.tenantName || ($('#company-title') || {}).textContent || '';
-    if (name && name !== '—') {
-      $('#afx-si-company').textContent = name;
-      $('#afx-header-company').textContent = name;
-    }
+    // v26: الاسم الكامل للشركة من بيانات المستأجر، وإلا الافتراضي الكامل
+    const full = (name && name !== '—') ? name : 'HAZEM.ERP SYSTEM MANAGER';
+    $('#afx-si-company').textContent = full;
+    $('#afx-header-company').textContent = full;
     const email = st.user && st.user.email;
     if (email) $('#afx-si-user').textContent = email.split('@')[0];
     const yr = new Date().getFullYear();
@@ -476,6 +492,12 @@
   function scatterCoins() {
     const desk = $('#afaq-desk');
     if (!desk) return;
+    // v26: النسر + اسم البرنامج watermark محفور في الخلفية
+    const wm = document.createElement('div');
+    wm.className = 'afx-watermark';
+    wm.innerHTML = '<img src="logo.png" alt="">' +
+      '<div class="wm-txt">HAZEM.ERP<br>SYSTEM MANAGER</div>';
+    desk.appendChild(wm);
     const sym = ['$', '﷼', '€', '£'];
     for (let i = 0; i < 9; i++) {
       const c = document.createElement('div');

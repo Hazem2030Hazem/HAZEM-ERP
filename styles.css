@@ -636,11 +636,8 @@ td .btn{margin-inline-start:6px}
   border-bottom: 2px solid #54399F;
 }
 #afaq-header .afx-logo {
-  width: 46px; height: 46px; border-radius: 50%; flex: 0 0 auto;
-  background: radial-gradient(circle at 35% 30%, #B8A5EE, #5B3CA8 70%);
-  border: 2px solid #D9CCF7; color: #fff; font-weight: 800; font-size: 22px;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 1px 4px rgba(0,0,0,.35);
+  width: auto; height: 52px; flex: 0 0 auto; object-fit: contain;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,.4));
 }
 #afaq-header .afx-brand { line-height: 1.25; }
 #afaq-header .afx-brand b { font-size: 19px; letter-spacing: .5px; display: block; }
@@ -807,3 +804,29 @@ fieldset.afx-sec > legend { font-size: 12.5px; font-weight: 700; padding: 0 6px;
   #afaq-menubar { overflow-x: auto; }
   .afx-win { inset: 2px !important; width: auto !important; height: auto !important; max-width: none !important; }
 }
+
+/* ── v26: النسر watermark في الخلفية + تخفيف العملات ── */
+#afaq-desk::before { opacity: .28; }
+#afaq-desk .afx-coin { opacity: .55; }
+.afx-watermark {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; pointer-events: none;
+  opacity: .1; z-index: 0;
+}
+.afx-watermark img { width: 46%; max-width: 620px; object-fit: contain; }
+.afx-watermark .wm-txt { margin-top: 10px; font-size: 34px; font-weight: 800; color: #fff;
+  letter-spacing: 2px; text-align: center; }
+.afx-win { z-index: 10; }
+
+/* ── v26: القوائم الطويلة — سكرول داخلي بسكرولبار كلاسيكي رفيع ── */
+.afx-drop { max-height: calc(100vh - 96px); overflow-y: auto; overflow-x: hidden; }
+.afx-drop::-webkit-scrollbar { width: 10px; }
+.afx-drop::-webkit-scrollbar-track { background: #EDE8DB; }
+.afx-drop::-webkit-scrollbar-thumb { background: #B9B2A2; border: 2px solid #EDE8DB; }
+.afx-drop .afx-sub { max-height: calc(100vh - 96px); overflow-y: auto; }
+/* القوائم الفرعية تفتح لفوق لو ما فيه مكان تحت */
+.afx-drop .afx-di.has-sub.flip > .afx-sub { top: auto; bottom: -3px; }
+
+/* ── v26: شريط عنوان النافذة — الأزرار يمين والعنوان بجانبها (مطابقة آفاق) ── */
+.afx-win-title .afx-wt-txt { order: 2; }
+.afx-win-btns { order: 1; direction: ltr; }

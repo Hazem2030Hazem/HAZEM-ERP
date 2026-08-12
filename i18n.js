@@ -1269,6 +1269,10 @@
     ['afx_stmt_fromstmt', 'من القوائم', 'From Statements'], ['afx_stmt_all', 'اختيار الكل', 'Select All'],
     ['afx_stmt_none', 'عدم الاختيار', 'Deselect All'], ['afx_stmt_invert', 'عكس الاختيار', 'Invert Selection'],
     ['afx_stmt_type', 'النوع', 'Type'], ['afx_stmt_more', 'المزيد', 'More'],
+    // النظم المتكاملة
+    ['afx_m_integrated', 'النظم المتكاملة', 'Integrated Systems'],
+    ['afx_ig_einv', 'الفواتير الالكترونية (السعودية)', 'E-Invoicing (Saudi Arabia)'],
+    ['afx_ig_debit', 'اشعار مدين', 'Debit Note'], ['afx_ig_credit', 'اشعار دائن', 'Credit Note'],
   ];
   AFX_I18N.forEach(([k, ar, en]) => { LANG.ar[k] = ar; LANG.en[k] = en; });
 
