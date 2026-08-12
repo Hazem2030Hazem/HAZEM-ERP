@@ -1273,6 +1273,24 @@
     ['afx_m_integrated', 'النظم المتكاملة', 'Integrated Systems'],
     ['afx_ig_einv', 'الفواتير الالكترونية (السعودية)', 'E-Invoicing (Saudi Arabia)'],
     ['afx_ig_debit', 'اشعار مدين', 'Debit Note'], ['afx_ig_credit', 'اشعار دائن', 'Credit Note'],
+    ['afx_ig_entities', 'الكيانات / الشركات الشقيقة', 'Entities / Sister Companies'],
+    // v27: زاتكا متعدد الكيانات + قالب آفاق A4 + بطاقة المتجر
+    ['ent_pick_lbl', 'الكيان (الشركة / الفرع المُصدِر للفواتير)', 'Entity (invoice-issuing company/branch)'],
+    ['ent_add', '➕ إضافة كيان جديد', '➕ Add Entity'], ['ent_edit', '✏️ تعديل', '✏️ Edit'],
+    ['ent_add_title', 'كيان جديد', 'New Entity'], ['ent_name', 'اسم الكيان', 'Entity Name'],
+    ['ent_vat', 'الرقم الضريبي (3xxxxxxxxxxxx3)', 'VAT Number (3xxxxxxxxxxxx3)'],
+    ['ent_cr', 'السجل التجاري', 'CR Number'], ['ent_addr', 'العنوان الوطني', 'National Address'],
+    ['ent_city', 'المدينة', 'City'], ['ent_district', 'الحي', 'District'], ['ent_postal', 'الرمز البريدي', 'Postal Code'],
+    ['ent_logo', 'رابط اللوجو (اختياري)', 'Logo URL (optional)'],
+    ['ent_is_default', 'الكيان الافتراضي', 'Default Entity'],
+    ['ent_saved', 'تم حفظ الكيان بنجاح', 'Entity saved'], ['ent_save_failed', 'فشل حفظ الكيان', 'Entity save failed'],
+    ['pv_tpl_std', 'القالب القياسي', 'Standard Template'], ['pv_tpl_a4', 'نموذج آفاق A4', 'AFAQ A4 Template'],
+    ['ig_df_title', '🛒 متجر درة فارس الشمال', '🛒 Durrat Fares Al-Shamal Store'],
+    ['ig_df_note', 'ℹ️ روابط سريعة لمتجر درة فارس الشمال الإلكتروني ولوحات إدارته — تُفتح في تبويب جديد. كل ما يُباع في المتجر تتم معالجته محاسبياً هنا (فواتير، زاتكا، كيانات).',
+      'ℹ️ Quick links to the Durrat Fares Al-Shamal online store and its admin panels — opened in a new tab. All store sales are processed here (invoices, ZATCA, entities).'],
+    ['ig_df_store', '🌐 المتجر', '🌐 Store'], ['ig_df_admin', '🛠️ لوحة الإدارة', '🛠️ Admin Panel'],
+    ['ig_df_pos', '🖥️ نقطة البيع', '🖥️ POS'], ['ig_df_staff', '👥 الموظفون', '👥 Staff'],
+    ['ig_df_team', '🔑 دخول الفريق', '🔑 Team Login'],
   ];
   AFX_I18N.forEach(([k, ar, en]) => { LANG.ar[k] = ar; LANG.en[k] = en; });
 

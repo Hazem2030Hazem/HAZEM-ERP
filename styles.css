@@ -830,3 +830,16 @@ fieldset.afx-sec > legend { font-size: 12.5px; font-weight: 700; padding: 0 6px;
 /* ── v26: شريط عنوان النافذة — الأزرار يمين والعنوان بجانبها (مطابقة آفاق) ── */
 .afx-win-title .afx-wt-txt { order: 2; }
 .afx-win-btns { order: 1; direction: ltr; }
+
+/* ── v27: الهيدر — النسر+الاسم يسار / الشركة يمين ── */
+#afaq-header { direction: ltr; }
+#afaq-header .afx-brand-side { display: flex; align-items: center; gap: 12px; }
+#afaq-header .afx-brand { text-align: left; }
+#afaq-header .afx-spacer { flex: 1; }
+#afaq-header .afx-slogan { margin: 0; direction: rtl; font-size: 15px; }
+
+/* ── v27: لوحة النظام — كل سطر: التسمية ثم القيمة، محاذاة يمين كاملة ── */
+.afx-panel-body.afx-sysinfo2 { line-height: 2.1; }
+.afx-sysinfo2 .ln { text-align: right; }
+.afx-sysinfo2 .k { color: #333; }
+.afx-sysinfo2 .v { color: #222; font-weight: 400; }

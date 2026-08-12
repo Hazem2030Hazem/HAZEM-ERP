@@ -521,18 +521,20 @@ $('#btn-add-item').onclick = () => itemForm(null);
 function itemForm(item) {
   openModal(`
     <h3>${item ? 'تعديل صنف' : 'صنف جديد'}</h3>
+    <div style="display:flex;gap:6px;align-items:center">
+      <input id="f-barcode" dir="ltr" placeholder="الباركود (امسح بالقارئ — أول حقل)" value="${esc(item?.barcode || '')}" style="flex:1;margin-bottom:0" autofocus>
+      <button class="btn btn-ghost btn-sm" id="f-bcgen" title="توليد باركود داخلي (EAN-13 يبدأ بـ 200)">توليد</button>
+    </div>
     <input id="f-sku" placeholder="الكود" value="${esc(item?.sku)}">
     <input id="f-name" placeholder="اسم الصنف" value="${esc(item?.name)}">
     <input id="f-unit" placeholder="الوحدة" value="${esc(item?.unit || 'حبة')}">
     <input id="f-price" type="number" step="0.0001" placeholder="سعر البيع" value="${item?.sale_price ?? 0}">
-    <div style="display:flex;gap:6px;align-items:center">
-      <input id="f-barcode" dir="ltr" placeholder="الباركود (اختياري)" value="${esc(item?.barcode || '')}" style="flex:1;margin-bottom:0">
-      <button class="btn btn-ghost btn-sm" id="f-bcgen" title="توليد باركود داخلي (EAN-13 يبدأ بـ 200)">توليد</button>
-    </div>
     <div class="modal-actions">
       <button class="btn btn-gold" id="f-save">حفظ</button>
       <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
     </div>`);
+  // v27: قارئ الباركود keyboard wedge — التركيز على حقل الباركود مع تحديد النص عند الفتح
+  setTimeout(() => { const b = $('#f-barcode'); if (b) { b.focus(); b.select(); } }, 40);
   // توليد باركود داخلي (المرحلة 14 — procurement.js)
   $('#f-bcgen').onclick = () => {
     if (typeof makeInternalBarcode !== 'function') return;
@@ -2793,12 +2795,28 @@ function _pvOpts() {
 
 function renderPvSheet() {
   if (!_pv.doc) return;
+  // v27: قالب «نموذج آفاق A4» للفواتير الضريبية (afaq-a4.js)
+  if (_pv.tplSel === 'a4' && _pv.doc.a4data && typeof window.afaqA4Sheet === 'function') {
+    $('#pv-sheet').innerHTML = '⏳ …';
+    window.afaqA4Sheet(_pv.doc.a4data).then(h => {
+      if (_pv.doc) $('#pv-sheet').innerHTML = buildWatermarkHtml($('#pv-wm').value) + h;
+    });
+    return;
+  }
   $('#pv-sheet').innerHTML = buildWatermarkHtml($('#pv-wm').value) + buildDocSheetHtml(_pv.doc, _pvOpts());
 }
 
 function openPrintPreview(doc) {
   _pv.doc = doc;
   _pv.zoom = 1;
+  _pv.tplSel = 'std';
+  // v27: منتقي القالب يظهر للفواتير الضريبية فقط (تحمل a4data)
+  const tplSel = $('#pv-tpl');
+  if (tplSel) {
+    tplSel.classList.toggle('hidden', !doc.a4data);
+    tplSel.value = 'std';
+    tplSel.onchange = () => { _pv.tplSel = tplSel.value; renderPvSheet(); };
+  }
   $('#pv-title').textContent = doc.title || 'معاينة';
   $('#pv-wm').value = '';
   renderPvSheet();
@@ -3098,6 +3116,8 @@ function _previewTaxInvoice(kind, K, d, lines) {
     note: qrNote || (lines === null ? 'تفصيل الأصناف غير متاح لهذا المستند' : ''),
     qrUrl,
     fileName: 'invoice-' + d.number,
+    // v27: بيانات قالب «نموذج آفاق A4» (afaq-a4.js)
+    a4data: { kind, d, lines, subtotal, taxAmt, gross, priceField: K.price },
   });
 }
 

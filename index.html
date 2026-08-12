@@ -219,11 +219,14 @@
     <main class="main">
       <!-- ═══ دفعة AFAQ (v25): هيدر بنفسجي + شريط قوائم كلاسيكي + سطح مكتب ═══ -->
       <header id="afaq-header">
-        <img src="logo.png" class="afx-logo brand-logo" alt="HAZEM.ERP">
-        <div class="afx-brand">
-          <b>HAZEM.ERP SYSTEM MANAGER</b>
-          <small data-i18n="afx_brand_sub">لإدارة الأعمال والمحاسبة</small>
+        <div class="afx-brand-side">
+          <img src="logo.png" class="afx-logo brand-logo" alt="HAZEM.ERP">
+          <div class="afx-brand">
+            <b>HAZEM.ERP SYSTEM MANAGER</b>
+            <small data-i18n="afx_brand_sub">لإدارة الأعمال والمحاسبة</small>
+          </div>
         </div>
+        <div class="afx-spacer"></div>
         <div class="afx-slogan" id="afx-header-company">—</div>
       </header>
       <nav id="afaq-menubar" aria-label="القوائم الرئيسية"></nav>
@@ -231,19 +234,19 @@
         <aside id="afaq-side">
           <div class="afx-panel">
             <div class="afx-panel-head"><span data-i18n="afx_panel_system">النظام</span><span>▾</span></div>
-            <div class="afx-panel-body" id="afx-sysinfo">
-              <div class="row"><span class="v" id="afx-si-company">—</span><span class="k" data-i18n="afx_company">الشركة</span></div>
-              <div class="row"><span class="v" data-i18n="afx_branch">الفرع الرئيسي</span><span class="k">الفرع</span></div>
-              <div class="row"><span class="v" id="afx-si-fy">—</span><span class="k" data-i18n="afx_fy">السنة المالية</span></div>
-              <div class="row"><span class="v" id="afx-si-date" dir="ltr">—</span><span class="k" data-i18n="afx_date_g">التاريخ الميلادي</span></div>
-              <div class="row"><span class="v" data-i18n="afx_fy_active">نشطة</span><span class="k" data-i18n="afx_fy_state">حالة السنة</span></div>
-              <div class="row"><span class="v" id="afx-si-user">Admin</span><span class="k" data-i18n="afx_user">اسم المستخدم</span></div>
-              <div class="row"><span class="v" id="afx-si-server" dir="ltr">—</span><span class="k" data-i18n="afx_server">الخادم</span></div>
-              <div class="row"><span class="v">HAZEM.ERP</span><span class="k" data-i18n="afx_db">قاعدة البيانات</span></div>
-              <div class="row"><span class="v" dir="ltr">V25.0</span><span class="k" data-i18n="afx_version">إصدار رقم</span></div>
-              <div class="row"><span class="v" data-i18n="afx_lic_type">نوع النسخة: محدودة ثلاثة فروع</span></div>
-              <div class="row"><span class="v" data-i18n="afx_conn_type">نوع الاتصال: مستخدم داخلي</span></div>
-              <div class="row"><span class="v" data-i18n="afx_copy_one">نسخة واحدة</span></div>
+            <div class="afx-panel-body afx-sysinfo2" id="afx-sysinfo">
+              <div class="ln"><span class="k">الشركة</span> <span class="v" id="afx-si-company">—</span></div>
+              <div class="ln"><span class="k">الفرع</span> <span class="v" data-i18n="afx_branch">الفرع الرئيسي</span></div>
+              <div class="ln"><span class="k">السنة المالية</span> <span class="v" id="afx-si-fy">—</span></div>
+              <div class="ln"><span class="k">التاريخ الميلادي</span> <span class="v" id="afx-si-date" dir="ltr">—</span></div>
+              <div class="ln"><span class="k">حالة السنة</span> <span class="v" data-i18n="afx_fy_active">نشطة</span></div>
+              <div class="ln"><span class="k">اسم المستخدم</span> <span class="v" id="afx-si-user">Admin</span></div>
+              <div class="ln"><span class="k">الخادم</span> <span class="v" id="afx-si-server" dir="ltr">—</span></div>
+              <div class="ln"><span class="k">قاعدة البيانات</span> <span class="v">HAZEM.ERP</span></div>
+              <div class="ln"><span class="k">إصدار رقم</span> <span class="v" dir="ltr">V27.0</span></div>
+              <div class="ln"><span class="v" data-i18n="afx_lic_type">نوع النسخة: محدودة ثلاثة فروع</span></div>
+              <div class="ln"><span class="v" data-i18n="afx_conn_type">نوع الاتصال: مستخدم داخلي</span></div>
+              <div class="ln"><span class="v" data-i18n="afx_copy_one">نسخة واحدة</span></div>
             </div>
           </div>
           <div class="afx-panel" style="flex:1">
@@ -475,6 +478,20 @@
 
         <!-- بطاقات المتاجر -->
         <div id="ig-pane-stores">
+          <!-- v27: متجر درة فارس الشمال — روابط سريعة (بدون API) -->
+          <div class="report-box" id="ig-df-store" style="max-width:640px">
+            <h3 data-i18n="ig_df_title">🛒 متجر درة فارس الشمال</h3>
+            <div class="logo-note" data-i18n="ig_df_note">
+              ℹ️ روابط سريعة لمتجر درة فارس الشمال الإلكتروني ولوحات إدارته — تُفتح في تبويب جديد. كل ما يُباع في المتجر تتم معالجته محاسبياً هنا (فواتير، زاتكا، كيانات).
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+              <a class="btn btn-gold btn-sm" href="https://alshamal-df.com" target="_blank" rel="noopener" data-i18n="ig_df_store">🌐 المتجر</a>
+              <a class="btn btn-ghost btn-sm" href="https://alshamal-df.com/admin.html" target="_blank" rel="noopener" data-i18n="ig_df_admin">🛠️ لوحة الإدارة</a>
+              <a class="btn btn-ghost btn-sm" href="https://alshamal-df.com/pos.html" target="_blank" rel="noopener" data-i18n="ig_df_pos">🖥️ نقطة البيع</a>
+              <a class="btn btn-ghost btn-sm" href="https://alshamal-df.com/staff.html" target="_blank" rel="noopener" data-i18n="ig_df_staff">👥 الموظفون</a>
+              <a class="btn btn-ghost btn-sm" href="https://alshamal-df.com/team-login.html" target="_blank" rel="noopener" data-i18n="ig_df_team">🔑 دخول الفريق</a>
+            </div>
+          </div>
           <div class="logo-note" style="margin-bottom:12px" data-i18n="ig_note">
             ℹ️ اربط متجرك (سلة/زد) بإدخال بيانات الاتصال ثم «اختبار الاتصال». زر «مزامنة الآن» يجلب الطلبات الجديدة ويحوّلها تلقائياً إلى فواتير مبيعات (بدون تكرار).
           </div>
@@ -1725,6 +1742,10 @@
   <div id="pv-overlay" class="pv-overlay hidden">
     <div class="pv-toolbar">
       <span id="pv-title" class="pv-title">معاينة</span>
+      <select id="pv-tpl" class="hidden" title="قالب الطباعة" style="max-width:150px">
+        <option value="std" data-i18n="pv_tpl_std">القالب القياسي</option>
+        <option value="a4" data-i18n="pv_tpl_a4">نموذج آفاق A4</option>
+      </select>
       <button id="pv-print" class="btn btn-gold btn-sm" title="طباعة المستند">🖨️ طباعة</button>
       <button id="pv-pdf" class="btn btn-ghost btn-sm" title="حفظ PDF عبر نافذة طباعة المتصفح">💾 حفظ PDF</button>
       <button id="pv-excel" class="btn btn-ghost btn-sm" title="تصدير المستند المعروض إلى Excel">📊 Excel</button>
@@ -1780,6 +1801,9 @@
   <script src="app.js"></script>
   <!-- دفعة AFAQ (v25): مدير النوافذ الكلاسيكية + القوائم + الساعة + شاشتي الفاتورة/كشف الحساب -->
   <script src="afaq-windows.js"></script>
+  <!-- دفعة v27: زاتكا متعدد الكيانات + قالب طباعة «نموذج آفاق A4» -->
+  <script src="entities.js"></script>
+  <script src="afaq-a4.js"></script>
   <script src="pos-plus.js"></script>
   <script src="hr.js"></script>
   <script src="assets.js"></script>

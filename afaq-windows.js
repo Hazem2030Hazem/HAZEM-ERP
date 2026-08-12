@@ -317,6 +317,7 @@
     ]},
     { k: 'afx_m_integrated', red: true, items: [
       M('afx_ig_einv', { red: true, ds: { tab: 'einvoices' } }),
+      M('afx_ig_entities', { red: true, ds: { action: 'tax-settings' } }),
       M('afx_ig_debit', { ds: { action: 'credit-note' } }),
       M('afx_ig_credit', { ds: { action: 'credit-note' } }),
     ]},
