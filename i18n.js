@@ -1335,6 +1335,23 @@
     ['s20_action', 'العملية', 'Action'], ['s20_details', 'التفاصيل', 'Details'],
     ['s20_search', 'بحث', 'Search'], ['s20_movements', 'حركات المخزون', 'Stock Movements'], ['s20_reason', 'السبب', 'Reason'],
     ['s20_unit_cost', 'تكلفة الوحدة', 'Unit Cost'], ['s20_total_cost', 'إجمالي التكلفة', 'Total Cost'],
+    // v29: نافذة قاعدة البيانات (التبديل بين الشركات)
+    ['db_sw_title', 'قاعدة البيانات', 'Database'],
+    ['db_sw_server', 'الخادم', 'Server'],
+    ['db_sw_login_sec', 'تسجيل الدخول إلى الخادم', 'Server Login'],
+    ['db_sw_auth_cloud', 'استخدام مصادقة السحابة (Supabase Auth)', 'Use Cloud Authentication (Supabase Auth)'],
+    ['db_sw_auth_sql', 'استخدام مصادقة SQL Server', 'Use SQL Server Authentication'],
+    ['db_sw_user', 'اسم الدخول', 'Login'], ['db_sw_pass', 'كلمة المرور', 'Password'],
+    ['db_sw_conn_sec', 'الاتصال بقاعدة بيانات', 'Connect to a Database'],
+    ['db_sw_pick', 'حدد أو أدخل اسم قاعدة البيانات:', 'Select or enter a database name:'],
+    ['db_sw_new', 'قاعدة بيانات جديدة', 'New database'],
+    ['db_sw_new_ph', 'اسم قاعدة البيانات الجديدة', 'New database name'],
+    ['db_sw_cancel', 'تراجع', 'Cancel'], ['db_sw_ok', 'موافق', 'OK'],
+    ['db_sw_test', 'اختبار اتصال', 'Test Connection'],
+    ['db_sw_connected', 'متصل', 'Connected'], ['db_sw_failed', 'فشل الاتصال', 'Connection failed'],
+    ['db_sw_switched', 'تم التبديل إلى قاعدة البيانات', 'Switched to database'],
+    ['db_sw_created', 'تم إنشاء قاعدة البيانات والتبديل إليها', 'Database created and switched'],
+    ['db_sw_create_fail', 'فشل إنشاء قاعدة البيانات', 'Database creation failed'],
   ];
   AFX_I18N.forEach(([k, ar, en]) => { LANG.ar[k] = ar; LANG.en[k] = en; });
 

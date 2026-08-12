@@ -89,13 +89,16 @@ async function boot() {
   // ونقيّد الاستعلام بعضوية المستخدم الحالي تحديداً (eq user_id) — وإلا فـ limit(1) قد يلتقط
   // عضوية شخص آخر من نفس الشركة (سياسة memberships_select تسمح برؤية كل أعضاء الشركة).
   const { data: ms } = await sb.from('memberships').select('tenant_id, role, tenants(name, logo_url)')
-    .eq('user_id', user.id).limit(1);
+    .eq('user_id', user.id);
   if (!ms || ms.length === 0) return showScreen('onboarding-screen');
 
-  state.tenant = ms[0].tenant_id;
-  state.myRole = ms[0].role || 'member';
-  state.tenantName = ms[0].tenants.name;
-  state.logoUrl = ms[0].tenants.logo_url || null;
+  // v29: نافذة «قاعدة البيانات» — تفضيل المستأجر المختار يُخزَّن محلياً ويُحترم عند الإقلاع
+  const prefTenant = localStorage.getItem('haz_tenant');
+  const chosen = (prefTenant && ms.find(m => m.tenant_id === prefTenant)) || ms[0];
+  state.tenant = chosen.tenant_id;
+  state.myRole = chosen.role || 'member';
+  state.tenantName = chosen.tenants.name;
+  state.logoUrl = chosen.tenants.logo_url || null;
   $('#company-title').textContent = state.tenantName;
   applyBrandLogo();
   loadTaxSettings(); // بيانات زاتكا (تدرّج آمن — لا تكسر الإقلاع)

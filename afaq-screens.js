@@ -971,3 +971,144 @@
     logAct('login', location.hostname);
   }, 3000);
 })(typeof window !== 'undefined' ? window : globalThis);
+
+/* ═══════════════════════════════════════════════════════════════
+   v29: نافذة «قاعدة البيانات» — التبديل بين قواعد البيانات/الشركات
+   (تكييف سحابي لنافذة آفاق: الخادم + اختبار اتصال فعلي، اسم الدخول
+   = بريد المستخدم، قائمة بكل tenants العضو فيها، إنشاء شركة جديدة
+   عبر RPC create_company الموجود، تبديل فوري عبر تفضيل haz_tenant
+   وإعادة تحميل آمنة، وتسجيل العملية في haz_user_log).
+   ═══════════════════════════════════════════════════════════════ */
+(function (g) {
+  'use strict';
+  const $ = (s) => document.querySelector(s);
+  const T = (k) => (typeof g.t === 'function' ? g.t(k) : k);
+  const st = () => (typeof state !== 'undefined' && state) ? state : {};
+
+  function dbSwitchScreen() {
+    const el = document.createElement('div');
+    const win = g.afaqOpenWindow({ title: T('db_sw_title'), body: el, w: 560, h: 520 });
+    const cfgUrl = (typeof HAZEM_SUPABASE_URL !== 'undefined' && HAZEM_SUPABASE_URL)
+      ? HAZEM_SUPABASE_URL : (st().supabaseUrl || '');
+    el.innerHTML = `
+      <div class="db-sw">
+        <div class="row" style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+          <span class="afx-lbl" style="min-width:56px">${T('db_sw_server')}</span>
+          <input id="dbs-url" dir="ltr" value="${cfgUrl ? cfgUrl.replace(/</g, '') : location.origin}" readonly
+            style="flex:1;background:#F7F5EF;text-align:left">
+          <button class="afx-btn" id="dbs-refresh" title="${T('db_sw_test')}">🔄</button>
+        </div>
+        <fieldset class="afx-sec"><legend>${T('db_sw_login_sec')}</legend>
+          <label style="display:block;margin:2px 0"><input type="radio" name="dbs-auth" checked disabled style="width:auto;margin-inline-end:6px">
+            ${T('db_sw_auth_cloud')}</label>
+          <label style="display:block;margin:2px 0;color:#888"><input type="radio" name="dbs-auth" disabled style="width:auto;margin-inline-end:6px">
+            ${T('db_sw_auth_sql')}</label>
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:5px 8px;margin-top:6px;align-items:center">
+            <span class="afx-lbl">${T('db_sw_user')}</span>
+            <input id="dbs-email" dir="ltr" readonly value="${(st().user && st().user.email) || '—'}" style="background:#F7F5EF;text-align:left">
+            <span class="afx-lbl">${T('db_sw_pass')}</span>
+            <input type="password" value="********" readonly disabled style="background:#F7F5EF">
+          </div>
+        </fieldset>
+        <fieldset class="afx-sec"><legend>${T('db_sw_conn_sec')}</legend>
+          <label style="display:flex;gap:8px;align-items:center;margin:3px 0">
+            <input type="radio" name="dbs-mode" value="pick" checked style="width:auto;margin:0">
+            <span>${T('db_sw_pick')}</span></label>
+          <select id="dbs-tenants" style="width:100%;margin:2px 0 8px 0"></select>
+          <label style="display:flex;gap:8px;align-items:center;margin:3px 0">
+            <input type="radio" name="dbs-mode" value="new" style="width:auto;margin:0">
+            <span>${T('db_sw_new')}</span></label>
+          <input id="dbs-newname" placeholder="${T('db_sw_new_ph')}" style="width:100%" disabled>
+        </fieldset>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:8px">
+          <span id="dbs-status" style="flex:1;font-size:12.5px;font-weight:700"></span>
+          <button class="afx-btn" id="dbs-cancel">${T('db_sw_cancel')}</button>
+          <button class="afx-btn afx-green" id="dbs-ok">${T('db_sw_ok')}</button>
+          <button class="afx-btn" id="dbs-lang">${T('afx_lang')}</button>
+          <button class="afx-btn" id="dbs-test">${T('db_sw_test')}</button>
+        </div>
+      </div>`;
+    const q = (s) => el.querySelector(s);
+
+    // تحميل كل الشركات التي المستخدم عضو فيها
+    let memberships = [];
+    (async () => {
+      if (typeof sb === 'undefined' || !sb || !st().user) {
+        q('#dbs-tenants').innerHTML = `<option>${st().tenantName || '—'}</option>`; return;
+      }
+      const { data } = await sb.from('memberships')
+        .select('tenant_id, role, tenants(name)').eq('user_id', st().user.id);
+      memberships = data || [];
+      q('#dbs-tenants').innerHTML = memberships.map(m =>
+        `<option value="${m.tenant_id}" ${m.tenant_id === st().tenant ? 'selected' : ''}>${m.tenants?.name || m.tenant_id}</option>`).join('')
+        || `<option>${st().tenantName || 'new'}</option>`;
+    })();
+
+    el.querySelectorAll('input[name="dbs-mode"]').forEach(r => r.onchange = () => {
+      const isNew = q('input[name="dbs-mode"]:checked').value === 'new';
+      q('#dbs-newname').disabled = !isNew;
+      q('#dbs-tenants').disabled = isNew;
+      if (isNew) q('#dbs-newname').focus();
+    });
+
+    // اختبار اتصال فعلي (استعلام خفيف)
+    async function testConn() {
+      const stEl = q('#dbs-status');
+      stEl.style.color = '#555'; stEl.textContent = '…';
+      const t0 = performance.now();
+      try {
+        if (typeof sb === 'undefined' || !sb) throw new Error('offline');
+        const { error } = await sb.from('tenants').select('id').limit(1);
+        if (error) throw error;
+        stEl.style.color = '#166534';
+        stEl.textContent = `✓ ${T('db_sw_connected')} (${Math.round(performance.now() - t0)}ms)`;
+      } catch (e) {
+        stEl.style.color = '#B42318';
+        stEl.textContent = `✗ ${T('db_sw_failed')}: ${e.message || ''}`;
+      }
+    }
+    q('#dbs-test').onclick = testConn;
+    q('#dbs-refresh').onclick = testConn;
+
+    q('#dbs-cancel').onclick = () => win.close();
+    q('#dbs-lang').onclick = () => g.setLang && g.setLang(g.currentLang() === 'ar' ? 'en' : 'ar');
+
+    q('#dbs-ok').onclick = async () => {
+      const isNew = q('input[name="dbs-mode"]:checked').value === 'new';
+      if (typeof sb === 'undefined' || !sb) return g.toast && toast(T('db_sw_failed'), false);
+      if (isNew) {
+        const name = q('#dbs-newname').value.trim();
+        if (!name) return g.toast && toast(T('db_sw_new_ph'), false);
+        // نفس دالة إنشاء الشركة في تدفق الدخول (تنشئ tenant + ملكية المستخدم + البذور)
+        const { error } = await sb.rpc('create_company', { p_name: name, p_currency: 'SAR' });
+        if (error) return g.toast && toast(T('db_sw_create_fail') + ': ' + error.message, false);
+        // حدّد الشركة الجديدة كتفضيل ثم أعد التحميل الآمن
+        const { data: ms } = await sb.from('memberships')
+          .select('tenant_id, tenants(name)').eq('user_id', st().user.id);
+        const created = (ms || []).find(m => m.tenants?.name === name);
+        if (created) localStorage.setItem('haz_tenant', created.tenant_id);
+        if (g.afaqLog) g.afaqLog('db_create', name);
+        g.toast && toast(T('db_sw_created') + ': ' + name);
+      } else {
+        const id = q('#dbs-tenants').value;
+        const name = q('#dbs-tenants').selectedOptions[0]?.textContent || '';
+        if (!id || id === st().tenant) { win.close(); return; }
+        localStorage.setItem('haz_tenant', id);
+        if (g.afaqLog) g.afaqLog('db_switch', name);
+        g.toast && toast(T('db_sw_switched') + ': ' + name);
+        // تحديث لوحة النظام فوراً ثم إعادة تحميل آمنة لكل البيانات والشاشات
+        const si = document.getElementById('afx-si-company');
+        if (si) si.textContent = name;
+        const hd = document.getElementById('afx-header-company');
+        if (hd) hd.textContent = name;
+      }
+      setTimeout(() => location.reload(), 900);
+    };
+    win.close = win.close;
+  }
+
+  const orig = g.openAfaqScreen;
+  // استبدال شاشة «إعدادات قاعدة البيانات» بالنافذة الجديدة + إتاحة db_switch
+  const SCREENS_V29 = { db_switch: dbSwitchScreen, dbcfg: dbSwitchScreen };
+  g.openAfaqScreen = (id) => SCREENS_V29[id] ? SCREENS_V29[id]() : orig(id);
+})(typeof window !== 'undefined' ? window : globalThis);
