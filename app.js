@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   H. ERP SYSTEM MANAGER — منطق التطبيق كاملاً (SPA خالص بدون build step)
+   HAZEM.ERP SYSTEM MANAGER — منطق التطبيق كاملاً (SPA خالص بدون build step)
    ═══════════════════════════════════════════════════════════════ */
 
 // ─────────── ١) تهيئة Supabase ───────────
@@ -11,7 +11,7 @@ if (!_cfgOk) {
     document.body.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#FFFFFF;color:#141210;font-family:inherit;direction:rtl">' +
       '<div style="max-width:560px;background:#FAF6F1;border:1px solid #E7DDD1;border-top:4px solid #B42318;border-radius:16px;padding:32px;line-height:2">' +
       '<h1 style="color:#B42318;margin:0 0 12px">⚙️ خطوة واحدة باقية — إعداد الاتصال</h1>' +
-      '<p>تطبيق <b>H. ERP SYSTEM MANAGER</b> شغال، بس محتاج مفاتيح مشروع Supabase الجديد:</p>' +
+      '<p>تطبيق <b>HAZEM.ERP SYSTEM MANAGER</b> شغال، بس محتاج مفاتيح مشروع Supabase الجديد:</p>' +
       '<ol style="margin:0;padding-right:20px">' +
       '<li>افتح مشروعك في Supabase ← <b>Project Settings ← API</b></li>' +
       '<li>انسخ <b>Project URL</b> و <b>anon public key</b></li>' +
@@ -20,7 +20,7 @@ if (!_cfgOk) {
       '</ol><p style="color:#7A6A5C;font-size:13px;margin-bottom:0">ولا تنسى تشغيل ملف schema.sql في SQL Editor مرة واحدة قبل أول استخدام.</p>' +
       '</div></div>';
   });
-  throw new Error('H. ERP SYSTEM MANAGER: config.js غير مُعدّ بعد');
+  throw new Error('HAZEM.ERP SYSTEM MANAGER: config.js غير مُعدّ بعد');
 }
 
 // حالة عامة
@@ -293,15 +293,15 @@ $$('.mb-leaf').forEach(leaf => {
     if (leaf.dataset.action === 'sysinfo') return openModal(`
       <h3>🖥️ معلومات النظام</h3>
       <div class="table-wrap"><table><tbody>
-        <tr><td style="color:#94a3b8">النظام</td><td style="font-weight:700">H. ERP SYSTEM MANAGER</td></tr>
-        <tr><td style="color:#94a3b8">الشركة</td><td>${esc(state.tenantName || '—')}</td></tr>
-        <tr><td style="color:#94a3b8">المستخدم</td><td dir="ltr">${esc(state.user?.email || '—')}</td></tr>
-        <tr><td style="color:#94a3b8">الإصدار</td><td>1.0.0</td></tr>
-        <tr><td style="color:#94a3b8">التاريخ</td><td>${new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}</td></tr>
+        <tr><td style="color:#7A6A5C">النظام</td><td style="font-weight:700">HAZEM.ERP SYSTEM MANAGER</td></tr>
+        <tr><td style="color:#7A6A5C">الشركة</td><td>${esc(state.tenantName || '—')}</td></tr>
+        <tr><td style="color:#7A6A5C">المستخدم</td><td dir="ltr">${esc(state.user?.email || '—')}</td></tr>
+        <tr><td style="color:#7A6A5C">الإصدار</td><td>1.0.0</td></tr>
+        <tr><td style="color:#7A6A5C">التاريخ</td><td>${new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}</td></tr>
       </tbody></table></div>
       <div class="modal-actions"><button class="btn btn-gold" onclick="closeModal()">موافق</button></div>`);
     if (leaf.dataset.action === 'about') return openModal(`
-      <h3 style="text-align:center">H. ERP SYSTEM MANAGER</h3>
+      <h3 style="text-align:center">HAZEM.ERP SYSTEM MANAGER</h3>
       <p style="text-align:center;color:var(--muted);line-height:2.2;margin:0">
         الإصدار 1.0.0<br>نظام محاسبة وإدارة متكامل<br>
         <span style="font-size:12px">جميع الحقوق محفوظة © ${new Date().getFullYear()}</span></p>
@@ -348,7 +348,7 @@ function _showDevGate() {
   openModal(`
     <h3 style="text-align:center">🔐 بوابة مالك النظام</h3>
     <p style="color:var(--muted);font-size:13px;text-align:center;margin-bottom:16px">
-      هذه المنطقة خاصة بمالك H. ERP SYSTEM MANAGER فقط — سجّل بياناتك للمتابعة</p>
+      هذه المنطقة خاصة بمالك HAZEM.ERP SYSTEM MANAGER فقط — سجّل بياناتك للمتابعة</p>
     <label class="lbl">البريد الإلكتروني</label>
     <input type="email" id="dg-email" dir="ltr" autocomplete="username">
     <label class="lbl">كلمة المرور</label>
@@ -1459,7 +1459,7 @@ async function loadDevPanel() {
 // قالب config.js للنسخة المُصدَّرة (بدون أي مفاتيح حقيقية)
 const DL_CONFIG_TEMPLATE =
 '/* ═══════════════════════════════════════════════\n' +
-'   H. ERP SYSTEM MANAGER — ملف إعداد الاتصال بقاعدة البيانات\n' +
+'   HAZEM.ERP SYSTEM MANAGER — ملف إعداد الاتصال بقاعدة البيانات\n' +
 '   ضع مفاتيح مشروع Supabase الخاص بك في السطرين التاليين:\n' +
 '   (Project Settings ← API ← Project URL و anon public key)\n' +
 '   ═══════════════════════════════════════════════ */\n' +
@@ -1470,7 +1470,7 @@ const DL_CONFIG_TEMPLATE =
 function dlLauncherHtml(version, customer) {
   return '<!DOCTYPE html>\n<html lang="ar" dir="rtl">\n<head>\n<meta charset="UTF-8">\n' +
 '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
-'<title>H. ERP SYSTEM MANAGER — ابدأ هنا</title>\n<style>\n' +
+'<title>HAZEM.ERP SYSTEM MANAGER — ابدأ هنا</title>\n<style>\n' +
 'body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#FFFFFF;color:#1C1712;font-family:Tahoma,Arial,sans-serif;direction:rtl;padding:20px;box-sizing:border-box}\n' +
 '.card{max-width:560px;width:100%;background:#FAF6F1;border:1px solid #E7DDD1;border-top:5px solid #B42318;border-radius:18px;padding:36px;text-align:center;box-shadow:0 10px 30px rgba(28,23,18,.08)}\n' +
 'img.logo{width:110px;height:110px;object-fit:contain;margin-bottom:14px}\n' +
@@ -1480,8 +1480,8 @@ function dlLauncherHtml(version, customer) {
 '.links a{color:#7B4B26;text-decoration:none;font-size:13px;margin:0 8px}\n' +
 '.meta{color:#7A6A5C;font-size:12px;margin-top:18px;line-height:1.9}\n' +
 '</style>\n</head>\n<body>\n<div class="card">\n' +
-'<img class="logo" src="logo.png" alt="H. ERP" onerror="this.style.display=\'none\'">\n' +
-'<h1>H. ERP <span>SYSTEM MANAGER</span></h1>\n' +
+'<img class="logo" src="logo.png" alt="HAZEM.ERP" onerror="this.style.display=\'none\'">\n' +
+'<h1>HAZEM.ERP <span>SYSTEM MANAGER</span></h1>\n' +
 '<p class="sub">نظام محاسبة وإدارة مخزون متكامل</p>\n' +
 '<a class="btn" href="index.html">🚀 تشغيل البرنامج</a>\n' +
 '<div class="links"><a href="اقرأني-التثبيت.txt">📖 دليل التثبيت</a> · <a href="VERSION.txt">ℹ️ معلومات الإصدار</a></div>\n' +
@@ -1493,7 +1493,7 @@ function dlLauncherHtml(version, customer) {
 function dlReadmeTxt(version, customer, dateStr) {
   return [
 '═══════════════════════════════════════════════════════',
-'   H. ERP SYSTEM MANAGER — دليل التثبيت خطوة بخطوة',
+'   HAZEM.ERP SYSTEM MANAGER — دليل التثبيت خطوة بخطوة',
 '═══════════════════════════════════════════════════════',
 '',
 'الإصدار: ' + version + (customer ? '   |   مرخَّص لصالح: ' + customer : '') + '   |   تاريخ التصدير: ' + dateStr,
@@ -1525,7 +1525,7 @@ function dlReadmeTxt(version, customer, dateStr) {
 '2) أنشئ شركتك من شاشة البداية وابدأ العمل فوراً.',
 '',
 'ملاحظة: لتشغيل البرنامج يحتاج العميل اتصالاً بالإنترنت (قاعدة البيانات سحابية).',
-'بالتوفيق! — فريق H. ERP SYSTEM MANAGER',
+'بالتوفيق! — فريق HAZEM.ERP SYSTEM MANAGER',
   ].join('\r\n');
 }
 
@@ -1558,7 +1558,7 @@ $('#btn-build-package').onclick = async () => {
     zip.file('اقرأني-التثبيت.txt', dlReadmeTxt(version, customer, dateStr));
     zip.file('ابدأ-هنا.html', dlLauncherHtml(version, customer));
     zip.file('VERSION.txt',
-      'H. ERP SYSTEM MANAGER\r\n' +
+      'HAZEM.ERP SYSTEM MANAGER\r\n' +
       'الإصدار: ' + version + '\r\n' +
       'تاريخ التصدير: ' + dateStr + '\r\n' +
       'المرخَّص له: ' + (customer || 'غير محدد') + '\r\n');
@@ -2714,7 +2714,7 @@ function buildDocSheetHtml(doc, opts = {}) {
   }
   if (doc.note) h += `<div class="doc-note">${esc(doc.note)}</div>`;
   if (doc.qrUrl) h += `<div class="doc-qr"><img src="${doc.qrUrl}" alt="QR"><div class="doc-qr-lbl">ZATCA QR</div></div>`;
-  h += '<div class="doc-foot">أُنشئ بواسطة <b>H. ERP SYSTEM MANAGER</b> — نظام المحاسبة والإدارة</div>';
+  h += '<div class="doc-foot">أُنشئ بواسطة <b>HAZEM.ERP SYSTEM MANAGER</b> — نظام المحاسبة والإدارة</div>';
   return h;
 }
 
@@ -2749,7 +2749,7 @@ function docToAOA(doc, opts = {}) {
   });
   (doc.totals || []).forEach(t => aoa.push([t]));
   if (doc.note) aoa.push([doc.note]);
-  aoa.push([], ['H. ERP SYSTEM MANAGER']);
+  aoa.push([], ['HAZEM.ERP SYSTEM MANAGER']);
   return aoa;
 }
 

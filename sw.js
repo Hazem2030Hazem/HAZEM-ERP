@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   H. ERP — المرحلة 16: Service Worker (PWA)
+   HAZEM.ERP — المرحلة 16: Service Worker (PWA)
    • cache-first للملفات الثابتة المحلية (HTML/CSS/JS/أيقونات/شعار).
    • لا نكاشط إطلاقاً: أي طلب POST، وأي طلب إلى Supabase
      (nqporduxtzrojnclkdbu.supabase.co أو أي *.supabase.co) أو أي
@@ -9,7 +9,7 @@
    ═══════════════════════════════════════════════════════════════ */
 'use strict';
 
-const CACHE_NAME = 'hazem-erp-v21';
+const CACHE_NAME = 'hazem-erp-v22';
 const STATIC_FILES = [
   'index.html',
   'styles.css',

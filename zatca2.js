@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   H. ERP — المرحلة 17: زاتكا الجيل الثاني (الربط والتكامل)
+   HAZEM.ERP — المرحلة 17: زاتكا الجيل الثاني (الربط والتكامل)
    ─────────────────────────────────────────────────────────────
    قرارات التنفيذ الموثقة (المستوى المطبق فعلياً client-side):
    • توليد XML فاتورة UBL 2.1 (ZATCA subset) نقي بلا مكتبات:
@@ -661,7 +661,7 @@
         <td>${new Date(v.created_at).toLocaleDateString('ar-EG')}</td>
         <td>${typeLbl}</td>
         <td>${fmt(v.total)}</td>
-        <td>${e ? `<b style="color:${statusColor[e.status] || '#7A6A5C'}">${statusLbl(e.status)}</b>` : '<span style="color:#94a3b8">—</span>'}</td>
+        <td>${e ? `<b style="color:${statusColor[e.status] || '#7A6A5C'}">${statusLbl(e.status)}</b>` : '<span style="color:#7A6A5C">—</span>'}</td>
         <td dir="ltr" style="font-family:monospace;font-size:11px">${e ? String(e.hash || '').slice(0, 14) + '…' : '—'}</td>
         <td style="white-space:nowrap">
           <button class="btn btn-gold btn-sm" onclick="zp2Generate('${v.id}')">⚡ ${t('zp2_gen_btn')}</button>
