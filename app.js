@@ -189,7 +189,10 @@ window.switchTab = switchTab;
 
 // ─────────── ٤-ز) تعدد اللغات (i18n foundation) — دفعة زاتكا/VAT ───────────
 // إعادة رسم التبويب الحالي بعد تبديل اللغة (تحديث عنوان النافذة الكلاسيكية)
-window.__rerenderCurrentTab = () => { if (window.__currentTab) switchTab(window.__currentTab); };
+window.__rerenderCurrentTab = () => {
+  if (window.__currentTab) switchTab(window.__currentTab);
+  if (typeof window.__qbRenderAll === 'function') window.__qbRenderAll(); // إعادة ترجمة القوائم العلوية وخريطة سير العمل
+};
 // زر اللغة في شريط القوائم: يبدّل عربي ⇄ English ويحدّث الاتجاه rtl/ltr
 const _btnLang = $('#btn-lang');
 if (_btnLang) _btnLang.onclick = () => setLang(currentLang() === 'ar' ? 'en' : 'ar');
@@ -258,39 +261,37 @@ if (_tabbar) _tabbar.addEventListener('click', (e) => {
   if (chip) switchTab(chip.dataset.tab);
 });
 
-// عناصر القوائم: تبويب أو إجراء
-$$('.mb-leaf').forEach(leaf => {
-  if (leaf.disabled) return; // البنود المعطلة «قريباً 🚧» لا تفعل شيئاً
-  leaf.addEventListener('click', () => {
-    closeAllMenus();
-    if (leaf.dataset.report) return openReport(leaf.dataset.report); // تبويب التقارير + تاب فرعي
-    if (leaf.dataset.tab) {
-      switchTab(leaf.dataset.tab);
+// مُرسل أوامر القوائم الموحّد: يستدعيه السايدبار + شريط القوائم العلوي + شريط الأيقونات + خريطة سير العمل
+// يقبل dataset بصيغة { report, tab, sub, action } — نفس دلالات بنود .mb-leaf
+function qbMenuDispatch(ds) {
+    if (ds.report) return openReport(ds.report); // تبويب التقارير + تاب فرعي
+    if (ds.tab) {
+      switchTab(ds.tab);
       // المرحلة 15: بنود المصروفات تحمل data-sub لفتح التاب الفرعي المطلوب
-      if (leaf.dataset.tab === 'expenses' && leaf.dataset.sub && window.switchExSub) switchExSub(leaf.dataset.sub);
+      if (ds.tab === 'expenses' && ds.sub && window.switchExSub) switchExSub(ds.sub);
       return;
     }
-    if (leaf.dataset.action === 'print-preview') return previewCurrentView(); // دفعة B
-    if (leaf.dataset.action === 'export-excel') return exportCurrentViewExcel(); // دفعة B
-    if (leaf.dataset.action === 'logout') return $('#btn-logout').click();
-    if (leaf.dataset.action === 'opening-entry') return openOpeningEntry();
-    if (leaf.dataset.action === 'tax-settings') return openTaxSettings();
+    if (ds.action === 'print-preview') return previewCurrentView(); // دفعة B
+    if (ds.action === 'export-excel') return exportCurrentViewExcel(); // دفعة B
+    if (ds.action === 'logout') return $('#btn-logout').click();
+    if (ds.action === 'opening-entry') return openOpeningEntry();
+    if (ds.action === 'tax-settings') return openTaxSettings();
     // ترقية POS+: إعدادات الطابعة (pos-plus.js — حارس التعريف)
-    if (leaf.dataset.action === 'pos-settings') return window.openPosSettings && window.openPosSettings();
-    if (leaf.dataset.action === 'voucher-receipt') return openVoucher('receipt');
-    if (leaf.dataset.action === 'voucher-payment') return openVoucher('payment');
-    if (leaf.dataset.action === 'voucher-transfer') return openVoucher('transfer');
-    if (leaf.dataset.action === 'purchase-invoice') return openPurchaseInvoice();
+    if (ds.action === 'pos-settings') return window.openPosSettings && window.openPosSettings();
+    if (ds.action === 'voucher-receipt') return openVoucher('receipt');
+    if (ds.action === 'voucher-payment') return openVoucher('payment');
+    if (ds.action === 'voucher-transfer') return openVoucher('transfer');
+    if (ds.action === 'purchase-invoice') return openPurchaseInvoice();
     // المرحلة 14: أمر شراء + إشعار دائن/مدين (procurement.js — حارس التعريف)
-    if (leaf.dataset.action === 'purchase-order') return window.openPurchaseOrder && window.openPurchaseOrder();
-    if (leaf.dataset.action === 'credit-note') return window.openCreditNote && window.openCreditNote();
-    if (leaf.dataset.action === 'purchase-return') return openPurchaseReturn();
-    if (leaf.dataset.action === 'sales-return') return openSalesReturn();
-    if (leaf.dataset.action === 'quote') return openQuote();
-    if (leaf.dataset.action === 'warehouses') return openWarehouses('list');
-    if (leaf.dataset.action === 'stock-transfer') return openWarehouses('transfer');
-    if (leaf.dataset.action === 'stock-count') return openWarehouses('count');
-    if (leaf.dataset.action === 'sysinfo') return openModal(`
+    if (ds.action === 'purchase-order') return window.openPurchaseOrder && window.openPurchaseOrder();
+    if (ds.action === 'credit-note') return window.openCreditNote && window.openCreditNote();
+    if (ds.action === 'purchase-return') return openPurchaseReturn();
+    if (ds.action === 'sales-return') return openSalesReturn();
+    if (ds.action === 'quote') return openQuote();
+    if (ds.action === 'warehouses') return openWarehouses('list');
+    if (ds.action === 'stock-transfer') return openWarehouses('transfer');
+    if (ds.action === 'stock-count') return openWarehouses('count');
+    if (ds.action === 'sysinfo') return openModal(`
       <h3>🖥️ معلومات النظام</h3>
       <div class="table-wrap"><table><tbody>
         <tr><td style="color:#7A6A5C">النظام</td><td style="font-weight:700">HAZEM.ERP SYSTEM MANAGER</td></tr>
@@ -307,6 +308,15 @@ $$('.mb-leaf').forEach(leaf => {
         <span style="font-size:12px">جميع الحقوق محفوظة © ${new Date().getFullYear()}</span></p>
       <div class="modal-actions" style="justify-content:center">
         <button class="btn btn-gold" onclick="closeModal()">موافق</button></div>`);
+}
+window.qbMenuDispatch = qbMenuDispatch;
+
+// عناصر القوائم: تبويب أو إجراء
+$$('.mb-leaf').forEach(leaf => {
+  if (leaf.disabled) return; // البنود المعطلة «قريباً 🚧» لا تفعل شيئاً
+  leaf.addEventListener('click', () => {
+    closeAllMenus();
+    qbMenuDispatch(leaf.dataset);
   });
 });
 
@@ -464,6 +474,9 @@ async function refreshDashboard() {
     });
     _set('#c-net-profit', rev - exp);
   } catch (_) { /* يبقى 0.00 عند أي خطأ */ }
+
+  // اللوحة الجانبية الكلاسيكية (أرصدة الحسابات + التنبيهات) — نفس مصادر البيانات أعلاه
+  if (typeof window.renderQbSidePanel === 'function') window.renderQbSidePanel();
 }
 
 // ─────────── ٧) الأصناف ───────────
@@ -3292,3 +3305,355 @@ window.delBranch = async (id) => {
   const { data: { session } } = await sb.auth.getSession();
   if (session) boot(); else showScreen('auth-screen');
 })();
+
+// ═══════════ ٢٠) واجهة QuickBooks Desktop الكلاسيكية ═══════════
+// شريط قوائم علوي + شريط أيقونات + خريطة سير عمل + لوحة جانبية.
+// كل البنود تمر عبر qbMenuDispatch (نفس آلية السايدبار) فلا تُكسر أي مسارات حالية.
+
+// ── ٢٠-أ) أيقونات SVG خطية (stroke) — لا إيموجي ──
+const QB_SVG = (paths, vb = 24) =>
+  `<svg viewBox="0 0 ${vb} ${vb}" fill="none" stroke="currentColor" stroke-width="1.7"
+    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+const QB_ICONS = {
+  home:     QB_SVG('<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/>'),
+  invoice:  QB_SVG('<rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M9 8h6M9 12h6M9 16h4"/>'),
+  receipt:  QB_SVG('<path d="M6 3h12v18l-2-1.5L14 21l-2-1.5L10 21l-2-1.5L6 21z"/><path d="M9 8h6M9 12h6"/>'),
+  payment:  QB_SVG('<rect x="3" y="6" width="18" height="12" rx="1.5"/><path d="M3 10h18"/><path d="M7 15h4"/>'),
+  item:     QB_SVG('<path d="M12 3 4 7v10l8 4 8-4V7z"/><path d="M4 7l8 4 8-4M12 11v10"/>'),
+  customer: QB_SVG('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6.5 8-6.5s8 2.5 8 6.5"/>'),
+  po:       QB_SVG('<circle cx="9" cy="20" r="1.6"/><circle cx="17" cy="20" r="1.6"/><path d="M3 4h2l2.4 11h10.4l2-8H7"/>'),
+  report:   QB_SVG('<path d="M4 20V10M10 20V4M16 20v-8M21 20H3"/>'),
+  search:   QB_SVG('<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.5-4.5"/>'),
+  quote:    QB_SVG('<rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M9 8h6M9 12h6"/><path d="M15 16l2 2 3-3.5"/>'),
+  money:    QB_SVG('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.5 10c0-1.2 1.1-2 2.5-2s2.5.8 2.5 2-1 1.8-2.5 2.2-2.5 1-2.5 2.2 1.1 2 2.5 2 2.5-.8 2.5-2"/>'),
+  stmt:     QB_SVG('<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h6M9 16h6"/>'),
+  transfer: QB_SVG('<path d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5"/>'),
+  count:    QB_SVG('<rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="m8 12 2.5 2.5L16 9"/>'),
+  journal:  QB_SVG('<path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2z"/><path d="M5 18a2 2 0 0 1 2-2h11"/><path d="M9 8h6"/>'),
+  balance:  QB_SVG('<path d="M12 4v16M5 20h14"/><path d="M12 6 7 8m5-2 5 2"/><path d="M4 13a3 3 0 0 0 6 0l-3-5zm10 0a3 3 0 0 0 6 0l-3-5z"/>'),
+};
+
+// ── ٢٠-ب) مصدر بيانات واحد للقوائم العلوية — سهل التعديل ──
+// item: { k: مفتاح i18n, tab|action|report, sub?, disabled? } أو '-' فاصل
+const QB_MENUS = [
+  { k: 'qb_menu_file', items: [
+    { k: 'mi_open_dash', tab: 'dashboard' }, { k: 'mi_print_preview', action: 'print-preview' },
+    { k: 'mi_export_excel', action: 'export-excel' }, '-',
+    { k: 'mi_sysinfo', action: 'sysinfo' }, { k: 'mi_backup', disabled: true }, '-',
+    { k: 'mi_logout', action: 'logout' },
+  ]},
+  { k: 'qb_menu_lists', items: [
+    { k: 'mi_items', tab: 'items' }, { k: 'mi_customers', tab: 'parties' },
+    { k: 'mi_suppliers', tab: 'parties' }, { k: 'mi_acc_tree', tab: 'accounts' }, '-',
+    { k: 'mi_warehouses', action: 'warehouses' }, { k: 'mi_hr_employees', tab: 'employees' },
+  ]},
+  { k: 'qb_menu_fav', items: [
+    { k: 'mi_sinv', tab: 'invoices' }, { k: 'mi_vreceipt', action: 'voucher-receipt' },
+    { k: 'mi_vpayment', action: 'voucher-payment' }, { k: 'qb_n_reports', tab: 'reports' },
+  ]},
+  { k: 'qb_menu_company', items: [
+    { k: 'mi_settings', tab: 'settings' }, { k: 'mi_users', tab: 'users' },
+    { k: 'mi_branches', tab: 'branches' }, { k: 'mi_tax_settings', action: 'tax-settings' }, '-',
+    { k: 'mi_acc_tree', tab: 'accounts' }, { k: 'mi_journal', tab: 'journal' },
+    { k: 'mi_opening', action: 'opening-entry' }, { k: 'mi_assets_register', tab: 'assets' }, '-',
+    { k: 'mi_integrations', tab: 'integrations' },
+  ]},
+  { k: 'qb_menu_customers', items: [
+    { k: 'mi_customers', tab: 'parties' }, '-',
+    { k: 'qb_n_quotes', tab: 'quotes' }, { k: 'mi_quote', action: 'quote' },
+    { k: 'mi_sinv', tab: 'invoices' }, { k: 'qb_n_returns', tab: 'returns' },
+    { k: 'mi_sret', action: 'sales-return' }, '-',
+    { k: 'mi_vreceipt', action: 'voucher-receipt' }, { k: 'mi_stmt', report: 'stmt' }, '-',
+    { k: 'mi_einvoices', tab: 'einvoices' }, { k: 'mi_crm', tab: 'crm' },
+  ]},
+  { k: 'qb_menu_vendors', items: [
+    { k: 'mi_suppliers', tab: 'parties' }, '-',
+    { k: 'mi_porder', action: 'purchase-order' }, { k: 'qb_n_pinv', tab: 'purchases' },
+    { k: 'mi_pinv', action: 'purchase-invoice' }, { k: 'mi_pret', action: 'purchase-return' },
+    { k: 'mi_cnote', action: 'credit-note' }, '-',
+    { k: 'mi_vpayment', action: 'voucher-payment' }, { k: 'rep_ps_tab', report: 'ps' },
+  ]},
+  { k: 'qb_menu_emp', items: [
+    { k: 'mi_hr_employees', tab: 'employees' }, { k: 'mi_hr_payroll', tab: 'hr' },
+  ]},
+  { k: 'qb_menu_inv', items: [
+    { k: 'mi_items', tab: 'items' }, { k: 'qb_n_wh', tab: 'warehouses' },
+    { k: 'mi_stock_transfer', action: 'stock-transfer' }, { k: 'mi_stock_count', action: 'stock-count' }, '-',
+    { k: 'mi_barcode', tab: 'barcode' }, { k: 'mi_manufacturing', tab: 'manufacturing' },
+  ]},
+  { k: 'qb_menu_bank', items: [
+    { k: 'qb_n_vouchers', tab: 'vouchers' }, { k: 'mi_vreceipt', action: 'voucher-receipt' },
+    { k: 'mi_vpayment', action: 'voucher-payment' }, { k: 'mi_vtransfer', action: 'voucher-transfer' }, '-',
+    { k: 'mi_journal', tab: 'journal' },
+  ]},
+  { k: 'qb_menu_reports', items: [
+    { k: 'qb_n_reports', tab: 'reports' }, '-',
+    { k: 'mi_trial', report: 'trial' }, { k: 'mi_income', report: 'income' },
+    { k: 'mi_balance', report: 'balance' }, { k: 'mi_stmt', report: 'stmt' }, '-',
+    { k: 'mi_stock_rep', report: 'stock' }, { k: 'mi_sales_rep', report: 'sales' },
+    { k: 'mi_purch_rep', report: 'purch' }, { k: 'rep_ps_tab', report: 'ps' },
+    { k: 'rep_poopen_tab', report: 'poopen' }, '-',
+    { k: 'mi_vat_return', report: 'vat' }, { k: 'mi_vat_ledger', report: 'vatledger' },
+    { k: 'mi_aging', report: 'aging' }, { k: 'mi_cashflow', report: 'cashflow' },
+    { k: 'mi_margin', report: 'margin' },
+  ]},
+  { k: 'qb_menu_window', items: [
+    { k: 'mi_open_dash', tab: 'dashboard' }, { k: 'mi_cashier', tab: 'pos' },
+    { k: 'mi_exp_list', tab: 'expenses' }, { k: 'mi_exp_cc', tab: 'expenses', sub: 'ccs' },
+    { k: 'mi_exp_rec', tab: 'expenses', sub: 'rec' }, { k: 'mi_exp_rem', tab: 'expenses', sub: 'rem' },
+  ]},
+  { k: 'qb_menu_help', items: [
+    { k: 'mi_guide', disabled: true }, { k: 'mi_about', action: 'about' },
+  ]},
+];
+
+// ── ٢٠-ج) شريط الأيقونات: الإجراءات الأكثر استخداماً ──
+const QB_ICONBAR = [
+  { icon: 'home',     k: 'qb_ic_home',    tab: 'dashboard' },
+  { icon: 'invoice',  k: 'qb_ic_sinv',    run: () => { switchTab('invoices'); invoiceForm(); } },
+  { icon: 'receipt',  k: 'qb_ic_receipt', action: 'voucher-receipt' },
+  { icon: 'payment',  k: 'qb_ic_payment', action: 'voucher-payment' },
+  { icon: 'item',     k: 'qb_ic_item',    run: () => { switchTab('items'); itemForm(null); } },
+  { icon: 'customer', k: 'qb_ic_customer',run: () => { switchTab('parties'); partyForm(null); } },
+  { icon: 'po',       k: 'qb_ic_po',      action: 'purchase-order' },
+  { icon: 'report',   k: 'qb_ic_report',  tab: 'reports' },
+  { icon: 'search',   k: 'qb_ic_search',  run: () => qbOpenSearch() },
+];
+
+// ── ٢٠-د) خريطة سير العمل: مجموعات أفقية RTL بعقد وأسهم ──
+const QB_WORKFLOW = [
+  { k: 'qb_wf_customers', nodes: [
+    { icon: 'quote',   k: 'qb_n_quotes',    tab: 'quotes' },
+    { icon: 'invoice', k: 'qb_n_sinv',      tab: 'invoices' },
+    { icon: 'money',   k: 'qb_n_collect',   action: 'voucher-receipt' },
+    { icon: 'stmt',    k: 'qb_n_cust_stmt', report: 'stmt' },
+  ]},
+  { k: 'qb_wf_vendors', nodes: [
+    { icon: 'po',      k: 'qb_n_po',        action: 'purchase-order' },
+    { icon: 'invoice', k: 'qb_n_pinv',      tab: 'purchases' },
+    { icon: 'money',   k: 'qb_n_pay',       action: 'voucher-payment' },
+    { icon: 'stmt',    k: 'qb_n_vend_stmt', report: 'ps' },
+  ]},
+  { k: 'qb_wf_inventory', nodes: [
+    { icon: 'item',     k: 'qb_n_items', tab: 'items' },
+    { icon: 'transfer', k: 'qb_n_moves', tab: 'warehouses' },
+    { icon: 'count',    k: 'qb_n_count', action: 'stock-count' },
+  ]},
+  { k: 'qb_wf_banking', nodes: [
+    { icon: 'receipt', k: 'qb_n_vouchers', tab: 'vouchers' },
+    { icon: 'journal', k: 'qb_n_journal',  tab: 'journal' },
+    { icon: 'balance', k: 'qb_n_balances', tab: 'vouchers' },
+  ]},
+];
+
+// ترجمة آمنة: t() إن وُجدت وإلا النص الاحتياطي
+const _qbT = (k, fb) => (typeof t === 'function' ? (t(k) || fb || k) : (fb || k));
+
+// ── ٢٠-هـ) بناء شريط القوائم العلوي (click-to-open / إغلاق خارجاً / Escape) ──
+function qbRenderMenubar() {
+  const bar = $('#qb-menubar');
+  if (!bar) return;
+  bar.innerHTML = QB_MENUS.map((m, i) => `
+    <div class="qb-menu" data-menu="${i}">
+      <button type="button" class="qb-menu-btn" aria-haspopup="true" aria-expanded="false">${esc(_qbT(m.k))}</button>
+      <div class="qb-dropdown hidden" role="menu">
+        ${m.items.map(it => it === '-'
+          ? '<div class="qb-dd-sep" role="separator"></div>'
+          : `<button type="button" role="menuitem" class="qb-dd-item${it.disabled ? ' disabled' : ''}"
+              ${it.disabled ? 'disabled' : ''}
+              ${it.tab ? `data-tab="${it.tab}"` : ''}${it.action ? `data-action="${it.action}"` : ''}
+              ${it.report ? `data-report="${it.report}"` : ''}${it.sub ? `data-sub="${it.sub}"` : ''}
+            >${esc(_qbT(it.k))}</button>`).join('')}
+      </div>
+    </div>`).join('');
+}
+function qbCloseDropdowns() {
+  $$('#qb-menubar .qb-menu.open').forEach(m => {
+    m.classList.remove('open');
+    m.querySelector('.qb-dropdown')?.classList.add('hidden');
+    m.querySelector('.qb-menu-btn')?.setAttribute('aria-expanded', 'false');
+  });
+}
+(function qbBindMenubar() {
+  const bar = $('#qb-menubar');
+  if (!bar) return;
+  bar.addEventListener('click', (e) => {
+    const item = e.target.closest('.qb-dd-item');
+    if (item && !item.disabled) { qbCloseDropdowns(); qbMenuDispatch(item.dataset); return; }
+    const btn = e.target.closest('.qb-menu-btn');
+    if (btn) {
+      const menu = btn.closest('.qb-menu');
+      const wasOpen = menu.classList.contains('open');
+      qbCloseDropdowns();
+      if (!wasOpen) {
+        menu.classList.add('open');
+        menu.querySelector('.qb-dropdown')?.classList.remove('hidden');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    }
+  });
+  // تنقّل hover بين القوائم أثناء فتح إحداها (سلوك سطح المكتب الكلاسيكي)
+  bar.addEventListener('mouseover', (e) => {
+    if (!bar.querySelector('.qb-menu.open')) return;
+    const btn = e.target.closest('.qb-menu-btn');
+    if (btn && !btn.closest('.qb-menu').classList.contains('open')) btn.click();
+  });
+  document.addEventListener('click', (e) => { if (!e.target.closest('#qb-menubar')) qbCloseDropdowns(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') qbCloseDropdowns(); });
+})();
+
+// ── ٢٠-و) بناء شريط الأيقونات ──
+function qbRenderIconbar() {
+  const bar = $('#qb-iconbar');
+  if (!bar) return;
+  bar.innerHTML = QB_ICONBAR.map((b, i) => `
+    <button type="button" class="qb-ic-btn" data-ic="${i}" title="${esc(_qbT(b.k))}">
+      <span class="qb-ic-glyph">${QB_ICONS[b.icon]}</span>
+      <span class="qb-ic-lbl">${esc(_qbT(b.k))}</span>
+    </button>`).join('');
+}
+(function qbBindIconbar() {
+  const bar = $('#qb-iconbar');
+  if (!bar) return;
+  bar.addEventListener('click', (e) => {
+    const btn = e.target.closest('.qb-ic-btn');
+    if (!btn) return;
+    const b = QB_ICONBAR[Number(btn.dataset.ic)];
+    if (!b) return;
+    if (b.run) return b.run();
+    qbMenuDispatch({ tab: b.tab, action: b.action, report: b.report, sub: b.sub });
+  });
+})();
+
+// ── ٢٠-ز) بناء خريطة سير العمل (الشاشة الرئيسية) ──
+function qbRenderWorkflow() {
+  const host = $('#qb-workflow');
+  if (!host) return;
+  host.innerHTML = QB_WORKFLOW.map(g => `
+    <div class="qb-wf-group">
+      <div class="qb-wf-head">${esc(_qbT(g.k))}</div>
+      <div class="qb-wf-row">
+        ${g.nodes.map(n => `
+          <button type="button" class="qb-node"
+            ${n.tab ? `data-tab="${n.tab}"` : ''}${n.action ? `data-action="${n.action}"` : ''}
+            ${n.report ? `data-report="${n.report}"` : ''}${n.sub ? `data-sub="${n.sub}"` : ''}>
+            <span class="qb-node-icon">${QB_ICONS[n.icon]}</span>
+            <span class="qb-node-lbl">${esc(_qbT(n.k))}</span>
+          </button>`).join('<span class="qb-arrow" aria-hidden="true"></span>')}
+      </div>
+    </div>`).join('');
+}
+(function qbBindWorkflow() {
+  const host = $('#qb-workflow');
+  if (!host) return;
+  host.addEventListener('click', (e) => {
+    const node = e.target.closest('.qb-node');
+    if (node) qbMenuDispatch(node.dataset);
+  });
+})();
+
+// ── ٢٠-ح) اللوحة الجانبية: أرصدة الحسابات + تذكيرات (بيانات فعلية فقط) ──
+window.renderQbSidePanel = async function () {
+  const balBox = $('#qb-sp-balances'), remBox = $('#qb-sp-reminders');
+  if (!balBox || !remBox) return;
+  const emptyHtml = `<div class="qb-sp-empty">${esc(_qbT('qb_sp_empty'))}</div>`;
+
+  // أرصدة الخزائن: حسابات 11xx من سطور القيود (نفس منطق بطاقة «رصيد الخزائن»)
+  try {
+    if (!state.accounts || !state.accounts.length) await loadAccounts();
+    const treas = treasuryAccounts();
+    const { data: lines } = await sb.from('journal_entry_lines').select('account_id, debit, credit');
+    const sums = {};
+    (lines || []).forEach(l => {
+      sums[l.account_id] = (sums[l.account_id] || 0) + Number(l.debit) - Number(l.credit);
+    });
+    balBox.innerHTML = treas.length
+      ? treas.map(a => `
+          <button type="button" class="qb-sp-row" data-tab="vouchers">
+            <span class="qb-sp-name">${esc(a.code)} — ${esc(a.name)}</span>
+            <span class="qb-sp-val">${fmt(sums[a.id] || 0)}</span>
+          </button>`).join('')
+      : emptyHtml;
+  } catch (_) { balBox.innerHTML = emptyHtml; }
+
+  // تذكيرات: أرصدة العملاء المدينة (ذمم مستحقة) من v_party_balances — أعلى ٥
+  try {
+    if (!state.parties.length) await loadParties();
+    const names = {};
+    state.parties.filter(p => p.kind === 'customer').forEach(p => { names[p.id] = p.name; });
+    const { data: pbals } = await sb.from('v_party_balances').select('party_id, balance');
+    const due = (pbals || []).filter(b => names[b.party_id] && Number(b.balance) > 0)
+      .sort((a, b) => Number(b.balance) - Number(a.balance)).slice(0, 5);
+    remBox.innerHTML = due.length
+      ? due.map(b => `
+          <button type="button" class="qb-sp-row qb-sp-alert" data-report="stmt">
+            <span class="qb-sp-name">${esc(_qbT('qb_sp_due'))}: ${esc(names[b.party_id])}</span>
+            <span class="qb-sp-val">${fmt(b.balance)}</span>
+          </button>`).join('')
+      : emptyHtml;
+  } catch (_) { remBox.innerHTML = emptyHtml; }
+};
+// نقر صفوف اللوحة يفتح القسم المقابل عبر نفس المُرسل
+(function qbBindSidePanel() {
+  const sp = $('#qb-sidepanel');
+  if (!sp) return;
+  sp.addEventListener('click', (e) => {
+    const row = e.target.closest('.qb-sp-row');
+    if (row) qbMenuDispatch(row.dataset);
+  });
+  // زر الطي/الفتح — تُحفظ الحالة
+  const tg = $('#qb-sp-toggle');
+  const apply = () => {
+    const c = localStorage.getItem('hazem_qb_sp') === '1';
+    sp.classList.toggle('collapsed', c);
+    tg.textContent = c ? '‹' : '›';
+    tg.title = _qbT(c ? 'qb_sp_open' : 'qb_sp_close');
+  };
+  if (tg) tg.onclick = () => {
+    localStorage.setItem('hazem_qb_sp', localStorage.getItem('hazem_qb_sp') === '1' ? '0' : '1');
+    apply();
+  };
+  apply();
+})();
+
+// ── ٢٠-ط) بحث سريع كلاسيكي (Find) — يبحث في الأصناف والعملاء/الموردين ──
+async function qbOpenSearch() {
+  openModal(`
+    <h3>${esc(_qbT('qb_ic_search'))}</h3>
+    <input id="qb-search-inp" placeholder="${esc(_qbT('qb_search_ph'))}" style="width:100%" autocomplete="off">
+    <div id="qb-search-res" class="qb-search-res"></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">${esc(_qbT('btn_close'))}</button></div>`);
+  const inp = $('#qb-search-inp'), res = $('#qb-search-res');
+  inp.focus();
+  let tm;
+  inp.oninput = () => {
+    clearTimeout(tm);
+    const q = inp.value.trim();
+    if (q.length < 2) { res.innerHTML = ''; return; }
+    tm = setTimeout(async () => {
+      try {
+        const like = `%${q}%`;
+        const [{ data: items }, { data: parties }] = await Promise.all([
+          sb.from('items').select('id, name, sku').or(`name.ilike.${like},sku.ilike.${like}`).limit(6),
+          sb.from('parties').select('id, name, kind').ilike('name', like).limit(6),
+        ]);
+        const rows = [
+          ...(items || []).map(x => ({ tab: 'items', lbl: `${x.name}${x.sku ? ' (' + x.sku + ')' : ''}` })),
+          ...(parties || []).map(x => ({ tab: 'parties', lbl: `${x.name} — ${_qbT(x.kind === 'customer' ? 'dash_customers' : 'dash_suppliers')}` })),
+        ];
+        res.innerHTML = rows.length
+          ? rows.map((r, i) => `<button type="button" class="qb-sp-row" data-i="${i}">${esc(r.lbl)}</button>`).join('')
+          : `<div class="qb-sp-empty">${esc(_qbT('qb_sp_empty'))}</div>`;
+        res.querySelectorAll('.qb-sp-row').forEach(b => b.onclick = () => {
+          closeModal(); switchTab(rows[Number(b.dataset.i)].tab);
+        });
+      } catch (_) { res.innerHTML = ''; }
+    }, 250);
+  };
+}
+
+// ── ٢٠-ي) الإقلاع: بناء كل مكونات الواجهة الكلاسيكية + إعادة البناء عند تبديل اللغة ──
+window.__qbRenderAll = function () {
+  qbRenderMenubar(); qbRenderIconbar(); qbRenderWorkflow();
+};
+window.__qbRenderAll();

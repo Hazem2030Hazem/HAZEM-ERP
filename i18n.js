@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   H. ERP SYSTEM MANAGER — أساس تعدد اللغات (i18n foundation)
+   HAZEM.ERP SYSTEM MANAGER — أساس تعدد اللغات (i18n foundation)
    دفعة ZATCA/VAT: كائن LANG + t(key) + setLang(l)
    - اللغة الحالية في localStorage['hazem_lang'] (الافتراضي ar)
    - setLang تبدّل document.dir (rtl/ltr) وتعيد ترجمة العناصر الثابتة
@@ -544,6 +544,29 @@
       pos_thanks: 'شكراً لتسوقكم معنا',
       pos_ni_title: '➕ صنف جديد سريع', pos_ni_name: 'اسم الصنف', pos_ni_price: 'سعر البيع',
       pos_ni_barcode: 'الباركود', pos_ni_gen: 'توليد', pos_ni_unit: 'الوحدة', pos_ni_save: 'حفظ وإضافة',
+      // ── واجهة QuickBooks الكلاسيكية: شريط القوائم العلوي ──
+      qb_menu_file: 'ملف', qb_menu_lists: 'القوائم', qb_menu_fav: 'المفضلة',
+      qb_menu_company: 'الشركة', qb_menu_customers: 'العملاء', qb_menu_vendors: 'الموردون',
+      qb_menu_emp: 'الموظفون', qb_menu_inv: 'المخزون', qb_menu_bank: 'البنوك',
+      qb_menu_reports: 'التقارير', qb_menu_window: 'النافذة', qb_menu_help: 'مساعدة',
+      // ── شريط الأيقونات ──
+      qb_ic_home: 'الرئيسية', qb_ic_sinv: 'فاتورة بيع', qb_ic_receipt: 'سند قبض',
+      qb_ic_payment: 'سند صرف', qb_ic_item: 'صنف جديد', qb_ic_customer: 'عميل جديد',
+      qb_ic_po: 'أمر شراء', qb_ic_report: 'تقرير', qb_ic_search: 'بحث',
+      qb_search_ph: 'اكتب للبحث في الأصناف والعملاء والموردين…',
+      // ── خريطة سير العمل ──
+      qb_wf_customers: 'العملاء', qb_wf_vendors: 'الموردون',
+      qb_wf_inventory: 'المخزون', qb_wf_banking: 'البنوك والخزينة',
+      qb_n_quotes: 'عروض الأسعار', qb_n_sinv: 'فواتير البيع', qb_n_collect: 'تحصيل المدفوعات',
+      qb_n_cust_stmt: 'كشف حساب', qb_n_po: 'أوامر الشراء', qb_n_pinv: 'فواتير الشراء',
+      qb_n_pay: 'المدفوعات', qb_n_vend_stmt: 'كشف حساب مورد',
+      qb_n_items: 'الأصناف', qb_n_moves: 'حركات المخزون', qb_n_count: 'الجرد',
+      qb_n_vouchers: 'السندات', qb_n_journal: 'القيود', qb_n_balances: 'الأرصدة',
+      // ── اللوحة الجانبية ──
+      qb_sp_balances: 'أرصدة الحسابات', qb_sp_reminders: 'تذكيرات وتنبيهات',
+      qb_sp_empty: 'لا توجد عناصر حالياً', qb_sp_due: 'ذمة مستحقة',
+      qb_sp_open: 'فتح اللوحة', qb_sp_close: 'طي اللوحة',
+      qb_n_returns: 'المرتجعات', qb_n_wh: 'المستودعات والجرد', qb_n_reports: 'التقارير',
     },
     en: {
       menu_home: 'Home',
@@ -1056,6 +1079,29 @@
       pos_thanks: 'Thank you for shopping with us',
       pos_ni_title: '➕ Quick new item', pos_ni_name: 'Item name', pos_ni_price: 'Sale price',
       pos_ni_barcode: 'Barcode', pos_ni_gen: 'Generate', pos_ni_unit: 'Unit', pos_ni_save: 'Save & add',
+      // ── Classic QuickBooks-style UI: top menu bar ──
+      qb_menu_file: 'File', qb_menu_lists: 'Lists', qb_menu_fav: 'Favorites',
+      qb_menu_company: 'Company', qb_menu_customers: 'Customers', qb_menu_vendors: 'Vendors',
+      qb_menu_emp: 'Employees', qb_menu_inv: 'Inventory', qb_menu_bank: 'Banking',
+      qb_menu_reports: 'Reports', qb_menu_window: 'Window', qb_menu_help: 'Help',
+      // ── Icon bar ──
+      qb_ic_home: 'Home', qb_ic_sinv: 'Invoice', qb_ic_receipt: 'Receive Payment',
+      qb_ic_payment: 'Pay Bills', qb_ic_item: 'New Item', qb_ic_customer: 'New Customer',
+      qb_ic_po: 'Purchase Order', qb_ic_report: 'Report', qb_ic_search: 'Find',
+      qb_search_ph: 'Type to search items, customers and vendors…',
+      // ── Workflow map ──
+      qb_wf_customers: 'Customers', qb_wf_vendors: 'Vendors',
+      qb_wf_inventory: 'Inventory', qb_wf_banking: 'Banking & Treasury',
+      qb_n_quotes: 'Estimates', qb_n_sinv: 'Sales Invoices', qb_n_collect: 'Receive Payments',
+      qb_n_cust_stmt: 'Statement', qb_n_po: 'Purchase Orders', qb_n_pinv: 'Purchase Invoices',
+      qb_n_pay: 'Payments', qb_n_vend_stmt: 'Vendor Statement',
+      qb_n_items: 'Items', qb_n_moves: 'Stock Moves', qb_n_count: 'Stock Count',
+      qb_n_vouchers: 'Vouchers', qb_n_journal: 'Journal', qb_n_balances: 'Balances',
+      // ── Side panel ──
+      qb_sp_balances: 'Account Balances', qb_sp_reminders: 'Reminders & Alerts',
+      qb_sp_empty: 'No items right now', qb_sp_due: 'Due balance',
+      qb_sp_open: 'Expand panel', qb_sp_close: 'Collapse panel',
+      qb_n_returns: 'Returns', qb_n_wh: 'Warehouses & Stock Count', qb_n_reports: 'Reports',
     },
   };
 

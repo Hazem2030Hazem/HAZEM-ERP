@@ -223,10 +223,18 @@
         <h2 id="company-title">—</h2>
         <button id="btn-logout" class="btn btn-ghost">تسجيل خروج</button>
       </header>
+      <!-- ═══ شريط القوائم العلوي الكلاسيكي (QuickBooks Desktop) — يُبنى من app.js ═══ -->
+      <nav id="qb-menubar" class="qb-menubar" aria-label="القوائم الرئيسية"></nav>
+      <!-- ═══ شريط الأيقونات (الإجراءات الأكثر استخداماً) ═══ -->
+      <div id="qb-iconbar" class="qb-iconbar"></div>
       <div id="tabbar" class="tabbar"></div>
 
       <!-- لوحة المؤشرات -->
       <section id="tab-dashboard" class="tab">
+        <div class="qb-home">
+        <div class="qb-home-main">
+        <!-- خريطة سير العمل الكلاسيكية (تُبنى من app.js) -->
+        <div id="qb-workflow" class="qb-workflow"></div>
         <!-- بطاقات KPI كبيرة بأسلوب Manager (رقم بارز + عنوان) -->
         <div class="cards kpi-cards">
           <div class="card kpi"><div class="card-num" id="c-today-sales">0.00</div><div class="card-lbl" data-i18n="dash_today_sales">مبيعات اليوم</div></div>
@@ -244,6 +252,18 @@
           <div class="card"><div class="card-num" id="c-invoices">0</div><div class="card-lbl" data-i18n="dash_invoices">الفواتير</div></div>
           <div class="card card-gold"><div class="card-num" id="c-sales">0</div><div class="card-lbl" data-i18n="dash_month_sales">مبيعات الشهر</div></div>
         </div>
+        </div><!-- /.qb-home-main -->
+        <!-- ═══ اللوحة الجانبية اليسرى (أرصدة + تنبيهات) — قابلة للطي ═══ -->
+        <aside id="qb-sidepanel" class="qb-sidepanel">
+          <button id="qb-sp-toggle" class="qb-sp-toggle" type="button" title="طي/فتح اللوحة" aria-label="toggle panel"></button>
+          <div class="qb-sp-body">
+            <h3 class="qb-sp-title" data-i18n="qb_sp_balances">أرصدة الحسابات</h3>
+            <div id="qb-sp-balances" class="qb-sp-list"></div>
+            <h3 class="qb-sp-title" data-i18n="qb_sp_reminders">تذكيرات وتنبيهات</h3>
+            <div id="qb-sp-reminders" class="qb-sp-list"></div>
+          </div>
+        </aside>
+        </div><!-- /.qb-home -->
       </section>
 
       <!-- الأصناف -->
